@@ -1,0 +1,64 @@
+
+// Prefer env var, but default to Render API with /api prefix.
+const API_BASE =
+  import.meta?.env?.VITE_API_BASE ?? "https://cogmyra-api.onrender.com/api";
+
+// Simple helper for JSON POSTs
+async function jsonPost<TReq, TRes>(
+  path: string,
+  body: TReq,
+  init?: RequestInit
+): Promise<TRes> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers ?? {}),
+    },
+    body: JSON.stringify(body),
+    credentials: "include", // fine w/ CORS preflight you verified
+    ...init,
+  });
+
+  // Surface non-2xx errors with text for easier debugging
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(
+      `API ${path} failed: ${res.status} ${res.statusText} ${text ? `– ${text}` : ""}`
+    );
+  }
+
+  // If there’s no body, return as any
+  if (res.status === 204) return undefined as unknown as TRes;
+
+  return (await res.json()) as TRes;
+}
+
+/** Chat endpoint types (adjust as your backend expects) */
+export type ChatRequest = {
+  messages: { role: "user" | "system" | "assistant"; content: string }[];
+  sessionId?: string;
+};
+
+export type ChatResponse = {
+  id: string;
+  content: string;
+  usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+  meta?: Record<string, unknown>;
+};
+
+/** POST /api/chat */
+export async function chat(req: ChatRequest): Promise<ChatResponse> {
+  return jsonPost<ChatRequest, ChatResponse>("/api/chat", req);
+}
+
+/** Optional: logs endpoint if you have it */
+export type LogsRequest = { limit?: number };
+export type LogsResponse = { entries: unknown[] };
+
+export async function fetchLogs(req: LogsRequest = {}): Promise<LogsResponse> {
+  return jsonPost<LogsRequest, LogsResponse>("/api/logs", req);
+}
+
+// Expose base for debugging in the UI if needed
+export const API = { base: API_BASE, chat, fetchLogs };

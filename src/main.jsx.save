@@ -1,0 +1,16 @@
+        onClick={() => alert("admin panel coming soon")}
+        style={{
+          marginTop: 20,
+          padding: "10px 16px",
+          border: "1px solid #bbb",
+          borderRadius: 6,
+          background: "#fff",
+          cursor: "pointer",
+          fontSize: 18,
+        }}
+      >
+        Show admin
+      </button>
+    </div>
+  );
+}
