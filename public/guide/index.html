@@ -2,86 +2,89 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>CogMyra Beta — Guide</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="/favicon.svg" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>CogMyra — Guide</title>
+    <meta name="description" content="Simple hosted API smoke test" />
+    <link rel="icon" href="/favicon.ico" />
     <style>
-      :root { --bg:#0b0b10; --card:#13131a; --muted:#9aa3b2; --ring:#4f46e5; }
-      *{box-sizing:border-box}
-      body{
-        margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
-        background: radial-gradient(1200px 700px at 20% -10%, rgba(79,70,229,.2), rgba(79,70,229,0)),
-                    radial-gradient(900px 600px at 100% 0%, rgba(16,185,129,.12), rgba(16,185,129,0)),
-                    var(--bg);
-        color:#e5e7eb;
+      :root { color-scheme: light dark; }
+      body {
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        margin: 0; padding: 24px;
       }
-      .wrap{max-width:960px;margin:32px auto;padding:16px}
-      header{
-        background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
-        border:1px solid rgba(255,255,255,.06);
-        border-radius:16px; padding:20px;
+      .wrap { max-width: 880px; margin: 0 auto; }
+      .card {
+        border: 1px solid hsla(0,0%,60%,0.2);
+        border-radius: 12px; padding: 16px; background: rgba(0,0,0,0.02);
       }
-      h1{margin:0 0 6px 0;font-size:24px}
-      .sub{color:var(--muted);margin:0}
-      code{background:#0f1115;padding:.2em .45em;border-radius:6px;border:1px solid #2a2f3a}
-      .row{display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap}
-      .status{display:inline-flex;align-items:center;gap:8px}
-      .dot{width:10px;height:10px;border-radius:50%;}
-      .dot.red{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.18)}
-      .dot.green{background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.18)}
-      .card{
-        background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0));
-        border:1px solid rgba(255,255,255,.06);
-        border-radius:16px; padding:18px; margin-top:16px;
+      label { display:block; font-weight:600; margin-bottom:6px; }
+      input, button, textarea, select {
+        font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid #ddd;
       }
-      .input{flex:1;min-width:260px;padding:10px 12px;border-radius:10px;background:#0f1115;color:#e5e7eb;border:1px solid #2a2f3a;outline:none}
-      .input:focus{border-color:var(--ring); box-shadow:0 0 0 3px rgba(79,70,229,.25)}
-      .btn{
-        background:linear-gradient(180deg, #6366f1, #4f46e5);
-        color:white;border:none;border-radius:10px;padding:10px 14px;cursor:pointer
-      }
-      .btn[disabled]{opacity:.6;cursor:not-allowed}
-      pre{
-        white-space:pre-wrap;background:#0f1115;border:1px solid #2a2f3a;border-radius:12px;padding:12px;overflow:auto
-      }
-      footer{color:#9aa3b2;margin-top:18px;text-align:center}
-      a{color:#93c5fd}
+      input, textarea, select { width: 100%; }
+      button { cursor: pointer; }
+      code { padding: 2px 6px; border-radius: 6px; background: #f3f3f5; }
+      .row { display:flex; gap:12px; }
+      .row > * { flex:1; }
+      .muted { color:#666; }
+      .ok { color: #0a7f2e; font-weight: 600; }
+      .err { color: #c62828; font-weight: 600; }
+      .footer { margin-top: 24px; color:#777; font-size: 14px; }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <header>
-        <h1>CogMyra Beta — Guide</h1>
-        <p class="sub">Quick smoke test for the hosted API.</p>
-        <div class="row">
-          <div>API Base: <code id="apiBase">…</code></div>
-          <div class="status"><span id="statusDot" class="dot red"></span><span id="statusText">Offline</span></div>
-        </div>
-      </header>
+      <h1 style="margin:0 0 6px">CogMyra — Guide</h1>
+      <p class="muted" style="margin:0 0 16px">
+        Hosted API smoke test. Uses <code>https://cogmyra-api.onrender.com</code>.
+      </p>
 
-      <section class="card">
-        <h2 style="margin:0 0 10px 0;font-size:18px">Chat</h2>
-        <form id="chatForm" class="row">
-          <input id="prompt" class="input" placeholder="Ask something short…" />
-          <button id="sendBtn" class="btn" type="submit">Send</button>
+      <div class="card" style="margin-bottom:16px">
+        <div class="row" style="align-items: center;">
+          <div>
+            <label>API Base</label>
+            <div><code id="apiBase">https://cogmyra-api.onrender.com</code></div>
+          </div>
+          <div style="max-width: 160px">
+            <label>Status</label>
+            <div id="health" class="muted">checking…</div>
+          </div>
+          <div style="max-width: 160px">
+            <label>Model</label>
+            <div id="model" class="muted">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <form id="chatForm">
+          <label>Ask something</label>
+          <div class="row" style="align-items: stretch;">
+            <input id="userInput" type="text" placeholder="Type a message…"/>
+            <button id="sendBtn" type="submit">Send</button>
+          </div>
         </form>
-        <div style="margin-top:12px;font-weight:600">Assistant reply:</div>
-        <pre id="reply">—</pre>
-      </section>
 
-      <section class="card">
-        <div class="row" style="justify-content:space-between">
-          <h2 style="margin:0;font-size:18px">Logs</h2>
-          <button id="refreshLogs" class="btn" type="button">Refresh</button>
+        <div style="margin-top:14px">
+          <div style="font-weight:600;margin-bottom:6px">Assistant reply:</div>
+          <pre id="replyBox" style="white-space:pre-wrap;margin:0;background:#fff;padding:12px;border-radius:8px;border:1px solid #eee">—</pre>
         </div>
-        <pre id="logs">{}</pre>
-      </section>
 
-      <footer>
-        CogMyra • MVP beta • <a href="/">home</a>
-      </footer>
+        <div class="row" style="margin-top:16px">
+          <button id="logsBtn" type="button" style="max-width:140px">Fetch logs</button>
+          <span class="muted">Shows the latest entries from <code>/api/admin/logs?limit=10</code></span>
+        </div>
+        <pre id="logsBox" style="white-space:pre-wrap;margin-top:10px;background:#fff;padding:12px;border-radius:8px;border:1px solid #eee;max-height:300px;overflow:auto">—</pre>
+      </div>
+
+      <div class="footer">
+        <a href="/" style="text-decoration:none;color:#4f46e5">← Back to app</a>
+      </div>
     </div>
 
-    <script defer src="./app.js"></script>
+    <script src="/guide/app.js" type="module"></script>
   </body>
 </html>
