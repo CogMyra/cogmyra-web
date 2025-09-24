@@ -3,67 +3,88 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CogMyra Beta — Guide</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>CogMyra — Guide</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; }
+    .card { border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; }
+    .row { display: flex; gap: 1rem; align-items: center; }
+    input, button { padding: 0.5rem; font-size: 1rem; }
+    button { cursor: pointer; }
+    #status { font-weight: bold; }
+    #status.online { color: green; }
+    #status.offline { color: red; }
+    pre { background: #f9f9f9; padding: 0.5rem; border-radius: 4px; }
+  </style>
 </head>
 <body>
-  <h1>CogMyra Beta — Guide</h1>
-  <p>Quick smoke test for the hosted API.</p>
-  
-  <div>
-    <strong>API Base:</strong>
-    <span id="apiBase">https://cogmyra-api.onrender.com</span>
-    <span id="statusDot" style="color:red;">● Offline</span>
+  <h1>CogMyra — Guide</h1>
+  <p>Hosted API smoke test. Uses <code>https://cogmyra-api.onrender.com</code>.</p>
+
+  <div class="card row">
+    <div><strong>API Base</strong><br/>https://cogmyra-api.onrender.com</div>
+    <div><strong>Status</strong><br/><span id="status">checking...</span></div>
+    <div><strong>Model</strong><br/><span id="model">—</span></div>
   </div>
 
-  <div>
-    <h3>Chat</h3>
-    <input id="userInput" placeholder="Ask something short..." />
-    <button onclick="sendMessage()">Send</button>
-    <p><strong>Assistant reply:</strong> <span id="reply">–</span></p>
+  <div class="card">
+    <h3>Ask something</h3>
+    <div class="row">
+      <input id="userInput" placeholder="Type a message..." style="flex:1"/>
+      <button onclick="sendMessage()">Send</button>
+    </div>
+    <p><strong>Assistant reply:</strong></p>
+    <p id="reply">–</p>
   </div>
 
-  <div>
+  <div class="card">
     <h3>Logs</h3>
-    <pre id="logs">{}</pre>
+    <button onclick="fetchLogs()">Fetch logs</button>
+    <p>Shows the latest entries from <code>/api/admin/logs?limit=10</code></p>
+    <pre id="logs">–</pre>
   </div>
+
+  <p><a href="/">← Back to app</a></p>
 
   <script>
     const API_BASE = "https://cogmyra-api.onrender.com";
 
     async function checkHealth() {
       try {
-        const res = await fetch(`${API_BASE}/api/health`, { mode: "cors" });
-        if (res.ok) {
-          document.getElementById("statusDot").textContent = "● Online";
-          document.getElementById("statusDot").style.color = "green";
-        } else {
-          document.getElementById("statusDot").textContent = "● Offline";
-          document.getElementById("statusDot").style.color = "red";
-        }
-      } catch (err) {
-        document.getElementById("statusDot").textContent = "● Offline";
-        document.getElementById("statusDot").style.color = "red";
+        const res = await fetch(`${API_BASE}/api/health`);
+        if (!res.ok) throw new Error("Bad status");
+        const data = await res.json();
+        document.getElementById("status").textContent = "Online";
+        document.getElementById("status").className = "online";
+      } catch (e) {
+        document.getElementById("status").textContent = "Offline";
+        document.getElementById("status").className = "offline";
       }
     }
 
     async function sendMessage() {
       const input = document.getElementById("userInput").value;
       const replyBox = document.getElementById("reply");
-      const logs = document.getElementById("logs");
-
       try {
         const res = await fetch(`${API_BASE}/api/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ model: "gpt-4.1", messages: [{ role: "user", content: input }] }),
+          body: JSON.stringify({ model: "gpt-4.1", messages: [{ role: "user", content: input }] })
         });
-
         const data = await res.json();
         replyBox.textContent = data.reply || JSON.stringify(data);
-        logs.textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
-        replyBox.textContent = "Error: " + err.message;
+      } catch (e) {
+        replyBox.textContent = "Error: " + e.message;
+      }
+    }
+
+    async function fetchLogs() {
+      const logsBox = document.getElementById("logs");
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/logs?limit=10`);
+        const data = await res.json();
+        logsBox.textContent = JSON.stringify(data, null, 2);
+      } catch (e) {
+        logsBox.textContent = "Error: " + e.message;
       }
     }
 
