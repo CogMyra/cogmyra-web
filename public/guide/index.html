@@ -1,94 +1,61 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CogMyra — Guide</title>
+  <meta charset="utf-8" />
+  <title>CogMyra – Guide (Beta)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="preconnect" href="https://cogmyra-api.onrender.com">
   <style>
-    body { font-family: system-ui, sans-serif; margin: 2rem; }
-    .card { border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; }
-    .row { display: flex; gap: 1rem; align-items: center; }
-    input, button { padding: 0.5rem; font-size: 1rem; }
-    button { cursor: pointer; }
-    #status { font-weight: bold; }
-    #status.online { color: green; }
-    #status.offline { color: red; }
-    pre { background: #f9f9f9; padding: 0.5rem; border-radius: 4px; }
+    :root { --bg:#0b0f1a; --card:#131a2a; --muted:#9fb3c8; --accent:#6cd3ff; --txt:#eaf2ff; }
+    html,body { margin:0; height:100%; background:var(--bg); color:var(--txt); font:16px/1.5 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+    .wrap { max-width:960px; margin:48px auto; padding:0 20px; }
+    .hero { display:grid; gap:12px; margin-bottom:16px; }
+    h1 { margin:0; font-size:28px; letter-spacing:0.2px; }
+    .muted { color:var(--muted); }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .api { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:var(--card); border:1px solid #263249; padding:8px 10px; border-radius:10px; color:#bfe7ff; }
+    .card { background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00)); border:1px solid #22304a; border-radius:16px; padding:18px; }
+    .input { flex:1; min-width:240px; border-radius:12px; border:1px solid #283756; background:#0f1524; color:var(--txt); padding:12px 14px; outline:none; }
+    .btn { border-radius:12px; padding:12px 16px; border:1px solid #2a87a3; background:linear-gradient(180deg,#0f2630,#0b1d29); color:#d7f3ff; cursor:pointer; }
+    .btn:disabled { opacity:.6; cursor:not-allowed; }
+    pre { margin:0; white-space:pre-wrap; word-break:break-word; }
+    .footer { margin-top:28px; color:var(--muted); font-size:13px; }
+    .ok { color:#6cff9f; } .bad { color:#ff7d7d; }
   </style>
 </head>
 <body>
-  <h1>CogMyra — Guide</h1>
-  <p>Hosted API smoke test. Uses <code>https://cogmyra-api.onrender.com</code>.</p>
-
-  <div class="card row">
-    <div><strong>API Base</strong><br/>https://cogmyra-api.onrender.com</div>
-    <div><strong>Status</strong><br/><span id="status">checking...</span></div>
-    <div><strong>Model</strong><br/><span id="model">—</span></div>
-  </div>
-
-  <div class="card">
-    <h3>Ask something</h3>
-    <div class="row">
-      <input id="userInput" placeholder="Type a message..." style="flex:1"/>
-      <button onclick="sendMessage()">Send</button>
+  <div class="wrap">
+    <div class="hero">
+      <h1>CogMyra — Guide (Beta)</h1>
+      <div class="row">
+        <div>API Base:</div>
+        <div id="apiBase" class="api">…</div>
+        <div id="apiDot" class="api" style="border-radius:999px;padding:4px 8px">●</div>
+      </div>
+      <div class="muted">Talks to the hosted API and shows your reply + server logs.</div>
     </div>
-    <p><strong>Assistant reply:</strong></p>
-    <p id="reply">–</p>
+
+    <div class="card row">
+      <input id="prompt" class="input" placeholder="Ask something…" />
+      <button id="send" class="btn">Send</button>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="muted" style="margin-bottom:6px">Assistant reply:</div>
+      <pre id="reply">—</pre>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <div style="flex:1"></div>
+      <button id="refresh" class="btn">Refresh Logs</button>
+    </div>
+    <div class="card" style="margin-top:10px">
+      <pre id="logs">{ }</pre>
+    </div>
+
+    <div class="footer">Public beta. Expect hiccups. If the dot is <span class="bad">red</span>, the API call failed; <span class="ok">green</span> means OK.</div>
   </div>
 
-  <div class="card">
-    <h3>Logs</h3>
-    <button onclick="fetchLogs()">Fetch logs</button>
-    <p>Shows the latest entries from <code>/api/admin/logs?limit=10</code></p>
-    <pre id="logs">–</pre>
-  </div>
-
-  <p><a href="/">← Back to app</a></p>
-
-  <script>
-    const API_BASE = "https://cogmyra-api.onrender.com";
-
-    async function checkHealth() {
-      try {
-        const res = await fetch(`${API_BASE}/api/health`);
-        if (!res.ok) throw new Error("Bad status");
-        const data = await res.json();
-        document.getElementById("status").textContent = "Online";
-        document.getElementById("status").className = "online";
-      } catch (e) {
-        document.getElementById("status").textContent = "Offline";
-        document.getElementById("status").className = "offline";
-      }
-    }
-
-    async function sendMessage() {
-      const input = document.getElementById("userInput").value;
-      const replyBox = document.getElementById("reply");
-      try {
-        const res = await fetch(`${API_BASE}/api/chat`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ model: "gpt-4.1", messages: [{ role: "user", content: input }] })
-        });
-        const data = await res.json();
-        replyBox.textContent = data.reply || JSON.stringify(data);
-      } catch (e) {
-        replyBox.textContent = "Error: " + e.message;
-      }
-    }
-
-    async function fetchLogs() {
-      const logsBox = document.getElementById("logs");
-      try {
-        const res = await fetch(`${API_BASE}/api/admin/logs?limit=10`);
-        const data = await res.json();
-        logsBox.textContent = JSON.stringify(data, null, 2);
-      } catch (e) {
-        logsBox.textContent = "Error: " + e.message;
-      }
-    }
-
-    checkHealth();
-  </script>
+  <script src="./app.js" type="module"></script>
 </body>
 </html>
