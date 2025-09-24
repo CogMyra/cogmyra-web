@@ -170,7 +170,7 @@ export default function Chat() {
       </div>
 
       <div className="mt-8 text-sm text-gray-500">
-        We log prompts/replies to improve the beta. Please don’t paste secrets.
+CogMyra Beta — prompts are logged for quality. Don’t paste secrets.
       </div>
     </div>
   );
