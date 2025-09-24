@@ -1,156 +1,177 @@
 // src/pages/Chat.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+const API_BASE =
+  import.meta.env.VITE_API_BASE?.replace(/\/+$/, "") || "http://127.0.0.1:8000";
 
-function makeId() {
-  return "web-" + Math.random().toString(36).slice(2, 10);
-}
-function getSessionId() {
-  let sid = localStorage.getItem("cmg_session");
-  if (!sid) {
-    sid = makeId();
-    localStorage.setItem("cmg_session", sid);
+function sessionId() {
+  const k = "cmg_session_id";
+  let s = localStorage.getItem(k);
+  if (!s) {
+    s = "web-" + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem(k, s);
   }
-  return sid;
+  return s;
 }
 
 export default function Chat() {
-  const api = useMemo(() => (API_BASE || "").replace(/\/+$/, ""), []);
-  const [sessionId, setSessionId] = useState(getSessionId);
+  const [model, setModel] = useState("gpt-4.1");
   const [input, setInput] = useState("");
-  const [reply, setReply] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [logs, setLogs] = useState([]);
-  const [health, setHealth] = useState("checking"); // "ok" | "down" | "checking"
-  const [model, setModel] = useState(
-    localStorage.getItem("cmg_model") || (import.meta.env.VITE_DEFAULT_MODEL || "gpt-4.1")
-  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [items, setItems] = useState(() => {
+    // keep a tiny history (up to 10)
+    const raw = localStorage.getItem("cmg_history");
+    return raw ? JSON.parse(raw) : [];
+  });
+  const [online, setOnline] = useState(true);
+  const inputRef = useRef(null);
+
+  const sid = useMemo(() => sessionId(), []);
 
   useEffect(() => {
-    localStorage.setItem("cmg_model", model);
-  }, [model]);
+    localStorage.setItem("cmg_history", JSON.stringify(items.slice(-10)));
+  }, [items]);
 
   async function checkHealth() {
     try {
-      const r = await fetch(`${api}/api/health`);
-      setHealth(r.ok ? "ok" : "down");
+      const r = await fetch(`${API_BASE}/api/health`, { credentials: "include" });
+      setOnline(r.ok);
     } catch {
-      setHealth("down");
-    }
-  }
-
-  async function sendChat(e) {
-    e?.preventDefault?.();
-    if (!input.trim()) return;
-
-    setBusy(true);
-    setReply("");
-    try {
-      const res = await fetch(`${api}/api/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId,
-          model, // server may ignore if not supported; Step 2 adds support
-          messages: [
-            { role: "system", content: "You are CogMyra Guide (CMG)." },
-            { role: "user", content: input.trim() },
-          ],
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setReply(`Error ${res.status}: ${data.error || data.detail || "(no details)"}`);
-      } else {
-        setReply(data.reply ?? "(no reply)");
-      }
-    } catch (err) {
-      setReply(`Network error: ${String(err)}`);
-    } finally {
-      setBusy(false);
-      refreshLogs();
-    }
-  }
-
-  async function refreshLogs() {
-    try {
-      const r = await fetch(`${api}/api/admin/logs?limit=50`);
-      const data = await r.json();
-      setLogs(data.entries ?? []);
-    } catch (err) {
-      setLogs([{ ts: new Date().toISOString(), kind: "error", msg: String(err) }]);
+      setOnline(false);
     }
   }
 
   useEffect(() => {
     checkHealth();
-    refreshLogs();
+    const t = setInterval(checkHealth, 15000);
+    return () => clearInterval(t);
   }, []);
 
+  async function handleSend() {
+    setError("");
+    const prompt = input.trim();
+    if (!prompt) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          sessionId: sid,
+          model,
+          messages: [
+            { role: "system", content: "You are CogMyra Guide (CMG)." },
+            { role: "user", content: prompt },
+          ],
+        }),
+      });
+
+      if (!res.ok) {
+        const detail = (await res.json().catch(() => null))?.detail || res.statusText;
+        throw new Error(String(detail || "Request failed"));
+      }
+
+      const data = await res.json();
+      const reply = String(data.reply ?? "");
+
+      setItems((prev) => [...prev, { ts: Date.now(), prompt, reply, model }].slice(-10));
+      setInput("");
+      inputRef.current?.focus();
+    } catch (e) {
+      setError(e.message || "Network error");
+    } finally {
+      setLoading(false);
+      checkHealth();
+    }
+  }
+
+  function onEnter(e) {
+    if (e.key === "Enter" && !e.shiftKey && !loading) {
+      e.preventDefault();
+      handleSend();
+    }
+  }
+
   return (
-    <div style={{ maxWidth: 980, margin: "32px auto", padding: 16, fontFamily: "Inter, system-ui, sans-serif" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <h1 style={{ marginBottom: 8 }}>CogMyra — Chat</h1>
-        <div style={{ fontSize: 13, color: "#555" }}>
-          API Base: <code>{api}</code>{" "}
+    <div className="min-h-screen p-6 text-gray-900">
+      <div className="flex items-center gap-2 mb-4">
+        <h1 className="text-2xl font-semibold">CogMyra — Chat</h1>
+        <div className="ml-auto text-sm flex items-center gap-2">
+          <span>API Base:</span>
+          <code className="bg-gray-100 px-2 py-0.5 rounded">{API_BASE}</code>
           <span
-            title={health === "ok" ? "API healthy" : health === "down" ? "API down" : "Checking…"}
+            title={online ? "API reachable" : "API unreachable"}
             style={{
-              marginLeft: 8,
               display: "inline-block",
-              width: 9,
-              height: 9,
-              borderRadius: 999,
-              background: health === "ok" ? "#16a34a" : health === "down" ? "#dc2626" : "#f59e0b",
-              verticalAlign: "middle",
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              background: online ? "#22c55e" : "#ef4444",
             }}
           />
         </div>
       </div>
 
-      <div style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>
-        Session: <code>{sessionId}</code>
-      </div>
-
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+      <div className="flex gap-2 mb-3">
         <select
-          aria-label="Model"
           value={model}
           onChange={(e) => setModel(e.target.value)}
-          style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd" }}
+          className="border rounded px-2 py-1"
         >
-          <option value="gpt-4.1">gpt-4.1</option>
-          <option value="gpt-4o-mini">gpt-4o-mini</option>
+          <option>gpt-4.1</option>
+          <option>gpt-4o-mini</option>
         </select>
-        <form onSubmit={sendChat} style={{ display: "flex", gap: 8, flex: 1 }}>
-          <input
-            type="text"
-            placeholder="Type a message…"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            style={{ flex: 1, padding: "10px 12px", borderRadius: 8, border: "1px solid #ddd" }}
-          />
-          <button disabled={busy} type="submit" style={{ padding: "10px 16px", borderRadius: 8 }}>
-            {busy ? "Sending…" : "Send"}
-          </button>
-        </form>
+
+        <input
+          ref={inputRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={onEnter}
+          placeholder="Type a message…"
+          className="flex-1 border rounded px-3 py-2"
+        />
+        <button
+          disabled={loading}
+          onClick={handleSend}
+          className="px-4 py-2 rounded text-white"
+          style={{ background: loading ? "#9ca3af" : "#111827" }}
+        >
+          {loading ? "Sending…" : "Send"}
+        </button>
       </div>
 
-      <div style={{ marginTop: 12 }}>
-        <div style={{ fontWeight: 600, marginBottom: 6 }}>Assistant reply:</div>
-        <pre style={{ background: "#f7f7f8", padding: 12, borderRadius: 8, whiteSpace: "pre-wrap" }}>
-{reply || "—"}
-        </pre>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded px-3 py-2 mb-3">
+          {error}
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {items.slice().reverse().map((it) => (
+          <div key={it.ts} className="bg-gray-50 border rounded p-3">
+            <div className="text-xs text-gray-500 mb-1">
+              {new Date(it.ts).toLocaleString()} • model: {it.model}
+            </div>
+            <div className="mb-2">
+              <span className="font-semibold">You:</span> {it.prompt}
+            </div>
+            <div>
+              <span className="font-semibold">Assistant:</span>{" "}
+              <span style={{ whiteSpace: "pre-wrap" }}>{it.reply}</span>
+            </div>
+          </div>
+        ))}
+        {items.length === 0 && (
+          <div className="text-gray-500">No messages yet — try a question!</div>
+        )}
       </div>
 
-      <div style={{ marginTop: 24, display: "flex", alignItems: "center", gap: 8 }}>
-        <h2 style={{ margin: 0 }}>Logs</h2>
-        <button onClick={refreshLogs} style={{ padding: "6px 10px", borderRadius: 8 }}>Refresh</button>
+      <div className="mt-8 text-sm text-gray-500">
+        We log prompts/replies to improve the beta. Please don’t paste secrets.
       </div>
-      <pre style={{ background: "#f7f7f8", padding: 12, borderRadius: 8, maxHeight: 360, overflow: "auto" }}>
-{JSON.stringify(logs, null, 2)}
-      </pre>
     </div>
   );
 }
