@@ -1,90 +1,73 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
-    <title>CogMyra — Guide</title>
-    <meta name="description" content="Simple hosted API smoke test" />
-    <link rel="icon" href="/favicon.ico" />
-    <style>
-      :root { color-scheme: light dark; }
-      body {
-        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-        margin: 0; padding: 24px;
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CogMyra Beta — Guide</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>CogMyra Beta — Guide</h1>
+  <p>Quick smoke test for the hosted API.</p>
+  
+  <div>
+    <strong>API Base:</strong>
+    <span id="apiBase">https://cogmyra-api.onrender.com</span>
+    <span id="statusDot" style="color:red;">● Offline</span>
+  </div>
+
+  <div>
+    <h3>Chat</h3>
+    <input id="userInput" placeholder="Ask something short..." />
+    <button onclick="sendMessage()">Send</button>
+    <p><strong>Assistant reply:</strong> <span id="reply">–</span></p>
+  </div>
+
+  <div>
+    <h3>Logs</h3>
+    <pre id="logs">{}</pre>
+  </div>
+
+  <script>
+    const API_BASE = "https://cogmyra-api.onrender.com";
+
+    async function checkHealth() {
+      try {
+        const res = await fetch(`${API_BASE}/api/health`, { mode: "cors" });
+        if (res.ok) {
+          document.getElementById("statusDot").textContent = "● Online";
+          document.getElementById("statusDot").style.color = "green";
+        } else {
+          document.getElementById("statusDot").textContent = "● Offline";
+          document.getElementById("statusDot").style.color = "red";
+        }
+      } catch (err) {
+        document.getElementById("statusDot").textContent = "● Offline";
+        document.getElementById("statusDot").style.color = "red";
       }
-      .wrap { max-width: 880px; margin: 0 auto; }
-      .card {
-        border: 1px solid hsla(0,0%,60%,0.2);
-        border-radius: 12px; padding: 16px; background: rgba(0,0,0,0.02);
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("userInput").value;
+      const replyBox = document.getElementById("reply");
+      const logs = document.getElementById("logs");
+
+      try {
+        const res = await fetch(`${API_BASE}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model: "gpt-4.1", messages: [{ role: "user", content: input }] }),
+        });
+
+        const data = await res.json();
+        replyBox.textContent = data.reply || JSON.stringify(data);
+        logs.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        replyBox.textContent = "Error: " + err.message;
       }
-      label { display:block; font-weight:600; margin-bottom:6px; }
-      input, button, textarea, select {
-        font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid #ddd;
-      }
-      input, textarea, select { width: 100%; }
-      button { cursor: pointer; }
-      code { padding: 2px 6px; border-radius: 6px; background: #f3f3f5; }
-      .row { display:flex; gap:12px; }
-      .row > * { flex:1; }
-      .muted { color:#666; }
-      .ok { color: #0a7f2e; font-weight: 600; }
-      .err { color: #c62828; font-weight: 600; }
-      .footer { margin-top: 24px; color:#777; font-size: 14px; }
-    </style>
-  </head>
-  <body>
-    <div class="wrap">
-      <h1 style="margin:0 0 6px">CogMyra — Guide</h1>
-      <p class="muted" style="margin:0 0 16px">
-        Hosted API smoke test. Uses <code>https://cogmyra-api.onrender.com</code>.
-      </p>
+    }
 
-      <div class="card" style="margin-bottom:16px">
-        <div class="row" style="align-items: center;">
-          <div>
-            <label>API Base</label>
-            <div><code id="apiBase">https://cogmyra-api.onrender.com</code></div>
-          </div>
-          <div style="max-width: 160px">
-            <label>Status</label>
-            <div id="health" class="muted">checking…</div>
-          </div>
-          <div style="max-width: 160px">
-            <label>Model</label>
-            <div id="model" class="muted">—</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <form id="chatForm">
-          <label>Ask something</label>
-          <div class="row" style="align-items: stretch;">
-            <input id="userInput" type="text" placeholder="Type a message…"/>
-            <button id="sendBtn" type="submit">Send</button>
-          </div>
-        </form>
-
-        <div style="margin-top:14px">
-          <div style="font-weight:600;margin-bottom:6px">Assistant reply:</div>
-          <pre id="replyBox" style="white-space:pre-wrap;margin:0;background:#fff;padding:12px;border-radius:8px;border:1px solid #eee">—</pre>
-        </div>
-
-        <div class="row" style="margin-top:16px">
-          <button id="logsBtn" type="button" style="max-width:140px">Fetch logs</button>
-          <span class="muted">Shows the latest entries from <code>/api/admin/logs?limit=10</code></span>
-        </div>
-        <pre id="logsBox" style="white-space:pre-wrap;margin-top:10px;background:#fff;padding:12px;border-radius:8px;border:1px solid #eee;max-height:300px;overflow:auto">—</pre>
-      </div>
-
-      <div class="footer">
-        <a href="/" style="text-decoration:none;color:#4f46e5">← Back to app</a>
-      </div>
-    </div>
-
-    <script src="/guide/app.js" type="module"></script>
-  </body>
+    checkHealth();
+  </script>
+</body>
 </html>
