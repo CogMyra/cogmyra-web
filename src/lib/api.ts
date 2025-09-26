@@ -5,58 +5,33 @@ export type ChatMessage = {
   content: string;
 };
 
-// During local dev, we want the web app to talk to the local FastAPI server.
-// You can still override via VITE_API_BASE if you need.
+// Base URL: prod API server, override with VITE_API_BASE if needed
 const API_BASE =
   (import.meta as any).env?.VITE_API_BASE ?? "https://cogmyra-api.onrender.com";
 
+// Always prefix paths with /api
 function url(path: string) {
-  return `${API_BASE}${path}`;
+  return `${API_BASE}/api${path}`;
 }
 
 export async function chat(messages: ChatMessage[], sessionId = "local-dev") {
   const body = { messages, sessionId };
 
-  console.log(
-    ">>> Fetching",
-    url("/api/chat"),
-    "with body",
-    JSON.parse(JSON.stringify(body))
-  );
-
-  const res = await fetch(url("/api/chat"), {
+  const res = await fetch(url("/chat"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 
-  const text = await res.text();
-  console.log("<<< Response raw:", text);
-
   if (!res.ok) {
-    throw new Error(`Chat failed (${res.status}): ${text}`);
+    throw new Error(`Chat API error: ${res.status}`);
   }
 
-  let data: any = {};
-  try {
-    data = JSON.parse(text);
-  } catch {
-    throw new Error("Chat response was not JSON");
-  }
-
-  return (data.reply as string) ?? "";
-}
-
-export async function getAdminLogs(limit = 50) {
-  const res = await fetch(url(`/api/admin/logs?limit=${limit}`));
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`Logs failed (${res.status}): ${t}`);
-  }
   return res.json();
 }
 
 export async function health() {
-  const res = await fetch(url("/api/health"));
-  return res.ok;
+  const res = await fetch(url("/health"));
+  if (!res.ok) throw new Error("Health check failed");
+  return res.json();
 }
