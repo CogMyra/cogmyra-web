@@ -8,7 +8,7 @@ export type ChatMessage = {
 // During local dev, we want the web app to talk to the local FastAPI server.
 // You can still override via VITE_API_BASE if you need.
 const API_BASE =
-  (import.meta as any).env?.VITE_API_BASE ?? "http://127.0.0.1:8000";
+  (import.meta as any).env?.VITE_API_BASE ?? "https://cogmyra-api.onrender.com";
 
 function url(path: string) {
   return `${API_BASE}${path}`;

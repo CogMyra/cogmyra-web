@@ -1,30 +1,58 @@
-import { useEffect, useState } from "react";
-
-const API_BASE = import.meta.env.VITE_API_BASE || "https://cogmyra-api.onrender.com";
+// src/pages/DebugPage.jsx
+import { useEffect, useMemo, useState } from "react";
 
 export default function DebugPage() {
-  const [health, setHealth] = useState({ ok: null, raw: null });
+  const api = useMemo(
+    () => (import.meta.env.VITE_API_BASE || "https://cogmyra-api.onrender.com").replace(/\/+$/, ""),
+    []
+  );
+
+  const [health, setHealth] = useState({ ok: false, error: "" });
+
+  async function checkHealth() {
+    try {
+      const r = await fetch(`${api}/api/health`, {
+        method: "GET",
+        // no cookies; keep it simple for CORS
+        credentials: "omit",
+        cache: "no-store",
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const j = await r.json();
+      if (j?.status === "ok") {
+        setHealth({ ok: true, error: "" });
+      } else {
+        setHealth({ ok: false, error: `Unexpected body: ${JSON.stringify(j)}` });
+      }
+    } catch (e) {
+      setHealth({ ok: false, error: String(e) });
+    }
+  }
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/health`)
-      .then(r => r.json())
-      .then(data => setHealth({ ok: true, raw: data }))
-      .catch(() => setHealth({ ok: false, raw: null }));
+    checkHealth();
   }, []);
 
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui, -apple-system, sans-serif" }}>
-      <h1>CogMyra — Debug Page</h1>
-      <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12, maxWidth: 720 }}>
-        <p><strong>API Base:</strong> {API_BASE}</p>
-        <p>
-          <strong>Health:</strong>{" "}
-          {health.ok === null ? "…" : health.ok ? "✅ OK" : "❌ Unavailable"}
-        </p>
-        <details>
-          <summary>Raw health response</summary>
-          <pre>{JSON.stringify(health.raw, null, 2)}</pre>
-        </details>
+    <div style={{ maxWidth: 880, margin: "32px auto", padding: 16, fontFamily: "Inter, system-ui, sans-serif" }}>
+      <h1 style={{ marginBottom: 8 }}>CogMyra — Debug</h1>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{
+          width: 10, height: 10,
+          borderRadius: 10,
+          background: health.ok ? "#22c55e" : "#ef4444",
+          boxShadow: "0 0 0 2px rgba(0,0,0,0.05)"
+        }} />
+        <div>
+          <div>API Base: <code>{api}</code></div>
+          <div style={{ color: health.ok ? "#16a34a" : "#ef4444", fontSize: 12 }}>
+            {health.ok ? "Health: OK" : `Health: Network error ${health.error ? `(${health.error})` : ""}`}
+          </div>
+        </div>
+        <button onClick={checkHealth} style={{ marginLeft: "auto", padding: "6px 10px", borderRadius: 8 }}>
+          Recheck
+        </button>
       </div>
     </div>
   );
