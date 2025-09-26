@@ -1,52 +1,60 @@
 /**
- * Minimal client JS for /guide page.
- * Talks to: https://cogmyra-api.onrender.com/api
+ * Guide page client — sends message + temperature to your API.
  */
 const API_BASE = "https://cogmyra-api.onrender.com/api";
 
-// ---- DOM by fixed IDs from guide.html
-const input     = document.getElementById("userInput");
-const sendBtn   = document.getElementById("sendBtn");
-const replyBox  = document.getElementById("assistantReply");
-const logsBox   = document.getElementById("logs");
+// ---- element getters (by ID; we control guide.html)
+const $ = (id) => document.getElementById(id);
+const input = $("userInput");
+const sendBtn = $("sendBtn");
+const tempSlider = $("temp");
+const tempValue = $("tempValue");
+const replyBox = $("assistantReply");
+const logsBox = $("logs");
 
-// ---- UI helpers
+// ---- small helpers
 function setReply(txt) {
   if (replyBox) replyBox.textContent = txt;
   else console.log("Assistant reply:", txt);
 }
 function setLogs(obj) {
-  if (logsBox) {
-    try { logsBox.textContent = JSON.stringify(obj ?? {}, null, 2); }
-    catch { logsBox.textContent = String(obj); }
-  } else {
-    console.log(obj);
-  }
+  try {
+    if (logsBox) logsBox.textContent = JSON.stringify(obj ?? {}, null, 2);
+  } catch {}
 }
 
-// ---- ping API on load so the page shows something useful
+// reflect slider value in the little <code> badge
+function reflectTemp() {
+  if (tempValue && tempSlider) tempValue.textContent = String(tempSlider.value);
+}
+
+// ---- ping API on load (for a quick health indicator in logs)
 (async () => {
   try {
     const r = await fetch(`${API_BASE}/health`, { credentials: "include" });
-    const data = await r.json();
-    setLogs({ health: r.status, ...data });
+    const j = await r.json().catch(() => ({}));
+    setLogs({ health: { ok: r.ok, ...j } });
   } catch (e) {
     setLogs({ healthError: String(e) });
   }
+  reflectTemp();
 })();
 
 // ---- main send handler
 async function send() {
   const text = (input?.value || "").trim();
+  const temperature = parseFloat(tempSlider?.value || "1.0");
+
   if (!text) return;
 
   sendBtn?.setAttribute("disabled", "true");
   setReply("…");
-  setLogs({ sending: true, model: "gpt-4.1" });
+  setLogs({ sending: true, model: "gpt-4.1", temperature });
 
   const body = {
     sessionId: "guide",
     model: "gpt-4.1",
+    temperature,
     messages: [{ role: "user", content: text }],
   };
 
@@ -58,7 +66,6 @@ async function send() {
       body: JSON.stringify(body),
     });
 
-    // try to read JSON even on non-200
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       setReply("—");
@@ -71,14 +78,14 @@ async function send() {
     setLogs(data);
   } catch (e) {
     setReply("—");
-    setLogs({ networkError: String(e) });
+    setLogs({ error: String(e) });
     alert("Network error; see console.");
   } finally {
     sendBtn?.removeAttribute("disabled");
   }
 }
 
-// ---- events
+// ---- wire events
 sendBtn?.addEventListener("click", send);
 input?.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
@@ -86,3 +93,4 @@ input?.addEventListener("keydown", (e) => {
     send();
   }
 });
+tempSlider?.addEventListener("input", reflectTemp);
