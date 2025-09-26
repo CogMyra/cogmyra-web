@@ -1,62 +1,68 @@
-/**
- * Guide page client — sends message + temperature to your API.
- */
-const API_BASE = "https://cogmyra-api.onrender.com/api";
+// ~/cogmyra-web/public/guide/app.js
 
-// ---- element getters (by ID; we control guide.html)
-const $ = (id) => document.getElementById(id);
-const input = $("userInput");
-const sendBtn = $("sendBtn");
-const tempSlider = $("temp");
-const tempValue = $("tempValue");
-const replyBox = $("assistantReply");
-const logsBox = $("logs");
+// ---- Config
+const DEFAULT_API = "https://cogmyra-api.onrender.com/api";
+let API_BASE = DEFAULT_API;
 
-// ---- small helpers
+// ---- Simple DOM helpers
+const $ = (sel) => document.querySelector(sel);
+
+function getPromptBox() {
+  return $("#prompt");
+}
+function getTempSlider() {
+  return $("#temp");
+}
+function getReplyBox() {
+  return $("#assistantReply");
+}
+function getLogsBox() {
+  return $("#logs");
+}
 function setReply(txt) {
-  if (replyBox) replyBox.textContent = txt;
+  const box = getReplyBox();
+  if (box) box.textContent = txt;
   else console.log("Assistant reply:", txt);
 }
 function setLogs(obj) {
+  const box = getLogsBox();
   try {
-    if (logsBox) logsBox.textContent = JSON.stringify(obj ?? {}, null, 2);
-  } catch {}
-}
-
-// reflect slider value in the little <code> badge
-function reflectTemp() {
-  if (tempValue && tempSlider) tempValue.textContent = String(tempSlider.value);
-}
-
-// ---- ping API on load (for a quick health indicator in logs)
-(async () => {
-  try {
-    const r = await fetch(`${API_BASE}/health`, { credentials: "include" });
-    const j = await r.json().catch(() => ({}));
-    setLogs({ health: { ok: r.ok, ...j } });
-  } catch (e) {
-    setLogs({ healthError: String(e) });
+    box.textContent = JSON.stringify(obj, null, 2);
+  } catch {
+    box.textContent = String(obj);
   }
-  reflectTemp();
-})();
+}
 
-// ---- main send handler
-async function send() {
-  const text = (input?.value || "").trim();
-  const temperature = parseFloat(tempSlider?.value || "1.0");
+// ---- API base dot (green/red) indicator
+function setApiStatus(ok) {
+  const dot = $("#api-dot");
+  if (!dot) return;
+  dot.style.background = ok ? "#21c55d" : "#ef4444"; // green / red
+}
 
-  if (!text) return;
+// ---- Send handler
+async function handleSend() {
+  const prompt = (getPromptBox()?.value || "").trim();
+  const tStr = getTempSlider()?.value;
+  const temperature =
+    tStr != null && tStr !== "" ? Number(tStr) : undefined;
 
-  sendBtn?.setAttribute("disabled", "true");
-  setReply("…");
-  setLogs({ sending: true, model: "gpt-4.1", temperature });
+  if (!prompt) {
+    setReply("—");
+    setLogs({ error: "Empty prompt" });
+    return;
+  }
 
+  // Build request
   const body = {
     sessionId: "guide",
     model: "gpt-4.1",
-    temperature,
-    messages: [{ role: "user", content: text }],
+    messages: [{ role: "user", content: prompt }],
   };
+  if (!Number.isNaN(temperature)) body.temperature = temperature;
+
+  setReply("…");
+  setLogs({ sending: true, body });
 
   try {
     const res = await fetch(`${API_BASE}/chat`, {
@@ -67,30 +73,79 @@ async function send() {
     });
 
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setReply("—");
-      setLogs({ error: true, status: res.status, data });
-      alert(`API error ${res.status}`);
-      return;
-    }
 
-    setReply(data.reply || "(no reply)");
+    // Build a small suffix with latency/tokens if present
+    const extra = [];
+    if (typeof data.latency_ms === "number") {
+      extra.push(`⏱ ${data.latency_ms} ms`);
+    }
+    if (data.usage && data.usage.total_tokens != null) {
+      extra.push(`🔢 ${data.usage.total_tokens} tokens`);
+    }
+    const suffix = extra.length ? `\n\n(${extra.join(" · ")})` : "";
+
+    setReply((data.reply || "(no reply)") + suffix);
     setLogs(data);
-  } catch (e) {
+
+    setApiStatus(res.ok);
+    if (!res.ok) {
+      console.warn("API error", res.status, data);
+    }
+  } catch (err) {
     setReply("—");
-    setLogs({ error: String(e) });
-    alert("Network error; see console.");
-  } finally {
-    sendBtn?.removeAttribute("disabled");
+    setLogs({ error: String(err && err.message || err) });
+    setApiStatus(false);
   }
 }
 
-// ---- wire events
-sendBtn?.addEventListener("click", send);
-input?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    send();
-  }
-});
-tempSlider?.addEventListener("input", reflectTemp);
+// ---- Temperature label update
+function wireTempLabel() {
+  const slider = getTempSlider();
+  const label = $("#temp-value");
+  if (!slider || !label) return;
+  const update = () => {
+    label.textContent = String(Number(slider.value));
+  };
+  slider.addEventListener("input", update);
+  update();
+}
+
+// ---- API base picker
+function wireApiPicker() {
+  const input = $("#api-base");
+  if (!input) return;
+  const apply = () => {
+    const val = (input.value || "").trim();
+    API_BASE = val || DEFAULT_API;
+    $("#api-base-current").textContent = API_BASE.replace(/\/+$/, "");
+  };
+  input.addEventListener("change", apply);
+  apply();
+}
+
+// ---- Wire buttons
+function wireButtons() {
+  $("#send")?.addEventListener("click", handleSend);
+  $("#refreshLogs")?.addEventListener("click", async () => {
+    // Small health ping just to update the status dot
+    try {
+      const r = await fetch(`${API_BASE}/health`, { credentials: "include" });
+      setApiStatus(r.ok);
+      setLogs({ health: r.status, ...(await r.json().catch(() => ({}))) });
+    } catch (e) {
+      setApiStatus(false);
+      setLogs({ error: String(e && e.message || e) });
+    }
+  });
+}
+
+// ---- Init
+function init() {
+  wireButtons();
+  wireTempLabel();
+  wireApiPicker();
+  // start with a green/red check
+  $("#refreshLogs")?.click();
+}
+
+document.addEventListener("DOMContentLoaded", init);
