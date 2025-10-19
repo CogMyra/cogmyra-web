@@ -1,0 +1,57 @@
+// src/functions/api/metrics/export/artifacts.csv.js
+// GET /api/metrics/export/artifacts.csv
+
+function toCSVRow(values) {
+  return values
+    .map((v) => {
+      if (v === null || v === undefined) return "";
+      const s = String(v);
+      if (/["\n,]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    })
+    .join(",");
+}
+
+export async function onRequestGet(context) {
+  const { env, request } = context;
+  const url = new URL(request.url);
+
+  const days = Math.max(1, Math.min(90, Number(url.searchParams.get("days")) || 30));
+  const limit = Math.max(1, Math.min(5000, Number(url.searchParams.get("limit")) || 2000));
+
+  const sql = `
+    SELECT
+      id,
+      user_id,
+      mode,
+      title,
+      tags,
+      created_at
+    FROM artifacts
+    WHERE created_at >= DATE('now', ?)
+    ORDER BY created_at DESC
+    LIMIT ?;
+  `;
+
+  const params = [`-${days} days`, limit];
+
+  try {
+    const { results } = await env.CMG_DB.prepare(sql).bind(...params).all();
+
+    const header = ["id", "user_id", "mode", "title", "tags", "created_at"];
+    const rows = [toCSVRow(header)];
+    for (const r of results) {
+      rows.push(toCSVRow([r.id, r.user_id, r.mode, r.title, r.tags, r.created_at]));
+    }
+
+    return new Response(rows.join("\n"), {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename=artifacts_last_${days}d.csv`,
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  }
+}
