@@ -1,143 +1,197 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CogMyra Admin Metrics</title>
-    <style>
-      :root {
-        --bg: #fafafa;
-        --fg: #222;
-        --muted: #6b7280;
-        --line: #e5e7eb;
-      }
-      body {
-        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        margin: 40px;
-        background: var(--bg);
-        color: var(--fg);
-      }
-      h1 { margin: 0 0 6px; }
-      p.lead { margin: 0 0 18px; color: var(--muted); }
-      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-      .card {
-        background: #fff; border: 1px solid var(--line); border-radius: 10px;
-        padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.03);
-      }
-      table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-      th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; }
-      th { background: #f8fafc; font-weight: 600; }
-      .controls { margin: 10px 0 16px; display: flex; gap: 10px; align-items: center; }
-      button {
-        padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line);
-        background: #fff; cursor: pointer;
-      }
-      button:disabled { opacity: .6; cursor: not-allowed; }
-      #error { color: #b91c1c; font-size: .9rem; }
-      .muted { color: var(--muted); font-size: .9rem; }
-      footer { margin-top: 28px; color: var(--muted); font-size: .85rem; }
-    </style>
-  </head>
-  <body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CogMyra Admin Metrics</title>
+  <style>
+    :root{
+      --bg:#fafafa; --fg:#111; --muted:#667085; --line:#e2e8f0; --brand:#2563eb;
+    }
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    main{max-width:1000px;margin:32px auto;padding:0 16px}
+    h1{margin:0 0 12px}
+    p{color:var(--muted)}
+    .controls{
+      display:flex; gap:12px; align-items:center; margin:16px 0 24px;
+      padding:12px; background:#fff; border:1px solid var(--line); border-radius:10px;
+    }
+    button{
+      border:1px solid var(--line); background:#fff; padding:8px 12px; border-radius:8px; cursor:pointer;
+    }
+    button.primary{ background:var(--brand); color:#fff; border-color:var(--brand) }
+    button:disabled{ opacity:.5; cursor:not-allowed }
+    table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden }
+    th,td{ padding:10px 12px; border-bottom:1px solid var(--line); text-align:left }
+    th{ background:#f8fafc; font-weight:600 }
+    tr:last-child td{ border-bottom:none }
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:16px }
+    @media (max-width:800px){ .row{ grid-template-columns:1fr } }
+    .note{ font-size:.9rem; color:var(--muted) }
+    .error{ color:#b91c1c }
+    .pill{ font-size:.85rem; color:var(--muted); }
+    .spacer{ height:8px }
+  </style>
+</head>
+<body>
+  <main>
     <h1>CogMyra Metrics Dashboard</h1>
-    <p class="lead">Daily activity and mode usage pulled from <code>/api/metrics/summary</code>.</p>
+    <p class="note">Daily activity and mode usage pulled from <code>/api/metrics/summary</code>. CSV exports are fetched with an admin key and downloaded locally.</p>
 
     <div class="controls">
-      <button id="refresh">Refresh Data</button>
-      <span id="status" class="muted"></span>
-      <span id="error"></span>
+      <label class="pill">Window:
+        <select id="window">
+          <option value="14">Last 14 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="60">Last 60 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+      </label>
+      <button id="btn-refresh" class="primary">Refresh Data</button>
+      <div style="flex:1"></div>
+      <button id="btn-export-events">Export events CSV</button>
+      <button id="btn-export-artifacts">Export artifacts CSV</button>
+      <a href="/guide/privacy.html" target="_blank" class="pill">Privacy &amp; Export Notice</a>
     </div>
+
+    <div id="status" class="note"></div>
+    <div id="error" class="error"></div>
+
+    <div class="spacer"></div>
 
     <div class="row">
-      <div class="card">
-        <h2 style="margin:0">Daily Summary (last 14 days)</h2>
-        <table id="summary">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Daily Active Users</th>
-              <th>Total Events</th>
-            </tr>
-          </thead>
+      <section>
+        <h2>Daily Summary (last 14 days)</h2>
+        <table id="tbl-daily">
+          <thead><tr><th>Date</th><th>DAU</th><th>Total Events</th></tr></thead>
           <tbody></tbody>
         </table>
-      </div>
+      </section>
 
-      <div class="card">
-        <h2 style="margin:0">Top Modes (last 30 days)</h2>
-        <table id="modes">
-          <thead>
-            <tr>
-              <th>Mode</th>
-              <th>Usage Count</th>
-            </tr>
-          </thead>
+      <section>
+        <h2>Top Modes (last 30 days)</h2>
+        <table id="tbl-modes">
+          <thead><tr><th>Mode</th><th>Count</th></tr></thead>
           <tbody></tbody>
         </table>
-      </div>
+      </section>
     </div>
+  </main>
 
-    <footer>
-      Generated by CogMyra • <span id="generatedAt" class="muted"></span>
-    </footer>
-
-    <script>
-      const refreshBtn = document.getElementById("refresh");
-      const statusEl = document.getElementById("status");
-      const errorEl = document.getElementById("error");
-      const genAtEl = document.getElementById("generatedAt");
-      const summaryBody = document.querySelector("#summary tbody");
-      const modesBody = document.querySelector("#modes tbody");
-
-      async function fetchMetrics() {
-        refreshBtn.disabled = true;
-        errorEl.textContent = "";
-        statusEl.textContent = "Loading…";
-        summaryBody.innerHTML = "<tr><td colspan='3'>Loading…</td></tr>";
-        modesBody.innerHTML = "<tr><td colspan='2'>Loading…</td></tr>";
-
-        try {
-          const res = await fetch("/api/metrics/summary");
-          if (!res.ok) throw new Error("Failed to fetch metrics (" + res.status + ")");
-          const data = await res.json();
-
-          // Populate summary table
-          summaryBody.innerHTML = "";
-          (data.daily_summary || []).forEach(row => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${row.date}</td>
-              <td>${row.dau}</td>
-              <td>${row.total_events}</td>
-            `;
-            summaryBody.appendChild(tr);
-          });
-
-          // Populate modes table
-          modesBody.innerHTML = "";
-          (data.top_modes || []).forEach(row => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${row.mode ?? "—"}</td>
-              <td>${row.count}</td>
-            `;
-            modesBody.appendChild(tr);
-          });
-
-          genAtEl.textContent = data.generated_at || "";
-          statusEl.textContent = "Updated";
-          setTimeout(() => (statusEl.textContent = ""), 1500);
-        } catch (err) {
-          console.error(err);
-          errorEl.textContent = "Error: " + err.message;
-          statusEl.textContent = "";
-        } finally {
-          refreshBtn.disabled = false;
-        }
+  <script>
+    // --- Admin key handling ---
+    // We avoid hardcoding the key by asking once and storing in localStorage.
+    // You can clear/change it anytime via the prompt.
+    const KEY_NAME = "cmg_admin_app_key";
+    function ensureAdminKey() {
+      let k = localStorage.getItem(KEY_NAME);
+      if (!k) {
+        k = prompt("Enter admin x-app-key for exports:");
+        if (!k) throw new Error("Missing admin key");
+        localStorage.setItem(KEY_NAME, k);
       }
+      return k;
+    }
+    function clearAdminKey() {
+      localStorage.removeItem(KEY_NAME);
+      alert("Admin key cleared.");
+    }
 
-      refreshBtn.addEventListener("click", fetchMetrics);
-      fetchMetrics();
-    </script>
-  </body>
+    const statusEl = document.getElementById("status");
+    const errEl = document.getElementById("error");
+    const dailyTbody = document.querySelector("#tbl-daily tbody");
+    const modesTbody = document.querySelector("#tbl-modes tbody");
+
+    function setStatus(msg){ statusEl.textContent = msg || ""; }
+    function setError(msg){ errEl.textContent = msg || ""; }
+
+    async function refresh() {
+      setStatus("Loading…");
+      setError("");
+
+      try {
+        const res = await fetch("/api/metrics/summary", { headers: { "x-app-key": ensureAdminKey() }});
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        renderDaily(data.daily_summary || []);
+        renderModes(data.top_modes || []);
+        setStatus(`Updated • ${new Date(data.generated_at || Date.now()).toLocaleString()}`);
+      } catch (e) {
+        setError(e.message || String(e));
+        setStatus("");
+      }
+    }
+
+    function renderDaily(rows){
+      dailyTbody.innerHTML = "";
+      for (const r of rows) {
+        const tr = document.createElement("tr");
+        const d = document.createElement("td");
+        d.textContent = r.date;
+        const dau = document.createElement("td");
+        dau.textContent = r.dau;
+        const te = document.createElement("td");
+        te.textContent = r.total_events;
+        tr.append(d, dau, te);
+        dailyTbody.append(tr);
+      }
+      if (!rows.length){
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 3; td.textContent = "No data yet.";
+        tr.append(td); dailyTbody.append(tr);
+      }
+    }
+
+    function renderModes(rows){
+      modesTbody.innerHTML = "";
+      for (const r of rows) {
+        const tr = document.createElement("tr");
+        const m = document.createElement("td");
+        m.textContent = r.mode;
+        const c = document.createElement("td");
+        c.textContent = r.count;
+        tr.append(m, c);
+        modesTbody.append(tr);
+      }
+      if (!rows.length){
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 2; td.textContent = "No data yet.";
+        tr.append(td); modesTbody.append(tr);
+      }
+    }
+
+    async function exportCsv(kind){
+      setStatus(`Exporting ${kind}…`);
+      setError("");
+      const days = document.getElementById("window").value;
+      const url = `/api/metrics/export/${kind}.csv?days=${encodeURIComponent(days)}`;
+
+      try {
+        const res = await fetch(url, { headers: { "x-app-key": ensureAdminKey() }});
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        const fname = `${kind}_last_${days}d.csv`;
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = fname;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setStatus(`Exported ${fname}`);
+      } catch (e) {
+        setError(e.message || String(e));
+        setStatus("");
+      }
+    }
+
+    document.getElementById("btn-refresh").addEventListener("click", refresh);
+    document.getElementById("btn-export-events").addEventListener("click", () => exportCsv("events"));
+    document.getElementById("btn-export-artifacts").addEventListener("click", () => exportCsv("artifacts"));
+
+    // Initial load
+    refresh();
+  </script>
+</body>
 </html>
