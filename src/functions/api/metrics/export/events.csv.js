@@ -6,6 +6,7 @@ function toCSVRow(values) {
     .map((v) => {
       if (v === null || v === undefined) return "";
       const s = String(v);
+      // escape " and wrap in quotes if it contains ", or newline
       if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
       return s;
     })
@@ -16,7 +17,8 @@ export async function onRequestGet(context) {
   const { env, request } = context;
   const url = new URL(request.url);
 
-  const days = Math.max(1, Math.min(90, Number(url.searchParams.get("days")) || 30));
+  // optional query params: ?days=30&limit=2000
+  const days  = Math.max(1, Math.min(90,  Number(url.searchParams.get("days"))  || 30));
   const limit = Math.max(1, Math.min(5000, Number(url.searchParams.get("limit")) || 2000));
 
   const sql = `
@@ -24,6 +26,9 @@ export async function onRequestGet(context) {
       id,
       user_id,
       type,
+      path,
+      ip,
+      user_agent,
       substr(payload, 1, 2000) AS payload,
       created_at
     FROM events
@@ -34,12 +39,13 @@ export async function onRequestGet(context) {
   const params = [`-${days} days`, limit];
 
   try {
+    // IMPORTANT: binding name must match Pages binding: CMG_DB → cmg_db database
     const { results = [] } = await env.CMG_DB.prepare(sql).bind(...params).all();
 
-    const header = ["id", "user_id", "type", "payload", "created_at"];
+    const header = ["id","user_id","type","path","ip","user_agent","payload","created_at"];
     const rows = [toCSVRow(header)];
     for (const r of results) {
-      rows.push(toCSVRow([r.id, r.user_id, r.type, r.payload, r.created_at]));
+      rows.push(toCSVRow([r.id, r.user_id, r.type, r.path, r.ip, r.user_agent, r.payload, r.created_at]));
     }
 
     return new Response(rows.join("\n"), {
