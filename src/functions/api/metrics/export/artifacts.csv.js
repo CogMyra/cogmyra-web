@@ -1,5 +1,5 @@
-src/functions/api/metrics/export/artifacts.csv.js
-  // GET /api/metrics/export/artifacts.csv
+// src/functions/api/metrics/export/artifacts.csv.js
+// GET /api/metrics/export/artifacts.csv
 
 function toCSVRow(values) {
   return values
