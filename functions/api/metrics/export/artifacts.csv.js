@@ -1,3 +1,5 @@
+// GET /api/metrics/export/artifacts.csv
+
 function toCSVRow(values) {
   return values
     .map((v) => {
@@ -14,12 +16,13 @@ export async function onRequestGet({ env, request }) {
   const days  = Math.max(1, Math.min(90,  Number(url.searchParams.get("days"))  || 30));
   const limit = Math.max(1, Math.min(5000, Number(url.searchParams.get("limit")) || 2000));
 
-  // Matches typical artifacts columns: id, user_id, type, content, created_at
+  // Match the actual `artifacts` schema: id, user_id, title, tags, content, created_at
   const sql = `
     SELECT
       id,
       user_id,
-      type,
+      title,
+      tags,
       substr(content, 1, 2000) AS content,
       created_at
     FROM artifacts
@@ -30,11 +33,13 @@ export async function onRequestGet({ env, request }) {
   const params = [`-${days} days`, limit];
 
   try {
-    const { results = [] } = await env.CMG_DB.prepare(sql).bind(...params).all();
+    const { results = [] } = await env.cmg_db.prepare(sql).bind(...params).all();
 
-    const header = ["id","user_id","type","content","created_at"];
-    const rows = [header];
-    for (const r of results) rows.push(toCSVRow([r.id, r.user_id, r.type, r.content, r.created_at]));
+    const header = ["id","user_id","title","tags","content","created_at"];
+    const rows = [toCSVRow(header)];
+    for (const r of results) {
+      rows.push(toCSVRow([r.id, r.user_id, r.title, r.tags, r.content, r.created_at]));
+    }
 
     return new Response(rows.join("\n"), {
       headers: {
