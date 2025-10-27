@@ -1,34 +1,34 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
     "./index.html",
     "./public/**/*.html",
-    "./src/**/*.{js,jsx,ts,tsx}"
+    "./src/**/*.{js,jsx,ts,tsx}",
   ],
-  darkMode: "media", // respects the OS dark-mode preference
   theme: {
     extend: {
       colors: {
-        // Contrast-aware brand set (AA on both light/dark backgrounds)
         brand: {
-          50:  "#eef2ff",
-          100: "#e0e7ff",
-          600: "#2563eb", // primary (AA on white)
-          700: "#1d4ed8", // hover on white
-          800: "#1e40af", // AA on light surfaces
+          50:  "#eff6ff",
+          100: "#dbeafe",
+          200: "#bfdbfe",
+          300: "#93c5fd",
+          400: "#60a5fa",
+          500: "#3b82f6",
+          600: "#2563eb", // primary accent blue
+          700: "#1d4ed8", // darker AA blue
+          800: "#1e40af",
+          900: "#1e3a8a",
         },
       },
-      // Slightly stronger default ring for focus (pairs with :focus-visible)
-      ringWidth: {
-        DEFAULT: "3px",
+      fontFamily: {
+        sans: ["Inter", "system-ui", "Avenir", "Helvetica", "Arial", "sans-serif"],
       },
-      ringColor: {
-        DEFAULT: "#2563eb",
+      boxShadow: {
+        focus: "0 0 0 3px rgba(37, 99, 235, 0.25)", // matches focus-visible glow
       },
     },
   },
-  plugins: [
-    require("@tailwindcss/forms")({ strategy: "class" }),
-    require("@tailwindcss/typography"),
-  ],
-}
+  plugins: [],
+  darkMode: "media", // automatically follows system dark/light mode
+};
