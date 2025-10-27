@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CogMyra</title>
+  <meta name="theme-color" content="#0b1220" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+           background:#f9fafb; color:#111827; line-height:1.5; }
+    header { background:#fff; border-bottom:1px solid #e5e7eb; }
+    .wrap { max-width:960px; margin:0 auto; padding:1rem; }
+    nav a { margin-right:.75rem; text-decoration:none; color:#1f2937; }
+    a:focus-visible { outline:3px solid #2563eb; outline-offset:3px;
+      box-shadow:0 0 0 3px rgba(37,99,235,.25); border-radius:.25rem; }
+    .skip-link { position:absolute; left:.75rem; top:.75rem; padding:.5rem .75rem;
+      background:#111827; color:#fff; border-radius:.375rem;
+      transform:translateY(-150%); transition:transform 120ms ease-in-out; z-index:1000; }
+    .skip-link:focus, .skip-link:focus-visible { transform:translateY(0); }
+    main { padding:2rem 0; }
+    .card { background:#fff; border:1px solid #e5e7eb; border-radius:.5rem; padding:1rem; }
+    @media (prefers-reduced-motion: reduce) {
+      *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; }
+      html { scroll-behavior:auto!important; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header>
+    <div class="wrap" role="navigation" aria-label="Primary">
+      <strong>CogMyra</strong>
+      <nav>
+        <a href="/guide/index.html">Guide</a>
+        <a href="/admin/metrics.html">Admin metrics</a>
+        <a href="/api/metrics/debug">API debug</a>
+        <a href="/api/metrics/export/events.csv?days=30">Export events</a>
+        <a href="/api/metrics/export/artifacts.csv?days=30">Export artifacts</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="wrap">
+    <h1>Welcome to CogMyra</h1>
+    <p>This is a static landing page so the root URL works. Use the links above to navigate.</p>
+    <section class="card" aria-labelledby="kb">
+      <h2 id="kb">Keyboard navigation & focus states</h2>
+      <p>Press <kbd>Tab</kbd> to see the “Skip to main content” link and focus ring.</p>
+    </section>
+  </main>
+</body>
+</html>
