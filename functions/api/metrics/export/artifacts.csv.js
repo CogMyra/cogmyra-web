@@ -1,5 +1,4 @@
 // GET /api/metrics/export/artifacts.csv
-
 function toCSVRow(values) {
   return values
     .map((v) => {
@@ -11,41 +10,74 @@ function toCSVRow(values) {
 }
 
 export async function onRequestGet({ env, request }) {
-  if (!env?.cmg_db) {
-    return new Response(
-      'error,"cmg_db binding is missing. Check Pages → Settings → Bindings → D1 database name is cmg_db."',
-      { status: 500 }
-    );
-  }
-
   const url = new URL(request.url);
   const days  = Math.max(1, Math.min(90,  Number(url.searchParams.get("days"))  || 30));
   const limit = Math.max(1, Math.min(5000, Number(url.searchParams.get("limit")) || 2000));
 
-  // Columns that actually exist in your DB: id, user_id, type, content, created_at
-  const header = ["id", "user_id", "type", "content", "created_at"];
-
-  const sql = `
-    SELECT
-      id,
-      user_id,
-      type,
-      substr(content, 1, 2000) AS content,
-      created_at
-    FROM artifacts
-    WHERE created_at >= DATE('now', ?1)
-    ORDER BY created_at DESC
-    LIMIT ?2;
-  `;
-  const params = [`-${days} days`, limit];
-
   try {
+    // Discover the schema of `artifacts`
+    const { results: cols = [] } = await env.cmg_db
+      .prepare(`PRAGMA table_info('artifacts')`)
+      .all();
+
+    if (!cols.length) {
+      return new Response(`error,${JSON.stringify("Table 'artifacts' not found")}`, { status: 500 });
+    }
+
+    const columnNames = new Set(cols.map(c => c.name));
+
+    // Columns we prefer to include, if present
+    const required = ["id", "user_id", "created_at"].filter(c => columnNames.has(c));
+    const optionalOrder = ["type", "title", "tags", "payload", "content"]; // include only if present
+    const optionals = optionalOrder.filter(c => columnNames.has(c));
+
+    // Build SELECT list, shortening large text columns if they exist
+    const selectPieces = [];
+    const header = [];
+
+    for (const c of required) {
+      selectPieces.push(c);
+      header.push(c);
+    }
+    for (const c of optionals) {
+      if (c === "payload" || c === "content") {
+        selectPieces.push(`substr(${c}, 1, 2000) AS ${c}`);
+      } else {
+        selectPieces.push(c);
+      }
+      header.push(c);
+    }
+
+    // If nothing from the preferred list exists, fall back to all columns
+    if (!selectPieces.length) {
+      const allCols = cols.map(c => c.name);
+      selectPieces.push(allCols.join(", "));
+      header.push(...allCols);
+    }
+
+    const hasCreatedAt = columnNames.has("created_at");
+    const where  = hasCreatedAt ? `WHERE created_at >= DATE('now', ?1)` : "";
+    const order  = hasCreatedAt ? `created_at` : `rowid`; // fall back to rowid if created_at not present
+
+    const sql = `
+      SELECT ${selectPieces.join(", ")}
+      FROM artifacts
+      ${where}
+      ORDER BY ${order} DESC
+      LIMIT ?${hasCreatedAt ? "2" : "1"};
+    `.trim();
+
+    const params = hasCreatedAt ? [`-${days} days`, limit] : [limit];
+
     const { results = [] } = await env.cmg_db.prepare(sql).bind(...params).all();
 
-    const rows = [toCSVRow(header)];
-    for (const r of results) {
-      rows.push(toCSVRow([r.id, r.user_id, r.type, r.content, r.created_at]));
+    // If header is empty (extreme fallback), derive from first row
+    if (!header.length && results[0]) {
+      header.push(...Object.keys(results[0]));
     }
+
+    const rows = [toCSVRow(header)];
+    for (const r of results) rows.push(toCSVRow(header.map(h => r[h])));
 
     return new Response(rows.join("\n"), {
       headers: {
@@ -55,6 +87,6 @@ export async function onRequestGet({ env, request }) {
       },
     });
   } catch (err) {
-    return new Response(`error,${JSON.stringify(String(err?.message || err))}`, { status: 500 });
+    return new Response(`error,${JSON.stringify(String(err))}`, { status: 500 });
   }
 }
