@@ -1,116 +1,122 @@
 // src/pages/Chat.jsx
-import React, { useId, useRef, useState } from "react";
+import React, { useState, useRef } from "react";
 import { Field, FieldError, announce } from "../lib/a11y";
-import EmptyState from "../components/EmptyState";
+import ResultToolbar from "../components/ResultToolbar.jsx"; // optional: shows Copy / Print
 
 export default function Chat() {
-  const baseId = useId();
-  const inputRef = useRef(null);
-
   const [prompt, setPrompt] = useState("");
-  const [error, setError]   = useState(null);
-  const [status, setStatus] = useState("idle"); // idle | sending | done
+  const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fieldRef = useRef(null);
 
-  const hasStarted = prompt.trim().length > 0;
+  function validate(text) {
+    const t = text.trim();
+    if (!t) return "Please enter a question or topic.";
+    if (t.length < 6) return "Try a longer prompt (at least 6 characters).";
+    return null;
+  }
 
   async function onSubmit(e) {
     e.preventDefault();
-    setError(null);
 
-    if (!prompt.trim()) {
-      const msg = "Please enter a prompt before submitting.";
-      setError(msg);
-      announce(msg);
-      requestAnimationFrame(() => inputRef.current?.focus());
+    const err = validate(prompt);
+    if (err) {
+      setError(err);
+      announce(err);
+      // move focus to the field for quick correction
+      requestAnimationFrame(() => fieldRef.current?.focus());
       return;
     }
 
-    setStatus("sending");
-    announce("Submitting…");
+    setError(null);
+    setIsSubmitting(true);
+    announce("Submitting your request…");
 
     try {
-      // TODO: call your API
-      // await fetch(...)
-      setStatus("done");
-      announce("Submitted successfully.");
-    } catch (err) {
+      // TODO: replace with your existing submit logic (call model, log event, etc.)
+      await new Promise((r) => setTimeout(r, 400)); // simulate
+      announce("Response ready.");
+    } catch (e) {
       const msg = "Something went wrong. Please try again.";
       setError(msg);
-      setStatus("idle");
       announce(msg);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
+  // Reusable hint text to guide novices
+  const hint = (
+    <>
+      Be specific: include grade/level, goal, and constraints.<br />
+      <span className="muted">
+        Example: “Explain photosynthesis for a 7th grader and give a 3-question quiz.”
+      </span>
+    </>
+  );
+
   return (
-    <main id="main-content" className="mx-auto max-w-3xl px-4 py-8 space-y-6">
-      <h1 className="text-2xl font-semibold">Chat</h1>
+    <main id="main-content" className="container mx-auto max-w-3xl px-4 py-8">
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold">Chat</h1>
+        <p className="muted mt-1">Ask a question or describe what you want to learn.</p>
+      </header>
 
-      {!hasStarted && (
-        <EmptyState
-          title="Start a conversation"
-          description="Type a clear question or task. Be specific about your goal, audience, and any constraints."
-          action={
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => {
-                setPrompt("Explain photosynthesis for a 7th grader in 3 short bullet points.");
-                requestAnimationFrame(() => inputRef.current?.focus());
-              }}
-            >
-              Try an example
-            </button>
-          }
-        />
-      )}
-
-      <form onSubmit={onSubmit} noValidate className="space-y-4">
-        <Field
-          id={`${baseId}-prompt`}
-          label="Your prompt"
-          hint="Be specific so CogMyra can help better."
-          error={error}
-          render={(fieldProps) => (
-            <textarea
-              ref={inputRef}
-              {...fieldProps}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              rows={5}
-              className="input"
-              placeholder="Ask a question or describe what you need…"
+      <section className="card">
+        <div className="card-body">
+          <form onSubmit={onSubmit} noValidate>
+            <Field
+              id="prompt"
+              label="What do you want to learn or create?"
+              hint={hint}
+              error={error}
+              render={(fieldProps) => (
+                <textarea
+                  {...fieldProps}
+                  ref={fieldRef}
+                  className="input h-36 resize-y"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                />
+              )}
             />
-          )}
-        />
+            {error && (
+              <FieldError id="prompt-err">
+                {error}
+              </FieldError>
+            )}
 
-        {error && (
-          <FieldError id={`${baseId}-prompt-err`}>{error}</FieldError>
-        )}
+            <div className="mt-4 flex items-center gap-3">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isSubmitting}
+                aria-disabled={isSubmitting}
+              >
+                {isSubmitting ? "Working…" : "Ask CogMyra"}
+              </button>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={status === "sending"}
-          >
-            {status === "sending" ? "Submitting…" : "Submit"}
-          </button>
-
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => {
-              setPrompt("");
-              setError(null);
-              setStatus("idle");
-              announce("Cleared.");
-              inputRef.current?.focus();
-            }}
-          >
-            Clear
-          </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => {
+                  setPrompt("");
+                  setError(null);
+                  announce("Cleared.");
+                  fieldRef.current?.focus();
+                }}
+              >
+                Clear
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </section>
+
+      {/* Optional: share/print tools for results area */}
+      <div className="mt-6">
+        <ResultToolbar getShareURL={() => window.location.href} />
+      </div>
     </main>
   );
 }
