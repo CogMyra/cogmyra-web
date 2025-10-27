@@ -1,28 +1,29 @@
 // src/pages/Chat.jsx
 import React, { useRef, useState } from "react";
-import { Field, announce } from "../lib/a11y.js";
+import { Field, FieldError, announce } from "../lib/a11y.js";
 import ResultToolbar from "../components/ResultToolbar.jsx";
-import EmptyState from "../components/EmptyState.jsx";
 
-/** Friendly validation messages */
-const M = {
-  required: "Please enter a question or topic.",
-  tooShort: "Try a longer prompt (at least 6 characters).",
-  generic: "Something went wrong. Please try again.",
-};
+/* Utility to make safe filenames from the prompt */
+function slugify(s = "") {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\- ]+/g, "")
+    .replace(/\s+/g, "-")
+    .slice(0, 60);
+}
 
 export default function Chat() {
   const [prompt, setPrompt] = useState("");
+  const [output, setOutput] = useState("");
   const [error, setError] = useState(null);
-  const [isSubmitting, setSubmitting] = useState(false);
-  const [output, setOutput] = useState(null);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fieldRef = useRef(null);
 
   function validate(text) {
-    const t = (text || "").trim();
-    if (!t) return M.required;
-    if (t.length < 6) return M.tooShort;
+    const v = (text || "").trim();
+    if (!v) return "Please enter a question or topic.";
+    if (v.length < 6) return "Try a longer prompt (at least 6 characters).";
     return null;
   }
 
@@ -33,124 +34,133 @@ export default function Chat() {
     if (err) {
       setError(err);
       announce(err);
+      // move focus to field for quick correction
       requestAnimationFrame(() => fieldRef.current?.focus());
       return;
     }
 
     setError(null);
-    setSubmitting(true);
+    setIsSubmitting(true);
     announce("Submitting your request…");
 
     try {
-      // TODO: replace with your real API call
-      await new Promise((r) => setTimeout(r, 500));
-      setOutput(`# Your result\n\nThis is where your model output will appear.`);
+      // TODO: swap this mock with your real API call.
+      // Example: const r = await fetch("/api/chat", { method:"POST", body: JSON.stringify({ prompt }) })
+      // const data = await r.json(); setOutput(data.text)
+      const mock = await new Promise((res) =>
+        setTimeout(
+          () =>
+            res(
+              [
+                `You asked: ${prompt}`,
+                "",
+                "Here is a short, formatted demo response.",
+                "",
+                "- Clear explanations",
+                "- Practice prompts",
+                "- Next steps you can take",
+              ].join("\n")
+            ),
+          500
+        )
+      );
+
+      setOutput(mock);
       announce("Response ready.");
-    } catch {
-      setOutput(null);
-      setError(M.generic);
-      announce(M.generic);
+    } catch (e2) {
+      const msg = "Something went wrong. Please try again.";
+      setError(msg);
+      announce(msg);
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   }
 
-  const showEmpty =
-    !isSubmitting && !output && (!prompt || prompt.trim().length === 0);
-
   return (
-    <main id="main-content" className="mx-auto max-w-3xl px-4 py-6">
+    <main id="main-content" className="mx-auto max-w-3xl p-4 sm:p-6">
+      {/* Page header + actions (toolbar hidden in print) */}
       <header className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Chat</h1>
         <nav aria-label="Page actions" className="print-hidden">
-          <ResultToolbar getShareURL={() => window.location.href} />
+          <ResultToolbar
+            getShareURL={() => window.location.href}
+            getContent={() => ({
+              text: output || "",
+              filenameBase: slugify(prompt || "cogmyra-output"),
+            })}
+          />
         </nav>
       </header>
 
-      <form onSubmit={onSubmit} noValidate className="card">
-        <div className="card-body">
-          <Field
-            id="prompt"
-            label="Your prompt"
-            hint="Be specific so CogMyra can help better."
-            error={error}
-            render={(fieldProps) => (
-              <textarea
-                ref={fieldRef}
-                {...fieldProps}
-                rows={5}
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="e.g., Explain photosynthesis for a 5th grader and give a 3-question quiz."
-              />
-            )}
-          />
+      {/* Prompt form */}
+      <form onSubmit={onSubmit} noValidate className="mb-6">
+        <Field
+          id="prompt"
+          label="Your prompt"
+          hint="Be specific so CogMyra can help better."
+          render={(inputProps) => (
+            <textarea
+              {...inputProps}
+              ref={fieldRef}
+              className="input min-h-[7rem]"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              required
+            />
+          )}
+          error={error}
+        />
 
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Submitting…" : "Ask"}
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => {
-                setPrompt("");
-                setError(null);
-                announce("Cleared prompt.");
-                fieldRef.current?.focus();
-              }}
-            >
-              Clear
-            </button>
-          </div>
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={isSubmitting}
+            aria-busy={isSubmitting ? "true" : "false"}
+          >
+            {isSubmitting ? "Submitting…" : "Submit"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => {
+              setPrompt("");
+              setError(null);
+              fieldRef.current?.focus();
+            }}
+          >
+            Clear
+          </button>
         </div>
       </form>
 
-      {/* Empty state (first-time help) */}
-      {showEmpty ? (
-        <div className="mt-6">
-          <EmptyState
-            title="Start by asking a question"
-            description={
-              <>
-                Try one of these to see how CogMyra structures helpful, readable answers:
-                <ul className="mt-2 list-disc space-y-1 text-left pl-5">
-                  <li>“Summarize the causes of the American Revolution in 5 bullet points.”</li>
-                  <li>“Create a 10-question practice quiz about photosynthesis with answers.”</li>
-                  <li>“Explain derivatives to a college freshman with one worked example.”</li>
-                </ul>
-              </>
-            }
-          >
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={() =>
-                setPrompt(
-                  "Create a 10-question practice quiz about photosynthesis with answers."
-                )
-              }
-            >
-              Try an example
-            </button>
-          </EmptyState>
-        </div>
-      ) : null}
-
-      {/* Output */}
-      {output ? (
-        <section className="mt-6 card no-break result-block">
-          <header className="card-header">Result</header>
+      {/* Result area */}
+      <section aria-live="polite" className="space-y-3">
+        <div className="card">
+          <div className="card-header">Result</div>
           <div className="card-body">
-            <pre className="whitespace-pre-wrap break-words">{output}</pre>
+            {output ? (
+              <pre className="result-block whitespace-pre-wrap break-words text-[0.95rem] leading-relaxed">
+                {output}
+              </pre>
+            ) : (
+              <p className="muted">
+                Your response will appear here after you submit a prompt.
+              </p>
+            )}
           </div>
-        </section>
-      ) : null}
+        </div>
+
+        {/* Inline error summary (in addition to FieldError near the field) */}
+        {error ? (
+          <div
+            role="alert"
+            className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700"
+          >
+            {error}
+          </div>
+        ) : null}
+      </section>
     </main>
   );
 }
