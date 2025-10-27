@@ -9,17 +9,15 @@ body {
   @apply antialiased bg-white text-gray-900;
 }
 
-/* Keep body text/primary buttons well above AA thresholds on white. */
-
 /* ---------- Focus visibility (keyboard only) ---------- */
 :focus-visible {
-  outline: 3px solid #2563eb;           /* blue-600 */
+  outline: 3px solid #2563eb;           /* brand-600 */
   outline-offset: 3px;
   box-shadow: 0 0 0 3px rgba(37,99,235,0.25);
 }
 :focus:not(:focus-visible) { outline: none; box-shadow: none; }
 
-/* ---------- Skip link (matches index.html) ---------- */
+/* ---------- Skip link (matches public/index.html) ---------- */
 .skip-link {
   position: absolute;
   left: 0.75rem;
@@ -55,46 +53,7 @@ body {
 }
 
 /* ===============================
-   High-contrast, reusable tokens
+   7(b) Color contrast AA baseline
    =============================== */
 
-/* Links that clearly meet AA on white */
-.a11y-link {
-  @apply text-blue-700 underline decoration-2 underline-offset-2;
-}
-.a11y-link:hover { @apply text-blue-800; }
-.a11y-link:focus-visible { @apply ring-4 ring-blue-300 rounded-sm; }
-
-/* Primary button (white text on blue-600/700) – AA on white */
-.btn-primary {
-  @apply inline-flex items-center justify-center gap-2
-         rounded-md px-4 py-2 font-semibold
-         text-white bg-blue-600 hover:bg-blue-700
-         focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300
-         disabled:opacity-40 disabled:cursor-not-allowed;
-}
-
-/* Secondary button with strong contrast (text on gray-900 with border) */
-.btn-secondary {
-  @apply inline-flex items-center justify-center gap-2
-         rounded-md px-4 py-2 font-semibold
-         text-gray-900 bg-white border border-gray-300 hover:bg-gray-50
-         focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300
-         disabled:opacity-40 disabled:cursor-not-allowed;
-}
-
-/* Form controls with clear borders & focus states */
-.input {
-  @apply block w-full rounded-md border border-gray-300 bg-white
-         px-3 py-2 text-gray-900 placeholder:text-gray-500
-         focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300;
-}
-
-.label { @apply block text-sm font-medium text-gray-900; }
-
-/* Cards/panels maintain AA contrast on white */
-.card {
-  @apply rounded-xl border border-gray-200 bg-white shadow-sm;
-}
-.card-header { @apply px-4 py-3 border-b border-gray-200 font-semibold; }
-.card-body   { @apply p-4; }
+/* Global links: AA on white,
