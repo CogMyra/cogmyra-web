@@ -27,10 +27,11 @@
 <body>
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <!-- SR-only polite live region for announce() -->
-  <div id="a11y-live" aria-live="polite" class="sr-only"></div>
-
   <div id="root"></div>
+
+  <!-- NEW: polite live region used by announce() in src/lib/a11y.js -->
+  <div id="a11y-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
   <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
