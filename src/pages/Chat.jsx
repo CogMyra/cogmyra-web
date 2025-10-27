@@ -2,6 +2,7 @@
 import React, { useRef, useState } from "react";
 import { Field, announce } from "../lib/a11y.js";
 import ResultToolbar from "../components/ResultToolbar.jsx";
+import EmptyState from "../components/EmptyState.jsx";
 
 /** Friendly validation messages */
 const M = {
@@ -28,17 +29,14 @@ export default function Chat() {
   async function onSubmit(e) {
     e.preventDefault();
 
-    // Validate & announce helpful guidance
     const err = validate(prompt);
     if (err) {
       setError(err);
       announce(err);
-      // Move focus back to the input for quick correction
       requestAnimationFrame(() => fieldRef.current?.focus());
       return;
     }
 
-    // OK to submit
     setError(null);
     setSubmitting(true);
     announce("Submitting your request…");
@@ -56,6 +54,9 @@ export default function Chat() {
       setSubmitting(false);
     }
   }
+
+  const showEmpty =
+    !isSubmitting && !output && (!prompt || prompt.trim().length === 0);
 
   return (
     <main id="main-content" className="mx-auto max-w-3xl px-4 py-6">
@@ -109,6 +110,37 @@ export default function Chat() {
           </div>
         </div>
       </form>
+
+      {/* Empty state (first-time help) */}
+      {showEmpty ? (
+        <div className="mt-6">
+          <EmptyState
+            title="Start by asking a question"
+            description={
+              <>
+                Try one of these to see how CogMyra structures helpful, readable answers:
+                <ul className="mt-2 list-disc space-y-1 text-left pl-5">
+                  <li>“Summarize the causes of the American Revolution in 5 bullet points.”</li>
+                  <li>“Create a 10-question practice quiz about photosynthesis with answers.”</li>
+                  <li>“Explain derivatives to a college freshman with one worked example.”</li>
+                </ul>
+              </>
+            }
+          >
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() =>
+                setPrompt(
+                  "Create a 10-question practice quiz about photosynthesis with answers."
+                )
+              }
+            >
+              Try an example
+            </button>
+          </EmptyState>
+        </div>
+      ) : null}
 
       {/* Output */}
       {output ? (
