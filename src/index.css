@@ -56,4 +56,84 @@ body {
    7(b) Color contrast AA baseline
    =============================== */
 
-/* Global links: AA on white,
+/* Global links: AA on white, underline on hover/focus, preserve visited */
+a {
+  color: #1d4ed8; /* brand-700-equivalent */
+  text-underline-offset: 3px;
+}
+a:hover,
+a:focus-visible { text-decoration: underline; }
+a:visited       { color: #4338ca; /* indigo-700, still AA on white */ }
+
+/* Buttons (shared) */
+.btn {
+  @apply inline-flex items-center justify-center gap-2
+         rounded-md px-3.5 py-2.5 text-sm font-medium
+         focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2;
+}
+
+/* Primary: use brand palette (AA on white) */
+.btn-primary {
+  @apply bg-brand-600 text-white hover:bg-brand-700
+         focus-visible:ring-brand-600 ring-offset-white
+         disabled:opacity-40 disabled:cursor-not-allowed;
+}
+
+/* Secondary: high-contrast text with border */
+.btn-secondary {
+  @apply text-gray-900 bg-white border border-gray-300 hover:bg-gray-50
+         focus-visible:ring-brand-600 ring-offset-white
+         disabled:opacity-40 disabled:cursor-not-allowed;
+}
+
+/* Quiet/ghost action */
+.btn-ghost {
+  @apply text-gray-900 hover:text-gray-700 hover:bg-gray-100
+         focus-visible:ring-brand-600 ring-offset-white;
+}
+
+/* Inputs/selects/textareas: consistent borders + strong focus */
+.input,
+select,
+textarea {
+  @apply block w-full rounded-md border border-gray-300 bg-white
+         px-3 py-2 text-gray-900 placeholder:text-gray-500
+         focus:border-brand-600 focus:ring-brand-600 focus:outline-none;
+}
+
+/* Labels */
+.label { @apply block text-sm font-medium text-gray-900; }
+
+/* Cards/panels maintain AA contrast on white */
+.card       { @apply rounded-xl border border-gray-200 bg-white shadow-sm; }
+.card-header{ @apply px-4 py-3 border-b border-gray-200 font-semibold; }
+.card-body  { @apply p-4; }
+
+/* Headings & muted text */
+h1,h2,h3,h4,h5,h6 { @apply text-gray-900; }
+small,.muted      { @apply text-gray-600; }
+
+/* ---------- Dark mode (respects OS setting) ---------- */
+@media (prefers-color-scheme: dark) {
+  body { @apply bg-gray-900 text-gray-100; }
+
+  a { color: #93c5fd; }                 /* light blue, AA on dark */
+  a:visited { color: #a5b4fc; }         /* light indigo */
+
+  .btn-primary { @apply ring-offset-gray-900; }
+  .btn-secondary {
+    @apply text-gray-100 bg-gray-900 border-gray-700 hover:bg-gray-800 ring-offset-gray-900;
+  }
+  .btn-ghost   { @apply text-gray-100 hover:text-gray-200 hover:bg-gray-800 ring-offset-gray-900; }
+
+  .input,
+  select,
+  textarea {
+    @apply border-gray-600 bg-gray-900 text-gray-100 placeholder-gray-400;
+  }
+
+  .card        { @apply border-gray-800 bg-gray-900; }
+  .card-header { @apply border-gray-800; }
+  h1,h2,h3,h4,h5,h6 { @apply text-gray-100; }
+  small,.muted      { @apply text-gray-400; }
+}
