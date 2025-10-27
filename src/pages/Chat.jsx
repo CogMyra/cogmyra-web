@@ -1,25 +1,26 @@
 // src/pages/Chat.jsx
 import React, { useId, useRef, useState } from "react";
 import { Field, FieldError, announce } from "../lib/a11y";
+import EmptyState from "../components/EmptyState";
 
 export default function Chat() {
-  const baseId = useId();                 // unique id seed for this render
+  const baseId = useId();
   const inputRef = useRef(null);
 
   const [prompt, setPrompt] = useState("");
   const [error, setError]   = useState(null);
   const [status, setStatus] = useState("idle"); // idle | sending | done
 
+  const hasStarted = prompt.trim().length > 0;
+
   async function onSubmit(e) {
     e.preventDefault();
     setError(null);
 
-    // Simple validation example
     if (!prompt.trim()) {
       const msg = "Please enter a prompt before submitting.";
       setError(msg);
       announce(msg);
-      // Send focus back to the field for quick correction
       requestAnimationFrame(() => inputRef.current?.focus());
       return;
     }
@@ -28,9 +29,8 @@ export default function Chat() {
     announce("Submitting…");
 
     try {
-      // TODO: Call your existing API here
+      // TODO: call your API
       // await fetch(...)
-
       setStatus("done");
       announce("Submitted successfully.");
     } catch (err) {
@@ -42,10 +42,29 @@ export default function Chat() {
   }
 
   return (
-    <main id="main-content" className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-2xl font-semibold mb-4">Chat</h1>
+    <main id="main-content" className="mx-auto max-w-3xl px-4 py-8 space-y-6">
+      <h1 className="text-2xl font-semibold">Chat</h1>
 
-      <form onSubmit={onSubmit} noValidate className="space-y-6">
+      {!hasStarted && (
+        <EmptyState
+          title="Start a conversation"
+          description="Type a clear question or task. Be specific about your goal, audience, and any constraints."
+          action={
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => {
+                setPrompt("Explain photosynthesis for a 7th grader in 3 short bullet points.");
+                requestAnimationFrame(() => inputRef.current?.focus());
+              }}
+            >
+              Try an example
+            </button>
+          }
+        />
+      )}
+
+      <form onSubmit={onSubmit} noValidate className="space-y-4">
         <Field
           id={`${baseId}-prompt`}
           label="Your prompt"
