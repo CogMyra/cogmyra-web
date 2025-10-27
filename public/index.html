@@ -1,13 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CogMyra</title>
 
-  <!-- Favicons -->
-  <link rel="icon" href="/vite.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="/vite.svg" />
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
   <meta name="theme-color" content="#0b1220" />
   <meta name="color-scheme" content="light dark" />
 
@@ -18,46 +18,18 @@
   <meta property="og:url" content="https://cogmyra.com/" />
   <meta property="og:image" content="https://cogmyra.com/vite.svg" />
 
-  <!-- Twitter -->
+  <!-- Twitter Cards -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="CogMyra — Your Personalized AI Learning Coach" />
   <meta name="twitter:description" content="Learn faster with clear explanations, practice, and feedback that adapts to you." />
   <meta name="twitter:image" content="https://cogmyra.com/vite.svg" />
-
-  <link rel="stylesheet" href="/src/index.css" />
 </head>
 <body>
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <!-- Screen-reader announcements (polite) -->
-  <div id="a11y-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  <!-- SR-only polite live region for announce() -->
+  <div id="a11y-live" aria-live="polite" class="sr-only"></div>
 
-  <!-- Static landing content -->
-  <header class="max-w-5xl mx-auto px-4 py-4">
-    <nav class="flex items-center gap-6 text-sm">
-      <a href="/guide/" class="a11y-link">Guide</a>
-      <a href="/admin/metrics.html" class="a11y-link">Admin metrics</a>
-      <a href="/api/metrics/debug" class="a11y-link">API debug</a>
-      <a href="/api/metrics/export/events.csv?days=30" class="a11y-link">Export events</a>
-      <a href="/api/metrics/export/artifacts.csv?days=30" class="a11y-link">Export artifacts</a>
-    </nav>
-  </header>
-
-  <main id="main-content" class="max-w-5xl mx-auto px-4 pb-16">
-    <h1 class="text-3xl md:text-4xl font-bold mt-2">Welcome to CogMyra</h1>
-    <p class="mt-2 text-gray-600">
-      This is a static landing page so the root URL works. Use the links above to navigate.
-    </p>
-
-    <section class="card mt-8">
-      <div class="card-header">Keyboard navigation & focus states</div>
-      <div class="card-body">
-        <p>Press <kbd>Tab</kbd> to see the “Skip to main content” link and focus ring.</p>
-      </div>
-    </section>
-  </main>
-
-  <!-- Your React app (if/when mounted at root) -->
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
