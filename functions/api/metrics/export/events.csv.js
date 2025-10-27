@@ -1,4 +1,5 @@
 // GET /api/metrics/export/events.csv
+
 function toCSVRow(values) {
   return values
     .map((v) => {
@@ -9,74 +10,62 @@ function toCSVRow(values) {
     .join(",");
 }
 
+async function getTableColumns(db, table) {
+  const { results = [] } = await db.prepare(`PRAGMA table_info('${table}')`).all();
+  return results.map(r => r.name);
+}
+
+function buildSelectPieces(existing, wantedInOrder) {
+  const have = new Set(existing);
+  const pieces = [];
+  const header = [];
+  for (const col of wantedInOrder) {
+    if (!have.has(col)) continue;
+    if (col === "content" || col === "payload") {
+      pieces.push(`substr(${col}, 1, 2000) AS ${col}`);
+    } else {
+      pieces.push(col);
+    }
+    header.push(col);
+  }
+  if (pieces.length === 0) {
+    pieces.push(existing.join(", "));
+    header.push(...existing);
+  }
+  return { selectSQL: pieces.join(", "), header };
+}
+
 export async function onRequestGet({ env, request }) {
+  const db = env.cmg_db;                 // <-- use the bound name exactly
   const url = new URL(request.url);
   const days  = Math.max(1, Math.min(90,  Number(url.searchParams.get("days"))  || 30));
   const limit = Math.max(1, Math.min(5000, Number(url.searchParams.get("limit")) || 2000));
 
   try {
-    // Discover the schema of `events`
-    const { results: cols = [] } = await env.cmg_db
-      .prepare(`PRAGMA table_info('events')`)
-      .all();
+    if (!db) throw new Error("env.cmg_db is undefined. Check Pages → Settings → Bindings.");
 
+    const cols = await getTableColumns(db, "events");
     if (!cols.length) {
-      return new Response(`error,${JSON.stringify("Table 'events' not found")}`, { status: 500 });
+      return new Response(`error,"Table 'events' not found"`, { status: 404 });
     }
 
-    const columnNames = new Set(cols.map(c => c.name));
+    // pick likely columns, include only those that exist
+    const preferredOrder = ["id","user_id","mode","type","name","title","payload","content","created_at"];
+    const { selectSQL, header } = buildSelectPieces(cols, preferredOrder);
 
-    const required = ["id", "user_id", "type", "created_at"].filter(c => columnNames.has(c));
-    const optionalsOrder = ["payload", "tags", "title"]; // nice-to-have, include if present
-    const optionals = optionalsOrder.filter(c => columnNames.has(c));
-
-    const selectPieces = [];
-    const header = [];
-
-    for (const c of required) {
-      // shorten payload in required if it happens to be there (unlikely)
-      if (c === "payload") {
-        selectPieces.push(`substr(payload, 1, 2000) AS payload`);
-      } else {
-        selectPieces.push(c);
-      }
-      header.push(c);
-    }
-
-    for (const c of optionals) {
-      if (c === "payload") {
-        selectPieces.push(`substr(payload, 1, 2000) AS payload`);
-      } else {
-        selectPieces.push(c);
-      }
-      header.push(c);
-    }
-
-    if (!selectPieces.length) {
-      const allCols = cols.map(c => c.name);
-      selectPieces.push(allCols.join(", "));
-      header.push(...allCols);
-    }
-
-    const hasCreatedAt = columnNames.has("created_at");
-    const where  = hasCreatedAt ? `WHERE created_at >= DATE('now', ?1)` : "";
-    const order  = hasCreatedAt ? `created_at` : `rowid`;
-
-    const sql = `
-      SELECT ${selectPieces.join(", ")}
-      FROM events
-      ${where}
-      ORDER BY ${order} DESC
-      LIMIT ?${hasCreatedAt ? "2" : "1"};
-    `.trim();
-
+    const hasCreatedAt = cols.includes("created_at");
+    const whereSQL = hasCreatedAt ? `WHERE created_at >= DATE('now', ?1)` : ``;
     const params = hasCreatedAt ? [`-${days} days`, limit] : [limit];
 
-    const { results = [] } = await env.cmg_db.prepare(sql).bind(...params).all();
+    const sql = `
+      SELECT ${selectSQL}
+      FROM events
+      ${whereSQL}
+      ORDER BY rowid DESC
+      LIMIT ?${hasCreatedAt ? 2 : 1};
+    `;
 
-    if (!header.length && results[0]) {
-      header.push(...Object.keys(results[0]));
-    }
+    const { results = [] } = await db.prepare(sql).bind(...params).all();
 
     const rows = [toCSVRow(header)];
     for (const r of results) rows.push(toCSVRow(header.map(h => r[h])));
@@ -89,6 +78,6 @@ export async function onRequestGet({ env, request }) {
       },
     });
   } catch (err) {
-    return new Response(`error,${JSON.stringify(String(err))}`, { status: 500 });
+    return new Response(`error,${JSON.stringify(String(err && err.message || err))}`, { status: 500 });
   }
 }
