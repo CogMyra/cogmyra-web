@@ -1,4 +1,5 @@
 // GET /api/metrics/export/artifacts.csv
+
 function toCSVRow(values) {
   return values
     .map((v) => {
@@ -9,72 +10,65 @@ function toCSVRow(values) {
     .join(",");
 }
 
+async function getTableColumns(db, table) {
+  const { results = [] } = await db.prepare(`PRAGMA table_info('${table}')`).all();
+  return results.map(r => r.name);
+}
+
+function buildSelectPieces(existing, wantedInOrder) {
+  const have = new Set(existing);
+  const pieces = [];
+  const header = [];
+
+  for (const col of wantedInOrder) {
+    if (!have.has(col)) continue;
+    if (col === "content" || col === "payload") {
+      pieces.push(`substr(${col}, 1, 2000) AS ${col}`);
+    } else {
+      pieces.push(col);
+    }
+    header.push(col);
+  }
+
+  // if nothing matched, fall back to selecting whatever exists
+  if (pieces.length === 0) {
+    pieces.push(existing.join(", "));
+    header.push(...existing);
+  }
+
+  return { selectSQL: pieces.join(", "), header };
+}
+
 export async function onRequestGet({ env, request }) {
+  const db = env.cmg_db;                 // <-- bound name in Cloudflare Pages
   const url = new URL(request.url);
   const days  = Math.max(1, Math.min(90,  Number(url.searchParams.get("days"))  || 30));
   const limit = Math.max(1, Math.min(5000, Number(url.searchParams.get("limit")) || 2000));
 
   try {
-    // Discover the schema of `artifacts`
-    const { results: cols = [] } = await env.cmg_db
-      .prepare(`PRAGMA table_info('artifacts')`)
-      .all();
-
+    // ensure table exists & discover columns
+    const cols = await getTableColumns(db, "artifacts");
     if (!cols.length) {
-      return new Response(`error,${JSON.stringify("Table 'artifacts' not found")}`, { status: 500 });
+      return new Response(`error,"Table 'artifacts' not found"`, { status: 404 });
     }
 
-    const columnNames = new Set(cols.map(c => c.name));
+    // include only columns that actually exist (order is our preference)
+    const preferredOrder = ["id","user_id","type","title","content","created_at","tags"];
+    const { selectSQL, header } = buildSelectPieces(cols, preferredOrder);
 
-    // Columns we prefer to include, if present
-    const required = ["id", "user_id", "created_at"].filter(c => columnNames.has(c));
-    const optionalOrder = ["type", "title", "tags", "payload", "content"]; // include only if present
-    const optionals = optionalOrder.filter(c => columnNames.has(c));
-
-    // Build SELECT list, shortening large text columns if they exist
-    const selectPieces = [];
-    const header = [];
-
-    for (const c of required) {
-      selectPieces.push(c);
-      header.push(c);
-    }
-    for (const c of optionals) {
-      if (c === "payload" || c === "content") {
-        selectPieces.push(`substr(${c}, 1, 2000) AS ${c}`);
-      } else {
-        selectPieces.push(c);
-      }
-      header.push(c);
-    }
-
-    // If nothing from the preferred list exists, fall back to all columns
-    if (!selectPieces.length) {
-      const allCols = cols.map(c => c.name);
-      selectPieces.push(allCols.join(", "));
-      header.push(...allCols);
-    }
-
-    const hasCreatedAt = columnNames.has("created_at");
-    const where  = hasCreatedAt ? `WHERE created_at >= DATE('now', ?1)` : "";
-    const order  = hasCreatedAt ? `created_at` : `rowid`; // fall back to rowid if created_at not present
-
-    const sql = `
-      SELECT ${selectPieces.join(", ")}
-      FROM artifacts
-      ${where}
-      ORDER BY ${order} DESC
-      LIMIT ?${hasCreatedAt ? "2" : "1"};
-    `.trim();
-
+    const hasCreatedAt = cols.includes("created_at");
+    const whereSQL = hasCreatedAt ? `WHERE created_at >= DATE('now', ?1)` : ``;
     const params = hasCreatedAt ? [`-${days} days`, limit] : [limit];
 
-    const { results = [] } = await env.cmg_db.prepare(sql).bind(...params).all();
+    const sql = `
+      SELECT ${selectSQL}
+      FROM artifacts
+      ${whereSQL}
+      ORDER BY rowid DESC
+      LIMIT ?${hasCreatedAt ? 2 : 1};
+    `;
 
-    // If header is empty (extreme fallback), derive from first row
-    if (!header.length && results[0]) {
-      header.push(...Object.keys(results[0]));
-    }
+    const { results = [] } = await db.prepare(sql).bind(...params).all();
 
     const rows = [toCSVRow(header)];
     for (const r of results) rows.push(toCSVRow(header.map(h => r[h])));
@@ -87,6 +81,6 @@ export async function onRequestGet({ env, request }) {
       },
     });
   } catch (err) {
-    return new Response(`error,${JSON.stringify(String(err))}`, { status: 500 });
+    return new Response(`error,${JSON.stringify(String(err && err.message || err))}`, { status: 500 });
   }
 }
