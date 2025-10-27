@@ -1,28 +1,32 @@
-import React, { useState } from 'react';
-import { apiFetch } from './lib/api';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Chat from "./pages/Chat";
+import DebugPage from "./pages/DebugPage";
+import Admin from "./Admin";
 
 function App() {
-  const [reply, setReply] = useState<string>('');
-
-  const handleSend = async () => {
-    try {
-      const res = await apiFetch('/health');
-      const data = await res.json();
-      setReply(JSON.stringify(data));
-    } catch (err) {
-      setReply('Error: ' + (err as Error).message);
-    }
-  };
-
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-      <h1>CogMyra — Private Beta</h1>
-      <input type="text" placeholder="Ask something…" />
-      <button onClick={handleSend}>Send</button>
-      <div>
-        <strong>Reply:</strong> {reply}
+    <Router>
+      <div className="min-h-screen flex flex-col">
+        {/* Skip link target */}
+        <header className="sr-only">
+          <h1>CogMyra Application</h1>
+        </header>
+
+        {/* Main content area with landmark */}
+        <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
+          <Routes>
+            <Route path="/" element={<Chat />} />
+            <Route path="/debug" element={<DebugPage />} />
+            <Route path="/admin" element={<Admin />} />
+          </Routes>
+        </main>
+
+        <footer className="p-4 text-center text-sm text-gray-500">
+          © {new Date().getFullYear()} CogMyra — All rights reserved.
+        </footer>
       </div>
-    </div>
+    </Router>
   );
 }
 
