@@ -137,3 +137,36 @@ small,.muted      { @apply text-gray-600; }
   h1,h2,h3,h4,h5,h6 { @apply text-gray-100; }
   small,.muted      { @apply text-gray-400; }
 }
+
+/* ===============================
+   Print styles (clean PDF output)
+   =============================== */
+@media print {
+  @page { margin: 12mm; } /* tidy PDF margins */
+
+  html, body { background: #fff !important; color: #000 !important; }
+  nav, header, footer, .print-hidden { display: none !important; }
+
+  /* Remove chrome that wastes ink / breaks layout */
+  .card, .shadow, .shadow-sm, .shadow-md, .shadow-lg {
+    box-shadow: none !important;
+  }
+  .border, .border-gray-200, .border-gray-300 { border: none !important; }
+
+  /* Avoid chopped blocks across pages */
+  .no-break, .result-block, .card { break-inside: avoid; page-break-inside: avoid; }
+
+  /* Long code/outputs wrap nicely in PDF */
+  pre, code { white-space: pre-wrap; word-break: break-word; }
+
+  /* Show link targets in print so readers can visit them */
+  a[href^="http"]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+  }
+}
+
+/* Helpers you can use in markup */
+.print-only { display: none; }
+@media print { .print-only { display: block; } }
+.page-break { page-break-after: always; }
