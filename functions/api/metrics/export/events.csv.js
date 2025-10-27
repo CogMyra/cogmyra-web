@@ -30,7 +30,7 @@ export async function onRequestGet({ env, request }) {
   const params = [`-${days} days`, limit];
 
   try {
-    const { results = [] } = await env.CMG_DB.prepare(sql).bind(...params).all();
+    const { results = [] } = await env.cmg_db.prepare(sql).bind(...params).all();
     const header = ["id","user_id","type","payload","created_at"];
     const rows = [header.join(",")];
     for (const r of results) rows.push(toCSVRow([r.id, r.user_id, r.type, r.payload, r.created_at]));
