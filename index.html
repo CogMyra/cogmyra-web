@@ -9,8 +9,9 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/favicon.svg" />
   <meta name="theme-color" content="#0b1220" />
+  <meta name="color-scheme" content="light dark" />
 
-  <!-- Open Graph (Facebook, LinkedIn, etc.) -->
+  <!-- Open Graph -->
   <meta property="og:title" content="CogMyra — Your Personalized AI Learning Coach" />
   <meta property="og:description" content="Learn faster with clear explanations, practice, and feedback that adapts to you." />
   <meta property="og:type" content="website" />
@@ -24,6 +25,9 @@
   <meta name="twitter:image" content="https://cogmyra.com/vite.svg" />
 </head>
 <body>
-  <div id="app"></div>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <div id="root"></div>
+  <!-- If your entry file is main.tsx, change the path accordingly -->
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
