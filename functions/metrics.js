@@ -1,10 +1,14 @@
 // functions/api/metrics.js
-// Cloudflare Pages Function: GET /api/metrics/summary
-// Requires a D1 binding named `cmg_db` in Pages settings
+// Route: GET /api/metrics
+// Requires a D1 binding named `cmg_db` in Cloudflare Pages → Settings → Bindings
 
-export async function onRequestGet(context) {
-  const { env } = context;
+export async function onRequestGet({ env }) {
+  // Surface binding misconfig quickly
+  if (!env.cmg_db) {
+    return json({ error: "Missing D1 binding 'cmg_db'" }, 500);
+  }
 
+  // Helper to run a query and return array results safely
   async function q(sql, ...params) {
     const stmt = env.cmg_db.prepare(sql);
     const bound = params.length ? stmt.bind(...params) : stmt;
@@ -13,6 +17,7 @@ export async function onRequestGet(context) {
   }
 
   try {
+    // 1) Daily summary (dau + total events), last 14 days
     const daily = await q(`
       SELECT
         date(created_at) AS date,
@@ -24,6 +29,7 @@ export async function onRequestGet(context) {
       LIMIT 14
     `);
 
+    // 2) Top modes from JSON payload (where present)
     const topModes = await q(`
       SELECT
         json_extract(payload, '$.mode') AS mode,
@@ -35,6 +41,7 @@ export async function onRequestGet(context) {
       LIMIT 10
     `);
 
+    // 3) Most visited paths
     const topPaths = await q(`
       SELECT
         path,
@@ -46,6 +53,7 @@ export async function onRequestGet(context) {
       LIMIT 10
     `);
 
+    // Shape stable API
     const body = {
       daily_summary: daily.map(r => ({
         date: r.date,
@@ -63,22 +71,25 @@ export async function onRequestGet(context) {
       generated_at: new Date().toISOString(),
     };
 
-    return new Response(JSON.stringify(body), {
-      status: 200,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "access-control-allow-origin": "*",
-      },
+    return json(body, 200, {
+      "cache-control": "no-store",
+      "access-control-allow-origin": "*",
     });
   } catch (err) {
-    const problem = {
-      error: "metrics_failed",
-      message: err?.message || String(err),
-    };
-    return new Response(JSON.stringify(problem), {
-      status: 500,
-      headers: { "content-type": "application/json; charset=utf-8" },
-    });
+    return json(
+      { error: "metrics_failed", message: err?.message || String(err) },
+      500
+    );
   }
+}
+
+/* ---------- tiny helper ---------- */
+function json(data, status = 200, extra = {}) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      ...extra,
+    },
+  });
 }
