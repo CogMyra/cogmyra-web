@@ -1,16 +1,21 @@
 // functions/api/events.js
-// Accepts JSON object OR array of events and stores into D1 `events` table.
+// Accepts JSON object OR array of events and stores into D1 `events`.
 // Each event: { type, path?, payload? (object), user_id? (string), ts? (ISO) }
 
 export async function onRequestPost({ request, env }) {
-  const json = (body, status = 200, extra = {}) => new Response(
-    JSON.stringify(body),
-    { status, headers: { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*", ...extra } }
-  );
+  const json = (body, status = 200, extra = {}) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "access-control-allow-origin": "*",
+        ...extra,
+      },
+    });
 
   if (!env.cmg_db) return json({ error: "Missing D1 binding 'cmg_db'" }, 500);
 
-  // CORS preflight
+  // CORS preflight support
   if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
@@ -30,43 +35,40 @@ export async function onRequestPost({ request, env }) {
     return json({ error: "Invalid JSON" }, 400);
   }
 
-  const events = Array.isArray(payload) ? payload : [payload];
-  if (!events.length) return json({ error: "Empty payload" }, 400);
+  const list = Array.isArray(payload) ? payload : [payload];
+  if (!list.length) return json({ error: "Empty payload" }, 400);
 
-  const ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "";
-  const userAgent = request.headers.get("user-agent") || "";
+  const ip = request.headers.get("cf-connecting-ip") ||
+             request.headers.get("x-forwarded-for") || "";
+  const ua = request.headers.get("user-agent") || "";
 
-  // Validate + normalize
   const rows = [];
-  for (const ev of events) {
+  for (const ev of list) {
     const type = String(ev?.type || "").trim();
     if (!type) continue;
 
-    const row = {
+    rows.push({
       id: crypto.randomUUID(),
       user_id: String(ev?.user_id || "").slice(0, 128) || null,
       type,
       path: String(ev?.path || "").slice(0, 512) || null,
       ip,
-      user_agent: userAgent.slice(0, 1024),
+      user_agent: ua.slice(0, 1024),
       payload: ev?.payload ? JSON.stringify(ev.payload).slice(0, 8000) : null,
       ts: String(ev?.ts || new Date().toISOString()),
       created_at: new Date().toISOString(),
-    };
-    rows.push(row);
+    });
   }
 
   if (!rows.length) return json({ error: "No valid events" }, 400);
 
-  // Insert (in a transaction)
-  const db = env.cmg_db;
   const sql = `
     INSERT INTO events (id, user_id, type, path, ip, user_agent, payload, ts, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   try {
-    const tx = db.transaction(async (d1) => {
+    const tx = env.cmg_db.transaction(async (d1) => {
       for (const r of rows) {
         await d1.prepare(sql).bind(
           r.id, r.user_id, r.type, r.path, r.ip, r.user_agent, r.payload, r.ts, r.created_at
