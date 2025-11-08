@@ -24,15 +24,18 @@
   <meta name="twitter:description" content="Learn faster with clear explanations, practice, and feedback that adapts to you." />
   <meta name="twitter:image" content="https://cogmyra.com/vite.svg" />
 </head>
-<script type="module" src="/eventLogger.js"></script>
 <body>
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
   <div id="root"></div>
 
-  <!-- NEW: polite live region used by announce() in src/lib/a11y.js -->
+  <!-- Live region used by announce() in src/lib/a11y.js -->
   <div id="a11y-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 
+  <!-- ✅ Load global front-end event logger -->
+  <script type="module" src="/eventLogger.js"></script>
+
+  <!-- Optional: your unbuilt React entry (can stay for now) -->
   <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
