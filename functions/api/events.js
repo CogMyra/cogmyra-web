@@ -1,5 +1,5 @@
 // functions/api/events.js
-// POST /api/events  -> writes rows into D1 `events`
+// POST /api/events  → writes rows into D1 `events`
 // Each event: { type, path?, payload?, user_id?, ts? }
 
 function json(body, status = 200, extra = {}) {
@@ -55,12 +55,16 @@ export async function onRequestPost({ request, env }) {
 
     rows.push({
       id: crypto.randomUUID(),
-      user_id: ev?.user_id ? String(ev.user_id).slice(0, 128) : null,
+      // Default user_id to "anon" to satisfy NOT NULL schema
+      user_id: String(ev?.user_id ?? "anon").slice(0, 128),
       type,
       path: ev?.path ? String(ev.path).slice(0, 512) : null,
       ip,
       user_agent: ua.slice(0, 1024),
-      payload: ev?.payload ? JSON.stringify(ev.payload).slice(0, 8000) : null,
+      payload:
+        ev?.payload != null
+          ? JSON.stringify(ev.payload).slice(0, 8000)
+          : null,
       ts: String(ev?.ts || new Date().toISOString()),
       created_at: new Date().toISOString(),
     });
