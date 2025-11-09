@@ -1,59 +1,55 @@
 // functions/uptime.js
-// GET handler (manual) + scheduled handler (cron)
+// Works two ways:
+// 1) Scheduled by Pages Cron (*/5 in _routes.json)
+// 2) Manual GET at /uptime?test=1 for quick verification
 
-const TARGET = "https://cogmyra-web.pages.dev/api/ping";
-
-async function runCheck(env) {
+async function runPing(env) {
+  const url = "https://cogmyra-web.pages.dev/api/ping";
   const ts = new Date().toISOString();
-  let status = 0, ok = false, errMsg = null;
+  let ok = false, status = 0, errMsg = null;
 
   try {
-    const res = await fetch(TARGET, { cf: { cacheTtl: 0, cacheEverything: false } });
+    const res = await fetch(url, { cf: { cacheTtl: 0 } });
     status = res.status;
     ok = res.ok;
   } catch (err) {
-    errMsg = String(err && err.message ? err.message : err);
+    errMsg = String(err);
   }
 
-  // log to console (shows in Observability logs)
-  console.log(`[Uptime] ${ts} -> ${TARGET} : ${status} ${ok ? "OK" : "FAIL"} ${errMsg ? `(${errMsg})` : ""}`);
-
-  // optional: persist to D1 if bound
+  // Best-effort log into D1 (ignore if binding missing)
   try {
-    if (env.cmg_db) {
-      await env.cmg_db
-        .prepare(
-          `INSERT INTO server_logs (id, type, path, payload, ts)
-           VALUES (?, ?, ?, ?, ?)`
-        )
-        .bind(
-          crypto.randomUUID(),
-          ok ? "uptime.ok" : "uptime.fail",
-          "/api/ping",
-          JSON.stringify({ status, ok, err: errMsg }),
-          ts
-        )
-        .run();
-    }
-  } catch (d1Err) {
-    console.log(`[Uptime] D1 insert error: ${d1Err}`);
-  }
+    await env.cmg_db?.prepare(
+      `INSERT INTO server_logs (id, type, path, payload, ts)
+       VALUES (?, ?, ?, ?, ?)`
+    )
+    .bind(
+      crypto.randomUUID(),
+      ok ? "uptime.ok" : "uptime.fail",
+      "/api/ping",
+      JSON.stringify({ status, ok, err: errMsg }),
+      ts
+    )
+    .run();
+  } catch (_) {}
 
-  return { ok, status, ts, err: errMsg };
+  const msg = `[uptime] ${ts} -> ${url} : ${ok ? "OK" : "FAIL"} ${status}`;
+  console.log(msg);
+
+  return { ok, status, ts, msg };
 }
 
-// ---- HTTP GET: /uptime (manual test) ----
-export async function onRequestGet({ env }) {
-  const result = await runCheck(env);
-  return new Response(JSON.stringify(result), {
-    headers: { "content-type": "application/json" },
-    status: result.ok ? 200 : 502,
-  });
-}
-
-// ---- Cron trigger (scheduled) ----
 export default {
-  async scheduled(_event, env, _ctx) {
-    await runCheck(env);
+  // Cron trigger handler (required for schedules in _routes.json)
+  async scheduled(event, env, ctx) {
+    await runPing(env);
+  },
+
+  // Manual GET so you can test in a browser (returns JSON)
+  async onRequestGet({ env }) {
+    const result = await runPing(env);
+    return new Response(JSON.stringify(result), {
+      status: result.ok ? 200 : 500,
+      headers: { "content-type": "application/json" }
+    });
   },
 };
