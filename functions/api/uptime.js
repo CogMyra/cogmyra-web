@@ -1,4 +1,7 @@
 // functions/api/uptime.js
+// Works two ways:
+// 1) Scheduled by Pages Cron (*/5 in _routes.json)
+// 2) Manual GET at /api/uptime?test=1 for quick verification
 
 const PING_URL = "https://cogmyra-web.pages.dev/api/ping";
 
@@ -32,19 +35,23 @@ async function runPing(env) {
       .run();
   } catch (_) {}
 
-  return { ok, status, ts };
+  const msg = `[uptime] ${ts} -> ${PING_URL} : ${ok ? "OK" : "FAIL"} ${status}`;
+  console.log(msg);
+
+  return { ok, status, ts, msg };
 }
 
-// Manual GET so you can hit /api/uptime?test=1
+// Manual GET so you can test in a browser (returns JSON)
 export async function onRequestGet({ env }) {
   const result = await runPing(env);
+
   return new Response(JSON.stringify(result), {
     status: result.ok ? 200 : 500,
-    headers: { "content-type": "application/json" }
+    headers: { "content-type": "application/json" },
   });
 }
 
-// Cron handler used by _routes.json
+// Cron handler (called because of /api/uptime schedule in _routes.json)
 export async function scheduled(event, env, ctx) {
-  await runPing(env);
+  ctx.waitUntil(runPing(env));
 }
