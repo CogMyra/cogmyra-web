@@ -1,6 +1,5 @@
 {
   "version": 1,
-  "content": "v2",
   "include": [
     "/api/*"
   ],
