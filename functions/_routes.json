@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "include": [
-    "/api/*",
-    "/uptime"
-  ],
+ "include": [
+  "/api/*",
+  "/uptime*"
+]
   "exclude": [],
   "schedules": [
     { "path": "/uptime", "cron": "*/5 * * * *" }
