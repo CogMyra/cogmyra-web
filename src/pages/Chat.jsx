@@ -1,6 +1,6 @@
 // src/pages/Chat.jsx
 import React, { useRef, useState } from "react";
-import { Field, FieldError, announce } from "../lib/a11y.js";
+import { FieldError } from "../lib/a11y.jsx";
 import ResultToolbar from "../components/ResultToolbar.jsx";
 
 /* Utility to make safe filenames from the prompt */
