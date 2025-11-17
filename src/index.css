@@ -4,25 +4,28 @@
 
 /* Global background + typography tweaks */
 body {
-  @apply bg-black text-slate-50 antialiased;
+  @apply antialiased;
 }
 
-/* Hero background using your palette (Onyx → Dark Slate Grey) */
+/* Hero background using your palette (Dark Slate Grey → Onyx) */
 .hero-bg {
-  background: radial-gradient(circle at top left, #26413C 0%, #03120E 45%, #000000 100%);
-}
-
-/* Pillar cards pulling subtle color tint from hero */
-.pillar-card {
-  @apply rounded-2xl bg-white/95 px-5 py-6 shadow-[0_18px_60px_rgba(0,0,0,0.18)];
-  background-image: linear-gradient(
-    145deg,
-    rgba(138, 176, 171, 0.08), /* Muted Teal */
-    rgba(62, 80, 91, 0.04)     /* Charcoal Blue */
+  background: radial-gradient(
+    circle at top left,
+    #26413c 0,
+    #03120e 45%,
+    #000000 100%
   );
 }
 
-/* Link styling fix for footer */
-footer a {
-  @apply text-slate-300 hover:text-white;
+/* Pillar cards that pull color from the top section */
+.pillar-card {
+  border-radius: 1rem; /* ~rounded-2xl */
+  padding: 1.5rem 1.25rem; /* ~py-6 px-5 */
+  background-color: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18);
+  background-image: linear-gradient(
+    145deg,
+    rgba(138, 176, 171, 0.08),
+    rgba(62, 80, 91, 0.02)
+  );
 }

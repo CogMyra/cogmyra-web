@@ -1,0 +1,123 @@
+                  className="text-sm font-medium text-slate-100/90 hover:text-slate-50"
+                >
+                  About CogMyra
+                </button>
+              </div>
+            </div>
+
+            {/* Right column – preview card */}
+            <div className="flex-1">
+              <div className="rounded-3xl border border-white/10 bg-[#050816]/90 p-6 shadow-[0_40px_120px_rgba(0,0,0,0.9)]">
+                <div className="mb-4 flex items-center justify-between text-xs font-medium tracking-[0.2em] text-slate-400 uppercase">
+                  <span>Preview</span>
+                  <span className="rounded-full border border-white/15 px-3 py-1 text-[0.65rem]">
+                    Student
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  {/* User bubble */}
+                  <div className="rounded-2xl border border-white/10 bg-[#050816] px-4 py-3 text-sm text-slate-100">
+                    <div className="mb-1 text-[0.65rem] uppercase tracking-[0.2em] text-slate-400">
+                      You
+                    </div>
+                    <p>Can you explain photosynthesis?</p>
+                  </div>
+
+                  {/* CogMyra bubble */}
+                  <div className="rounded-2xl border border-[#8AB0AB]/25 bg-[#26413C] px-4 py-3 text-sm text-slate-50">
+                    <div className="mb-1 text-[0.65rem] uppercase tracking-[0.2em] text-slate-300">
+                      CogMyra
+                    </div>
+                    <p>
+                      Think of leaves as tiny solar panels. They use sunlight,
+                      water, and carbon dioxide to make sugar for the plant and
+                      release oxygen for us to breathe. What part of that process
+                      would you like to zoom in on?
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex justify-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-500/70" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-500/70" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Pillars section */}
+        <section className="bg-[#E3ECE8] text-slate-900">
+          <div className="mx-auto max-w-6xl px-6 py-16">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
+              How CogMyra helps you learn
+            </h2>
+
+            <p className="mt-4 max-w-3xl text-sm sm:text-base text-slate-700">
+              One simple interface, three powerful pillars of support—for
+              students, teachers, and professionals. CogMyra is a collection of
+              world-class educators, not a search engine.
+            </p>
+
+            <div className="mt-10 grid gap-6 md:grid-cols-3">
+              {/* Students */}
+              <div className="pillar-card">
+                <h3 className="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
+                  For Students
+                </h3>
+                <p className="mt-3 text-sm text-slate-800">
+                  Build confidence, close gaps, and prepare for exams with a
+                  coach that remembers what you’ve already mastered and adapts
+                  to your pace.
+                </p>
+              </div>
+
+              {/* Educators */}
+              <div className="pillar-card">
+                <h3 className="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
+                  For Teachers
+                </h3>
+                <p className="mt-3 text-sm text-slate-800">
+                  Design lessons, scaffolds, and checks for understanding in
+                  minutes—without losing your identity or expertise as an
+                  educator.
+                </p>
+              </div>
+
+              {/* Professionals */}
+              <div className="pillar-card">
+                <h3 className="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
+                  For Professionals
+                </h3>
+                <p className="mt-3 text-sm text-slate-800">
+                  Learn new tools, frameworks, and skills through examples,
+                  role-plays, and practice that matches the real work you do.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 bg-[#020708] py-4 text-xs text-slate-400">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6">
+          <span>© {year} CogMyra. All rights reserved.</span>
+          <nav className="flex gap-4">
+            <a href="/guide" className="hover:text-slate-200">
+              Guide
+            </a>
+            <a href="/privacy" className="hover:text-slate-200">
+              Privacy
+            </a>
+            <a href="/contact" className="hover:text-slate-200">
+              Contact
+            </a>
+          </nav>
+        </div>
+      </footer>
+    </div>
+  );
+}
