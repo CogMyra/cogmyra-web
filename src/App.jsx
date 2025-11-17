@@ -9,7 +9,7 @@ export default function App() {
       <header className="border-b border-white/5 bg-[#03120E]/95">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="text-lg sm:text-xl tracking-[0.35em] font-semibold text-slate-50">
-            COGMYRA_
+            CogMyra_
           </div>
           <Link
             to="/guide"
