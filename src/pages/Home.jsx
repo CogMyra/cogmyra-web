@@ -11,9 +11,22 @@ export default function Home() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
 
           {/* Logo — corrected */}
-<div className="text-3xl font-semibold tracking-normal !normal-case text-slate-50">
+<div
+  className="
+    text-3xl
+    font-semibold
+    tracking-normal
+    text-slate-50
+    normal-case
+    !normal-case
+    !capitalize
+    !lowercase
+  "
+  style={{ textTransform: "none" }}
+>
   CogMyra_
 </div>
+
           {/* Top Right Button */}
           <a
             href="/guide"
