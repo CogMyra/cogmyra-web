@@ -1,8 +1,90 @@
-// ~/cogmyra-web/src/App.jsx
-import Chat from "./pages/Chat";
-// If you want to keep the debug page for later:
-// import DebugPage from "./pages/DebugPage";
+  );
+}
+
+function Pillars() {
+  return (
+    <section
+      id="about"
+      className="bg-[#E2ECEC] py-16 text-slate-900"
+    >
+      <div className="mx-auto max-w-6xl px-6">
+        <h2 className="text-2xl md:text-[1.9rem] font-semibold tracking-tight text-slate-900">
+          How CogMyra helps you learn
+        </h2>
+
+        <p className="mt-4 max-w-3xl text-sm md:text-base leading-relaxed text-slate-700">
+          One simple interface, three powerful pillars of support—for students,
+          educators, and professionals. CogMyra is a collection of world-class
+          educators, not a search engine.
+        </p>
+
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
+          {/* Students */}
+          <article className="pillar-card border-t-4 border-[#8AB0AB]">
+            <h3 className="text-xs font-semibold tracking-[0.22em] text-slate-500 uppercase">
+              For Students
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-slate-800">
+              Build confidence, close gaps, and prepare for exams with a coach
+              that remembers what you’ve already mastered and adapts to your
+              pace.
+            </p>
+          </article>
+
+          {/* Educators */}
+          <article className="pillar-card border-t-4 border-[#3E505B]">
+            <h3 className="text-xs font-semibold tracking-[0.22em] text-slate-500 uppercase">
+              For Educators
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-slate-800">
+              Design lessons, scaffolds, and checks for understanding in
+              minutes—without losing your identity or expertise as an educator.
+            </p>
+          </article>
+
+          {/* Professionals */}
+          <article className="pillar-card border-t-4 border-[#26413C]">
+            <h3 className="text-xs font-semibold tracking-[0.22em] text-slate-500 uppercase">
+              For Professionals
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-slate-800">
+              Learn new tools, frameworks, and skills through examples,
+              role-plays, and practice that matches the real work you do.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="bg-[#03120E] py-4 text-xs text-slate-400">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 sm:flex-row">
+        <div>© 2025 CogMyra. All rights reserved.</div>
+        <nav className="flex gap-4">
+          <a href="/guide" className="hover:text-slate-200">
+            Guide
+          </a>
+          <a href="/privacy" className="hover:text-slate-200">
+            Privacy
+          </a>
+          <a href="/contact" className="hover:text-slate-200">
+            Contact
+          </a>
+        </nav>
+      </div>
+    </footer>
+  );
+}
 
 export default function App() {
-  return <Chat />;
+  return (
+    <div className="min-h-screen bg-black text-slate-50">
+      <Hero />
+      <Pillars />
+      <Footer />
+    </div>
+  );
 }
