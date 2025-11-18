@@ -6,12 +6,12 @@ export default function GuidePage() {
     {
       role: "assistant",
       content:
-        "Hi, I’m CogMyra Guide. Tell me who you are (student, educator, or professional) and what you’re working on. I’ll tailor support just for you.",
+        "Hi, I’m CogMyra Guide. Tell me who you are (student, educator, or professional), what you’re working on, and what you need help with. I’ll tailor the path with you.",
     },
   ]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -20,15 +20,15 @@ export default function GuidePage() {
     const trimmed = input.trim();
     if (!trimmed || isSending) return;
 
-    // Add user message to the local list
     const userMessage = { role: "user", content: trimmed };
     const nextMessages = [...messages, userMessage];
+
+    // Update UI immediately
     setMessages(nextMessages);
     setInput("");
     setIsSending(true);
 
     try {
-      // Call your Pages Function at /api/chat
       const resp = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -41,7 +41,7 @@ export default function GuidePage() {
 
       const data = await resp.json();
 
-      // Pull the assistant reply from OpenAI-style payload
+      // Pull reply from OpenAI-style response
       const reply =
         data?.choices?.[0]?.message?.content ??
         "Sorry, I couldn’t generate a response just now.";
@@ -50,18 +50,18 @@ export default function GuidePage() {
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (err) {
-      console.error("Chat error", err);
+      console.error("GuidePage chat error:", err);
       setError(
         err?.message || "Something went wrong while contacting CogMyra Guide."
       );
 
-      // Optional: add a visible error message into the chat stream
+      // Optional: show a gentle error message in the stream
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
           content:
-            "I ran into a connection problem reaching the CogMyra engine. Please try again in a moment.",
+            "I hit a connection problem on my side. Let’s try that again in a moment.",
         },
       ]);
     } finally {
@@ -79,7 +79,7 @@ export default function GuidePage() {
         fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
-      {/* Left rail placeholder to roughly match your layout */}
+      {/* Left rail */}
       <aside
         style={{
           width: 260,
@@ -109,7 +109,7 @@ export default function GuidePage() {
             color: "#a0a6b5",
           }}
         >
-          History
+          Guide
         </div>
         <div
           style={{
@@ -130,7 +130,7 @@ export default function GuidePage() {
               backgroundColor: "#18c08f",
             }}
           />
-          Live
+          Online
         </div>
       </aside>
 
