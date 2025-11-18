@@ -1,10 +1,9 @@
 // src/pages/GuidePage.jsx
-import { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 
 export default function GuidePage() {
   const [messages, setMessages] = useState([
     {
-      id: "welcome",
       role: "assistant",
       content:
         "Hi, I’m CogMyra Guide. Tell me who you are (student, educator, or professional) and what you’re working on. I’ll tailor support just for you.",
@@ -12,253 +11,249 @@ export default function GuidePage() {
   ]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [typingText, setTypingText] = useState("");
-  const typingIntervalRef = useRef(null);
-  const messagesEndRef = useRef(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Auto-scroll
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
-  }, [messages, typingText]);
-
-  useEffect(() => {
-    return () => {
-      if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
-    };
-  }, []);
-
-  async function handleSubmit(e) {
+  const handleSend = async (e) => {
     e.preventDefault();
+    setError(null);
+
     const trimmed = input.trim();
     if (!trimmed || isSending) return;
 
-    const userMessage = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: trimmed,
-    };
-    setMessages((prev) => [...prev, userMessage]);
+    // Add user message to the local list
+    const userMessage = { role: "user", content: trimmed };
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
     setInput("");
     setIsSending(true);
 
-    if (typingIntervalRef.current) {
-      clearInterval(typingIntervalRef.current);
-      typingIntervalRef.current = null;
-    }
-    setTypingText("");
-
-    const history = [...messages, userMessage].map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
-
-    let replyText =
-      "I’m having trouble reaching the CogMyra engine right now. But I’m here—tell me more about your goals and context, and we’ll structure a path together.";
-
     try {
-const resp = await fetch("/api/chat", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    messages: [
-      ...messages,
-      { role: "user", content: input }
-    ]
-  })
-});
+      // Call your Pages Function at /api/chat
+      const resp = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: nextMessages }),
+      });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data && typeof data.reply === "string" && data.reply.trim().length > 0) {
-          replyText = data.reply;
-        }
-      } else {
-        console.error("Guide API error:", res.status, await res.text());
+      if (!resp.ok) {
+        throw new Error(`Chat API error: ${resp.status}`);
       }
+
+      const data = await resp.json();
+
+      // Pull the assistant reply from OpenAI-style payload
+      const reply =
+        data?.choices?.[0]?.message?.content ??
+        "Sorry, I couldn’t generate a response just now.";
+
+      const assistantMessage = { role: "assistant", content: reply };
+
+      setMessages((prev) => [...prev, assistantMessage]);
     } catch (err) {
-      console.error("Guide API fetch error:", err);
+      console.error("Chat error", err);
+      setError(
+        err?.message || "Something went wrong while contacting CogMyra Guide."
+      );
+
+      // Optional: add a visible error message into the chat stream
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "I ran into a connection problem reaching the CogMyra engine. Please try again in a moment.",
+        },
+      ]);
+    } finally {
+      setIsSending(false);
     }
-
-    startTypingAnimation(replyText);
-  }
-
-  function startTypingAnimation(fullText) {
-    if (typingIntervalRef.current) {
-      clearInterval(typingIntervalRef.current);
-      typingIntervalRef.current = null;
-    }
-
-    setTypingText("");
-    setIsSending(false);
-
-    let index = 0;
-    typingIntervalRef.current = setInterval(() => {
-      index += 1;
-      setTypingText(fullText.slice(0, index));
-
-      if (index >= fullText.length) {
-        clearInterval(typingIntervalRef.current);
-        typingIntervalRef.current = null;
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `assistant-${Date.now()}`,
-            role: "assistant",
-            content: fullText,
-          },
-        ]);
-        setTypingText("");
-      }
-    }, 18);
-  }
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#03120E] text-slate-50">
-      {/* Top nav */}
-      <header className="border-b border-white/5 bg-[#03120E]/95">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-<div className="text-sm sm:text-base tracking-[0.35em] font-semibold text-slate-200">
-  CogMyra_
-</div>
-<div className="flex items-center gap-3 text-xs sm:text-sm text-slate-200/80">
-  <a
-    href="/"
-    className="rounded-full border border-white/15 px-4 py-1.5 text-[11px] sm:text-xs font-medium text-slate-50/90 hover:bg-white/5 transition"
-  >
-    Back to Home
-  </a>
-</div>
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        backgroundColor: "#050608",
+        color: "#f5f5f5",
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      }}
+    >
+      {/* Left rail placeholder to roughly match your layout */}
+      <aside
+        style={{
+          width: 260,
+          borderRight: "1px solid #15171c",
+          padding: "20px",
+          boxSizing: "border-box",
+          backgroundColor: "#050608",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 20,
+            fontWeight: 600,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            marginBottom: 24,
+          }}
+        >
+          CogMyra_
         </div>
-      </header>
 
-      {/* Main layout */}
-      <div className="flex flex-1 min-h-0">
-        {/* Left sidebar */}
-        <aside className="hidden md:flex w-64 flex-col border-r border-white/10 bg-[#020B08]">
-          <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
-            <h2 className="text-xs font-semibold tracking-[0.18em] text-slate-300 uppercase">
-              HISTORY
-            </h2>
-            <span className="rounded-full bg-[#3E505B]/30 text-[10px] px-2 py-0.5 text-slate-100">
-              Live
-            </span>
-          </div>
+        <div
+          style={{
+            marginBottom: 16,
+            fontSize: 14,
+            fontWeight: 600,
+            color: "#a0a6b5",
+          }}
+        >
+          History
+        </div>
+        <div
+          style={{
+            fontSize: 13,
+            padding: "10px 12px",
+            borderRadius: 999,
+            backgroundColor: "#181b22",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              backgroundColor: "#18c08f",
+            }}
+          />
+          Live
+        </div>
+      </aside>
 
-          <div className="flex-1 overflow-y-auto px-4 py-3 text-xs text-slate-300/80 space-y-4">
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                TODAY
-              </div>
-              <div className="mt-2 space-y-1.5">
-                <div className="rounded-lg bg-white/5 px-3 py-2 text-[11px] leading-snug border border-white/10">
-                  Current CogMyra Guide session
-                </div>
-              </div>
-            </div>
+      {/* Main chat area */}
+      <main
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          backgroundColor: "#0a0c11",
+        }}
+      >
+        {/* Header */}
+        <header
+          style={{
+            padding: "16px 32px",
+            borderBottom: "1px solid #15171c",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <span style={{ fontWeight: 600, fontSize: 16 }}>CogMyra Guide</span>
+          <span
+            style={{
+              fontSize: 12,
+              padding: "4px 10px",
+              borderRadius: 999,
+              backgroundColor: "#181b22",
+              color: "#b4bac8",
+            }}
+          >
+            Students · Educators · Professionals
+          </span>
+        </header>
 
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                COMING SOON
-              </div>
-              <p className="mt-1 text-[11px] text-slate-400">
-                Multiple saved sessions, pinned threads, and structured learning paths.
-              </p>
-            </div>
-          </div>
-        </aside>
-
-        {/* Right side */}
-        <main className="flex-1 bg-[#F5F5F2] text-slate-900 flex flex-col">
-          {/* Top info bar (minimal, with color accents) */}
-          <div className="border-b border-slate-200 bg-[#F5F5F2]/95">
-            <div className="mx-auto max-w-4xl px-4 sm:px-8 py-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <h1 className="text-sm font-semibold text-[#3E505B]">
-                  CogMyra Guide
-                </h1>
-                <span className="hidden sm:inline rounded-full bg-[#8AB0AB]/25 px-3 py-1 text-[11px] font-medium text-[#3E505B]">
-                  Students • Educators • Professionals
-                </span>
-              </div>
-
-              <span className="rounded-full border border-[#8AB0AB]/60 bg-[#8AB0AB]/15 px-2.5 py-0.5 text-[10px] font-semibold tracking-[0.18em] text-[#3E505B] uppercase">
-                Beta
-              </span>
-            </div>
-          </div>
-
-          {/* Conversation area */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-4xl px-4 sm:px-8 py-6 space-y-4">
-              {messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={
-                    m.role === "user" ? "flex justify-end" : "flex justify-start"
-                  }
-                >
-                  <div
-                    className={
-                      m.role === "user"
-                        ? "max-w-[80%] rounded-2xl bg-[#3E505B] px-4 py-3 text-sm text-slate-50 shadow-sm"
-                        : "max-w-[80%] rounded-2xl bg-white px-4 py-3 text-sm text-slate-900 shadow-sm border border-slate-200/80"
-                    }
-                  >
-                    <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
-                  </div>
-                </div>
-              ))}
-
-              {typingText && (
-                <div className="flex justify-start">
-                  <div className="max-w-[80%] rounded-2xl bg-white px-4 py-3 text-sm text-slate-900 shadow-sm border border-slate-200/80">
-                    <p className="whitespace-pre-wrap leading-relaxed">
-                      {typingText}
-                      <span className="inline-block animate-pulse">▌</span>
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-
-          {/* Input area */}
-          <div className="border-t border-slate-200 bg-[#F5F5F2]/98">
-            <form
-              onSubmit={handleSubmit}
-              className="mx-auto max-w-4xl px-4 sm:px-8 py-4 flex flex-col gap-3 sm:flex-row sm:items-end"
+        {/* Messages */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "24px 32px",
+            boxSizing: "border-box",
+          }}
+        >
+          {messages.map((m, idx) => (
+            <div
+              key={idx}
+              style={{
+                display: "flex",
+                justifyContent: m.role === "user" ? "flex-end" : "flex-start",
+                marginBottom: 16,
+              }}
             >
-
-<div className="flex-1">
-  <textarea
-    rows={2}
-    className="w-full resize-none rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#8AB0AB] focus:border-[#8AB0AB]"
-    placeholder="Describe who you are, what you’re working on, and what you need help with…"
-    value={input}
-    onChange={(e) => setInput(e.target.value)}
-  />
-</div>
-              <div className="flex flex-row sm:flex-col gap-2 sm:w-32">
-                <button
-                  type="submit"
-                  disabled={!input.trim() || isSending}
-                  className="inline-flex justify-center items-center rounded-2xl bg-[#3E505B] px-4 py-2 text-sm font-semibold text-slate-50 shadow-md transition hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSending ? "Thinking…" : "Send"}
-                </button>
-                <div className="text-[10px] text-slate-500 text-left sm:text-right">
-                  Powered by CogMyra Guide (beta)
-                </div>
+              <div
+                style={{
+                  maxWidth: "70%",
+                  padding: "12px 16px",
+                  borderRadius: 16,
+                  backgroundColor:
+                    m.role === "user" ? "#273043" : "#151924",
+                  color: "#f5f5f5",
+                  fontSize: 14,
+                  lineHeight: 1.5,
+                }}
+              >
+                {m.content}
               </div>
-            </form>
-          </div>
-        </main>
-      </div>
+            </div>
+          ))}
+          {error && (
+            <div style={{ color: "#ff6b6b", fontSize: 13, marginTop: 8 }}>
+              {error}
+            </div>
+          )}
+        </div>
+
+        {/* Input */}
+        <form
+          onSubmit={handleSend}
+          style={{
+            padding: "16px 32px 24px",
+            borderTop: "1px solid #15171c",
+            display: "flex",
+            gap: 12,
+            boxSizing: "border-box",
+          }}
+        >
+          <input
+            type="text"
+            placeholder="Describe who you are, what you’re working on, and what you need help with…"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            style={{
+              flex: 1,
+              borderRadius: 999,
+              border: "1px solid #252938",
+              padding: "10px 16px",
+              fontSize: 14,
+              backgroundColor: "#0f1118",
+              color: "#f5f5f5",
+              outline: "none",
+            }}
+          />
+          <button
+            type="submit"
+            disabled={isSending || !input.trim()}
+            style={{
+              borderRadius: 999,
+              border: "none",
+              padding: "10px 24px",
+              fontSize: 14,
+              fontWeight: 600,
+              backgroundColor: isSending || !input.trim() ? "#273043" : "#f5f5f5",
+              color: isSending || !input.trim() ? "#80879a" : "#050608",
+              cursor:
+                isSending || !input.trim() ? "not-allowed" : "pointer",
+            }}
+          >
+            {isSending ? "Thinking…" : "Send"}
+          </button>
+        </form>
+      </main>
     </div>
   );
 }
