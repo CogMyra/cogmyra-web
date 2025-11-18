@@ -4,7 +4,6 @@ export async function onRequestPost(context) {
     const body = await request.json();
     const userMessages = body.messages || [];
 
-    // --- API KEY CHECK -------------------------------------------------------
     const apiKey = env.OPENAI_API_KEY;
     if (!apiKey) {
       return new Response(
@@ -34,20 +33,17 @@ CogMyra Guide configuration for tone, scaffolding, and instructional flow.
 
     const model = env.MODEL || "gpt-4o";
 
-    const completion = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-        }),
-      }
-    );
+    const completion = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+      }),
+    });
 
     const result = await completion.json();
 
@@ -65,6 +61,7 @@ CogMyra Guide configuration for tone, scaffolding, and instructional flow.
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
+
   } catch (err) {
     return new Response(
       JSON.stringify({ error: err.message || "Unknown server error" }),
