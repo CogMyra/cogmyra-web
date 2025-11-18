@@ -1,90 +1,257 @@
-  );
-}
+Last login: Mon Nov 17 14:32:42 on ttys011
 
-function Pillars() {
-  return (
-    <section
-      id="about"
-      className="bg-[#E2ECEC] py-16 text-slate-900"
-    >
-      <div className="mx-auto max-w-6xl px-6">
-        <h2 className="text-2xl md:text-[1.9rem] font-semibold tracking-tight text-slate-900">
-          How CogMyra helps you learn
-        </h2>
+The default interactive shell is now zsh.
+To update your account to use zsh, please run `chsh -s /bin/zsh`.
+For more details, please visit https://support.apple.com/kb/HT208050.
+macbookpro:cogmyra-web MichaelFAngotti$ cd ~/cogmyra-web
+macbookpro:cogmyra-web MichaelFAngotti$ nano src/App.jsx
 
-        <p className="mt-4 max-w-3xl text-sm md:text-base leading-relaxed text-slate-700">
-          One simple interface, three powerful pillars of support—for students,
-          educators, and professionals. CogMyra is a collection of world-class
-          educators, not a search engine.
-        </p>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {/* Students */}
-          <article className="pillar-card border-t-4 border-[#8AB0AB]">
-            <h3 className="text-xs font-semibold tracking-[0.22em] text-slate-500 uppercase">
-              For Students
-            </h3>
-            <p className="mt-3 text-sm leading-relaxed text-slate-800">
-              Build confidence, close gaps, and prepare for exams with a coach
-              that remembers what you’ve already mastered and adapts to your
-              pace.
-            </p>
-          </article>
 
-          {/* Educators */}
-          <article className="pillar-card border-t-4 border-[#3E505B]">
-            <h3 className="text-xs font-semibold tracking-[0.22em] text-slate-500 uppercase">
-              For Educators
-            </h3>
-            <p className="mt-3 text-sm leading-relaxed text-slate-800">
-              Design lessons, scaffolds, and checks for understanding in
-              minutes—without losing your identity or expertise as an educator.
-            </p>
-          </article>
 
-          {/* Professionals */}
-          <article className="pillar-card border-t-4 border-[#26413C]">
-            <h3 className="text-xs font-semibold tracking-[0.22em] text-slate-500 uppercase">
-              For Professionals
-            </h3>
-            <p className="mt-3 text-sm leading-relaxed text-slate-800">
-              Learn new tools, frameworks, and skills through examples,
-              role-plays, and practice that matches the real work you do.
-            </p>
-          </article>
-        </div>
-      </div>
-    </section>
-  );
-}
 
-function Footer() {
-  return (
-    <footer className="bg-[#03120E] py-4 text-xs text-slate-400">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 sm:flex-row">
-        <div>© 2025 CogMyra. All rights reserved.</div>
-        <nav className="flex gap-4">
-          <a href="/guide" className="hover:text-slate-200">
-            Guide
-          </a>
-          <a href="/privacy" className="hover:text-slate-200">
-            Privacy
-          </a>
-          <a href="/contact" className="hover:text-slate-200">
-            Contact
-          </a>
-        </nav>
-      </div>
-    </footer>
-  );
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  UW PICO 5.09                               File: src/App.jsx                                  
+
+import { Link } from "react-router-dom";
 
 export default function App() {
+  const year = new Date().getFullYear();
+
   return (
-    <div className="min-h-screen bg-black text-slate-50">
-      <Hero />
-      <Pillars />
-      <Footer />
+    <div className="min-h-screen flex flex-col bg-[#03120E] text-slate-50">
+      {/* Top nav */}
+      <header className="border-b border-white/5 bg-[#03120E]/95">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <div className="text-lg sm:text-xl tracking-[0.35em] font-semibold text-slate-50">
+            COGMYRA_
+          </div>
+          <Link
+            to="/guide"
+            className="rounded-full bg-[#8AB0AB] px-5 py-2 text-sm font-medium text-[#03120E] s$
+          >
+            Try the Guide
+          </Link>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <main className="flex-1 bg-gradient-to-br from-[#26413C] via-[#03120E] to-black">
+        <section className="hero-bg">
+          <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-12 lg:flex-row lg:item$
+            {/* Left column: copy */}
+            <div className="max-w-xl">
+              <div className="inline-flex items-center rounded-full border border-white/10 bg-b$
+                LEARNING, FASTER
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-tight">
+                <span className="block text-slate-50">Your Personalized</span>
+
+^G Get Help     ^O WriteOut     ^R Read File    ^Y Prev Pg      ^K Cut Text     ^C Cur Pos      
+^X Exit         ^J Justify      ^W Where is     ^V Next Pg      ^U UnCut Text   ^T To Spell    
+import { Link } from "react-router-dom";
+
+export default function App() {
+  const year = new Date().getFullYear();
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#03120E] text-slate-50">
+      {/* Top nav */}
+      <header className="border-b border-white/5 bg-[#03120E]/95">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <div className="text-lg sm:text-xl tracking-[0.35em] font-semibold text-slate-50">
+            COGMYRA_
+          </div>
+          <Link
+            to="/guide"
+            className="rounded-full bg-[#8AB0AB] px-5 py-2 text-sm font-medium text-[#03120E] shadow-lg hover:opacity-90 transition"
+          >
+            Try the Guide
+          </Link>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <main className="flex-1 bg-gradient-to-br from-[#26413C] via-[#03120E] to-black">
+        <section className="hero-bg">
+          <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-12 lg:flex-row lg:items-center lg:py-20">
+            {/* Left column: copy */}
+            <div className="max-w-xl">
+              <div className="inline-flex items-center rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs font-medium tracking-wide text-slate-100 mb-6">
+                LEARNING, FASTER
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-tight">
+                <span className="block text-slate-50">Your Personalized</span>
+                <span className="block text-[#8AB0AB]">AI Learning Coach</span>
+              </h1>
+
+              <p className="mt-6 text-base md:text-lg text-slate-200/85 max-w-xl">
+                Whether you’re a student building confidence, a teacher
+                amplifying your classroom, or a professional leveling up—CogMyra
+                understands how you learn and delivers clear explanations,
+                targeted practice, and adaptive feedback designed for real
+                learning.
+              </p>
+
+              <div className="mt-7 flex flex-wrap items-center gap-4">
+                <Link
+                  to="/guide"
+                  className="inline-flex items-center rounded-full bg-[#8AB0AB] px-6 py-2.5 text-sm font-medium text-[#03120E] shadow-xl hover:opacity-90 transition"
+                >
+                  Try the Guide
+                </Link>
+                <a
+                  href="#about"
+                  className="text-sm font-medium text-slate-100 hover:text-slate-200"
+                >
+                  About CogMyra
+                </a>
+              </div>
+            </div>
+
+            {/* Right column: preview card */}
+            <div className="flex-1">
+              <div className="mx-auto max-w-xl rounded-3xl border border-white/10 bg-[#020817] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.65)]">
+                <div className="mb-3 flex items-center justify-between text-[11px] font-medium tracking-[0.2em] text-slate-300/70">
+                  <span>PREVIEW</span>
+                  <span className="rounded-full border border-white/10 px-3 py-1 text-[10px] tracking-[0.2em]">
+                    STUDENT
+                  </span>
+                </div>
+
+                <div className="space-y-4 text-sm">
+                  <div className="rounded-2xl border border-white/8 bg-gradient-to-br from-slate-900 to-slate-950 px-4 py-3">
+                    <div className="mb-1 text-[11px] font-medium tracking-[0.18em] text-slate-400">
+                      YOU
+                    </div>
+                    <p className="text-slate-100">
+                      Can you explain photosynthesis?
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-900/40 bg-[#26413C] px-4 py-3 text-sm leading-relaxed text-slate-50">
+                    <div className="mb-1 text-[11px] font-medium tracking-[0.18em] text-slate-200/80">
+                      COGMYRA
+                    </div>
+                    <p>
+                      Think of leaves as tiny solar panels. They use sunlight,
+                      water, and carbon dioxide to make sugar for the plant and
+                      release oxygen for us to breathe. What part of that
+                      process would you like to zoom in on?
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex justify-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-600/60" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-700/40" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Bottom section */}
+        <section
+          id="about"
+          className="bg-[#E2E7E5] text-slate-900 border-t border-slate-200"
+        >
+          <div className="mx-auto max-w-6xl px-6 py-14">
+            <h2 className="text-2xl md:text-3xl font-semibold text-[#1A1D1A]">
+              How CogMyra helps you learn
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm md:text-base text-slate-700">
+              One simple interface, three powerful pillars of support—for
+              students, educators, and professionals. CogMyra is a collection of
+              world-class educators, not a search engine.
+            </p>
+
+            <div className="mt-10 grid gap-6 md:grid-cols-3">
+              {/* Students */}
+              <div className="pillar-card">
+                <div className="text-xs font-semibold tracking-[0.2em] text-slate-500">
+                  FOR STUDENTS
+                </div>
+                <p className="mt-3 text-sm text-slate-800 leading-relaxed">
+                  Build confidence, close gaps, and prepare for exams with a
+                  coach that remembers what you’ve already mastered and adapts
+                  to your pace.
+                </p>
+              </div>
+
+              {/* Educators */}
+              <div className="pillar-card">
+                <div className="text-xs font-semibold tracking-[0.2em] text-slate-500">
+                  FOR EDUCATORS
+                </div>
+                <p className="mt-3 text-sm text-slate-800 leading-relaxed">
+                  Design lessons, scaffolds, and checks for understanding in
+                  minutes—without losing your identity or expertise as an
+                  educator.
+                </p>
+              </div>
+
+              {/* Professionals */}
+              <div className="pillar-card">
+                <div className="text-xs font-semibold tracking-[0.2em] text-slate-500">
+                  FOR PROFESSIONALS
+                </div>
+                <p className="mt-3 text-sm text-slate-800 leading-relaxed">
+                  Learn new tools, frameworks, and skills through examples,
+                  role-plays, and practice that match the real work you do.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-black/20 bg-[#02050A] py-4 text-xs text-slate-400">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6">
+          <span>© {year} CogMyra. All rights reserved.</span>
+          <div className="flex gap-4">
+            <a href="/guide" className="hover:text-slate-200">
+              Guide
+            </a>
+            <a href="/privacy" className="hover:text-slate-200">
+              Privacy
+            </a>
+            <a href="/contact" className="hover:text-slate-200">
+              Contact
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
