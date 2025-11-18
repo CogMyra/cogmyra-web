@@ -58,16 +58,16 @@ export default function GuidePage() {
       "I’m having trouble reaching the CogMyra engine right now. But I’m here—tell me more about your goals and context, and we’ll structure a path together.";
 
     try {
-      const res = await fetch("/api/guide", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt: trimmed,
-          history,
-        }),
-      });
+const resp = await fetch("/api/chat", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    messages: [
+      ...messages,
+      { role: "user", content: input }
+    ]
+  })
+});
 
       if (res.ok) {
         const data = await res.json();
