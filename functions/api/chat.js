@@ -3,21 +3,41 @@ export async function onRequestPost(context) {
     const { request, env } = context;
 
     // Safely parse incoming JSON body
-    let body = {};
+    let body;
     try {
       body = await request.json();
-    } catch (e) {
+    } catch {
       body = {};
     }
 
-    // Normalize possible body shapes into a single messages array
-    const userMessages =
+    // Normalize messages from a few possible shapes
+    let userMessages =
       body.messages ||
       body?.data?.messages ||
       body?.input?.messages ||
       [];
 
-    // 1) Validate OpenAI API key
+    // If no messages array but a single "prompt" is provided, wrap it
+    if (
+      (!Array.isArray(userMessages) || userMessages.length === 0) &&
+      body?.prompt
+    ) {
+      userMessages = [
+        {
+          role: "user",
+          content: String(body.prompt),
+        },
+      ];
+    }
+
+    if (!Array.isArray(userMessages) || userMessages.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "No messages provided" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // --- Validate OpenAI API key -----------------------------------------
     const apiKey = env.OPENAI_API_KEY;
     if (!apiKey) {
       return new Response(
@@ -25,8 +45,9 @@ export async function onRequestPost(context) {
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
+    // ---------------------------------------------------------------------
 
-    // 2) SYSTEM PROMPT — primary source is the Cloudflare secret
+    // --- SYSTEM PROMPT: Uses secret (fallback is a safe placeholder) -----
     const systemPrompt =
       (env.COGMYRA_SYSTEM_PROMPT && env.COGMYRA_SYSTEM_PROMPT.trim()) ||
       `
@@ -35,33 +56,36 @@ Guide, teach, and coach learners with clarity, care, and rigor, while
 staying emotionally grounded and attuned to each person. Follow the
 CogMyra Guide configuration for tone, scaffolding, and instructional flow.
       `.trim();
+    // ---------------------------------------------------------------------
 
-    // 3) Build messages array (system prompt FIRST)
+    // Construct messages for OpenAI API
     const messages = [
       { role: "system", content: systemPrompt },
       ...userMessages,
     ];
 
-    // 4) Select model: from Cloudflare variable MODEL, or fallback
-    //    (in Dashboard you've set MODEL = gpt-5.1)
-    const model = env.MODEL || "gpt-4o";
+    // Choose model from Cloudflare variable; default to gpt-5.1
+    const model = env.MODEL || "gpt-5.1";
 
-    // 5) Call OpenAI chat completions API
-    const completion = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-      }),
-    });
+    // Call OpenAI chat completions endpoint
+    const completion = await fetch(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+        }),
+      }
+    );
 
     const result = await completion.json();
 
-    // 6) Handle upstream OpenAI error
+    // Handle OpenAI upstream error
     if (!completion.ok) {
       return new Response(
         JSON.stringify({
@@ -72,16 +96,18 @@ CogMyra Guide configuration for tone, scaffolding, and instructional flow.
       );
     }
 
-    // 7) Return the full OpenAI response to the frontend
+    // Return final chat completion result (OpenAI-style JSON)
     return new Response(JSON.stringify(result), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
     });
-
   } catch (err) {
-    // 8) Catch-all server error
+    // Catch-all server error
     return new Response(
-      JSON.stringify({ error: err.message || "Unknown server error" }),
+      JSON.stringify({ error: err?.message || "Unknown server error" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
