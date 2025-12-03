@@ -9,7 +9,7 @@ export default function GuidePage() {
     {
       role: "assistant",
       content:
-        "Hello, I’m the CogMyra Guide. Tell me what you’re working on, and I’ll coach you step by step.",
+  "Hello, I’m the CogMyra Guide. Tell me what you're working on, and I’ll help you one step at a time.",
     },
   ]);
   const [loading, setLoading] = useState(false);

@@ -14,28 +14,26 @@ For each prompt:
 I’m 9 years old and I get distracted easily. Can you explain what fractions are and help me really understand them?
 
 ### **A. Local Engine Response**
-Lots of kids your age get distracted — it’s totally okay, nothing is wrong with you.  
+Lots of kids your age get distracted and feel unsure about fractions — it’s totally okay.  
 We’ll go in tiny, easy steps together.  
-Let’s start with a super simple version of fractions so your brain can grab onto it.
+Let’s start with a super simple version so your brain can grab just one idea at a time.  
 
-A fraction is a way to show a “piece” of something.  
-If you cut a pizza into 4 equal slices and you take 1 slice, that piece is written as **1/4** (one-fourth).  
-The **top number** (1) tells how many pieces you have, and the **bottom number** (4) tells how many equal pieces the whole pizza was cut into.
+Fractions are a way to show a part of something.  
+We usually write them with two numbers and a line, like this: 1/2.  
+The top number tells how many parts you have, and the bottom number tells how many equal parts the whole thing is cut into.  
 
-**Example (just one):**  
-Imagine a chocolate bar broken into **8 equal squares**. If you eat **3 squares**, the fraction you ate is **3/8**.
+Example:  
+Imagine a chocolate bar cut into 4 equal squares. If you eat 1 square, you ate **1/4** (one out of four) of the chocolate bar.  
 
-**Your turn (5–10 seconds):**  
-Picture a sandwich cut into **2 equal halves**. You eat **1 half**.  
-What fraction of the sandwich did you eat? (You can just type it like `1/2`.)
+Try this (super quick):  
+If a pizza is cut into **8** equal slices and you eat **3** slices, what fraction of the pizza did you eat? (You can just type it like this: ? / ?)  
 
-**Micro-check:**  
-Did that part — “top = pieces you have, bottom = total pieces” — make sense?
+Did that part make sense so far?  
 
-**Choose what you want next:**  
-A) Another quick real-life example with food or toys  
+What do you want to do next?  
+A) Another quick example with food  
 B) A picture-style explanation (I’ll describe it so you can “see” it in your head)  
-C) A slightly harder challenge with fractions like 2/4 or 3/6
+C) A slightly harder challenge with fractions
 
 ### **B. CogMyra Guide GPT Response**
 Hey there—since you’re 9 and sometimes get distracted (that’s totally normal!), let’s make fractions feel simple and kind of fun.
@@ -53,37 +51,46 @@ If you cut a brownie into 8 equal squares and take 3, what fraction of the brown
 ### **Summary of Drift for Prompt 1:**
 
 **Tone Score:** 9
-**Scaffolding Score:** 10
+**Scaffolding Score:** 9
 **Alignment Score:** 9
 **Overall Effectiveness Score:** 9
 
 **Evaluator Notes:**
-Tone: Warm, reassuring, age-appropriate, and validating of the child’s distractibility. Slightly more wordy than the GUIDE, but still very suitable for a 9-year-old.
-Scaffolding: Excellent. The LOCAL answer breaks the idea into small chunks, restates the definition clearly, gives an example, then immediately offers a simple practice problem and a comprehension check. It further supports autonomy by letting the learner choose what to do next, which is strong scaffolding for attention and engagement.
-Alignment: Very close to the GUIDE’s intent—simple language, concrete examples (pizza, chocolate), and an immediate question to the child. LOCAL goes beyond by adding micro-checks and choice-based next steps, all of which align with a tutoring-style, learner-centered approach.
-Overall: A bit longer than the GUIDE, but in a useful way for a tutoring context. It is more interactive and supportive, particularly for a distractible 9-year-old, making it slightly stronger pedagogically than the GUIDE while staying aligned with its style and goals.
+Tone: LOCAL is warm, encouraging, and age-appropriate, directly validating the learner and using simple language, similar to GUIDE but with a bit more reassurance and choice; very well-suited to a 9-year-old.
+Scaffolding: LOCAL breaks the idea into clear steps, uses a concrete example, then immediately gives a simple practice question and offers multiple next-step options (A/B/C), which supports attention and engagement for an easily-distracted child more than GUIDE does. This is stronger scaffolding.
+Alignment: Both follow the core explanation from the GUIDE—using food examples, defining top/bottom numbers, and giving a try-it question. LOCAL adds structure (tiny steps, explicit check for understanding, and options), which is aligned with a CogMyra-style tutoring approach of gradual, interactive learning.
+Overall: LOCAL slightly exceeds the GUIDE in interactivity and support for attention, while staying consistent conceptually. It’s very effective for this learner profile, with only minor room for further improvement (e.g., more visual language or checks for focus).
 
 ## Prompt 2 — Young Learner / Photosynthesis
 ### **Prompt**
 Explain photosynthesis for a 3rd grader.
 
 ### **A. Local Engine Response**
-Nice! Learning about photosynthesis is a big science idea, and it’s awesome you’re asking in 3rd grade. 🌱 Let’s do a super simple version first.
+Nice! Let’s learn about photosynthesis together. 🌱  
 
-Plants make their own food in their leaves. They use sunlight, water, and a gas from the air called carbon dioxide. The leaves are like tiny kitchens that mix these together to make sugar for the plant and oxygen for us to breathe. This whole food-making process is called photosynthesis.
+Photosynthesis is how plants make their own food using **sunlight**, **water**, and **air**.  
+The green parts of the plant (like leaves) catch sunlight like tiny solar panels.  
+They take in water from the soil through the roots and a gas from the air called carbon dioxide.  
+Then the plant uses sunlight to **mix** them and make sugar (its food) and oxygen (the air we breathe).  
 
-Example:  
-Think of a plant like a little “solar-powered chef.” The sun is its stove, water is like the drink, and carbon dioxide is like the ingredients. The plant cooks these together in its leaves to make sugar (its food) and oxygen (the fresh air we need).
+**Quick example:**  
+Think of a plant like a tiny chef. The sun is the stove, water is like the soup broth, and air is like the veggies. The plant “cooks” them together to make food (sugar) and gives off oxygen as a “smell” into the air.
 
-Try this:  
-Can you name **two things** a plant needs to do photosynthesis?
+**Your turn (5–10 seconds):**  
+Fill in the missing word:  
+Plants use sunlight, water, and ________ from the air to make their food.
 
-Did that part make sense?
+What do you think goes in the blank?  
+A) Oxygen  
+B) Carbon dioxide  
+C) Dirt  
 
-Choose what you want next:  
-A) Another quick example with a different plant  
-B) A picture-style explanation (I’ll describe it like a cartoon in words)  
-C) A little challenge question about photosynthesis
+Did that part make sense so far?  
+
+What would you like to do next?  
+A) Another quick example of photosynthesis  
+B) A picture-style explanation (describing what a diagram would look like)  
+C) A harder challenge with a short quiz question
 
 ### **B. CogMyra Guide GPT Response**
 Let’s keep this super clear for a 3rd grader.
@@ -107,46 +114,78 @@ Sun + water + air → plant food.
 **Overall Effectiveness Score:** 9
 
 **Evaluator Notes:**
-Tone: Friendly, encouraging, age-appropriate, and positive. The use of an emoji is slightly more playful than the GUIDE, but still fits a 3rd-grade audience well.
-Scaffolding: Excellent. The LOCAL answer breaks the concept into a simple explanation, gives an analogy, then follows with a check-for-understanding question and clear options for next steps (A/B/C). This adds interactivity and supports learning more than the GUIDE.
-Alignment with CogMyra Guide: Strong alignment on clarity, age-appropriate language, and use of simple analogies (tiny chefs/solar-powered chef). It maintains conceptual accuracy and simplicity. It is a bit more elaborate and interactive than the GUIDE, but still in the same spirit of clarity and support.
-Overall Effectiveness: Very effective for a 3rd grader. It explains the core idea correctly, uses a memorable analogy, and actively engages the learner with questions and choices for how to continue. The added scaffolding makes it slightly more effective than the GUIDE in teaching, while staying aligned with its intent.
+Tone: Warm, encouraging, age-appropriate, and friendly; the emoji is slightly more playful than the Guide but still suitable for a 3rd grader. Scaffolding: Excellent; the LOCAL response adds a concrete analogy (tiny chef), a fill-in-the-blank prompt, multiple-choice options, and explicit next-step choices, all of which strongly support learning and engagement beyond the Guide. Alignment: Very close in content (sunlight, water, carbon dioxide, sugar, oxygen) and level; both use the “tiny chef” analogy and keep vocabulary simple. The LOCAL answer is a bit more interactive and elaborate but still aligned with the CogMyra style. Overall: More effective than the Guide for tutoring purposes due to active checks for understanding and clear next-step options while maintaining conceptual accuracy and simplicity for a 3rd grader.
 
 ## Prompt 3 — 7th Grader / Dividing Fractions
 ### **Prompt**
 I’m a 7th grader who feels dumb in math class. Can you help me understand how to divide fractions?
 
 ### **A. Local Engine Response**
-Lots of kids feel exactly how you do about math sometimes — it’s totally okay, and it doesn’t mean you’re dumb at all.  
+Lots of students feel dumb in math sometimes — it really does NOT mean you’re actually bad at it.  
 We’ll go in tiny, easy steps together.  
-Let’s start with a super simple version of dividing fractions, just to get the idea.
+Let’s start with a super simple version of dividing fractions and just one example so your brain doesn’t get overloaded.
 
-When you divide fractions, the big rule is: **keep, change, flip**.  
-- **Keep** the first fraction the same.  
-- **Change** the division sign to multiplication.  
-- **Flip** the second fraction (use its reciprocal).
+---
 
-**Example (just one):**  
-\(\dfrac{2}{3} \div \dfrac{1}{4}\)  
-Step 1: Keep: \(\dfrac{2}{3}\)  
-Step 2: Change ÷ to ×  
-Step 3: Flip \(\dfrac{1}{4}\) to \(\dfrac{4}{1}\)  
+**Step 1: The basic idea (tiny explanation)**  
+When you divide fractions, you **change the second fraction** (the one you’re dividing by):  
+- You **flip** the second fraction (that’s called the *reciprocal*).  
+- Then you **multiply** the fractions instead of dividing.  
+People remember it as: **“Keep, Flip, Multiply.”**
 
-So it becomes:  
-\(\dfrac{2}{3} \times \dfrac{4}{1} = \dfrac{8}{3}\)
+---
 
-**Your 5-second micro-practice:**  
-Use “keep, change, flip” on this:  
-\(\dfrac{3}{5} \div \dfrac{1}{2} = \ ?\)  
-Just rewrite it as a multiplication problem (don’t solve yet). What does it become?
+**One example only**
 
-**Micro-check:**  
-Did “keep, change, flip” make sense so far?
+Let’s do:  
+\[
+\frac{2}{3} \div \frac{4}{5}
+\]
 
-Choose what you want next:  
-A) Another easy numerical example  
-B) A picture-style explanation (with “pizza” or “chocolate bar” style drawings in words)  
-C) A slightly harder challenge problem to try together
+Using **Keep, Flip, Multiply**:
+
+1. **Keep** the first fraction: \(\frac{2}{3}\)  
+2. **Flip** the second fraction: \(\frac{4}{5} \rightarrow \frac{5}{4}\)  
+3. **Multiply**:  
+\[
+\frac{2}{3} \times \frac{5}{4} = \frac{2 \times 5}{3 \times 4} = \frac{10}{12}
+\]
+
+You can simplify \(\frac{10}{12}\) by dividing top and bottom by 2:  
+\[
+\frac{10}{12} = \frac{5}{6}
+\]
+
+So:
+\[
+\frac{2}{3} \div \frac{4}{5} = \frac{5}{6}
+\]
+
+---
+
+**Your 5-second micro-practice**
+
+Try this one using **Keep, Flip, Multiply** (you don’t have to simplify unless you want to):
+
+\[
+\frac{1}{2} \div \frac{3}{4} = \; ?
+\]
+
+Just tell me what fraction you get after you **keep**, **flip**, and **multiply**.
+
+---
+
+**Micro-check**
+
+Did the “Keep, Flip, Multiply” idea make sense so far, or did any step feel fuzzy?
+
+---
+
+**Pick what you want next:**
+
+A) Do another quick example just like the one we did  
+B) See a picture-style explanation of what dividing fractions *means*  
+C) Try a slightly harder challenge to see if you’ve got it
 
 ### **B. CogMyra Guide GPT Response**
 First, you’re not “dumb.” You’re someone trying to learn something tricky, and that’s brave.
@@ -166,80 +205,87 @@ Example…
 ### **Summary of Drift for Prompt 3:**
 
 **Tone Score:** 9
-**Scaffolding Score:** 9
+**Scaffolding Score:** 10
 **Alignment Score:** 9
 **Overall Effectiveness Score:** 9
 
 **Evaluator Notes:**
-Tone: Warm, reassuring, and age-appropriate, similar to the guide; normalizes struggle and offers support. Scaffolding: Strong—introduces one core rule (keep, change, flip), gives a single clear example, then a very small practice step, and checks understanding with a micro-check plus choice of next steps. Alignment: Closely follows the CogMyra-like approach—chunked info, interactive question, learner choice, and emotional reassurance. Minor difference is that the LOCAL answer goes into a bit more detail than the GUIDE snippet but stays well within aligned pedagogy. Overall: Very effective for a 7th grader, both affectively and instructionally, and slightly more structured than the GUIDE example.
+Tone: LOCAL is warm, validating, and encouraging without being condescending, similar to GUIDE but with more concrete reassurance and gentleness; very appropriate for a 7th grader who feels insecure. Scaffolding: LOCAL gives a clear step-by-step procedure, a single worked example, a low-pressure practice problem, and explicit check-in plus choice of next steps (A/B/C). This is stronger scaffolding than GUIDE, which only outlines the rule and starts an example. Alignment: Strong alignment with CogMyra-like principles—normalizing struggle, chunking into small steps, minimizing cognitive load (one example), using a catchy rule (“Keep, Flip, Multiply”), inviting metacognition (“did any step feel fuzzy?”), and offering options for how to proceed. Minor deviation might be that it doesn’t yet explain conceptual meaning, but it explicitly offers that as an option. Overall effectiveness: LOCAL is more complete, interactive, and supportive than GUIDE for this learner’s emotional state and understanding needs. It not only tells the rule but actively engages the student and checks comprehension.
 
 ## Prompt 4 — College Freshman / Thesis Statements
 ### **Prompt**
 I’m a college freshman struggling to understand thesis statements. What makes a thesis strong?
 
 ### **A. Local Engine Response**
-A strong thesis is basically a clear, specific *promise* your paper will keep.
+A strong thesis is basically a *clear, specific answer* to the question your paper is asking — and it points forward to how you’ll argue that answer.
 
-Here’s what makes it strong:
+Here are the core traits of a strong thesis for college writing:
 
-1. **It actually answers the question**  
-   - If there’s a prompt, your thesis should fully respond to it, not just repeat it.  
-   - Ask: “If someone reads only this sentence, do they know my main point about the topic?”
+1. **It actually makes an argument (not just a topic or fact).**  
+   - Weak: “Social media is popular among teenagers.” (just a fact)  
+   - Strong: “Social media harms teenagers’ sleep and focus, so high schools should limit phone use during class.”  
+   → You can agree or disagree with the strong one; that’s what makes it arguable.
 
-2. **It’s arguable, not obvious**  
-   - Weak: a fact most people agree on.  
-   - Strong: a claim a reasonable person could disagree with.  
-   - If you can’t imagine anyone saying, “I’m not sure I agree,” it’s probably too weak.
+2. **It’s specific, not vague.**  
+   - Weak: “Climate change is a big problem.”  
+   - Strong: “Because climate change increases extreme heat waves in cities, local governments should expand tree cover and cool-roof programs in low-income neighborhoods.”  
+   → Notice the who/what/where: *local governments*, *tree cover and cool roofs*, *low-income neighborhoods*.
 
-3. **It’s specific, not vague**  
-   - Avoid fuzzy words like “stuff,” “things,” “a lot,” “very important,” or “good/bad” without saying *why* or *how*.  
-   - A strong thesis usually hints at your *reasons* or “because”-parts.
+3. **It answers the “so what?” question.**  
+   - Weak: “College is stressful.” (okay… and why does that matter?)  
+   - Strong: “Because unmanageable stress drives many first-year students to drop classes, colleges should replace high-stakes midterms with more frequent low-stakes quizzes.”  
+   → It shows why the issue matters and what should be done.
 
-4. **It sets up the structure of your paper**  
-   - The thesis should quietly outline the main lines of argument your body paragraphs will follow.  
-   - Your reader should be able to predict the paper’s direction from that one sentence.
+4. **It usually includes a *because* or an implied reason.**  
+   - “X should happen **because** A, B, and C.”  
+   - Even if you don’t write the word “because,” the reason is there:  
+     - “Mandatory gap years improve students’ mental health, academic performance, and career clarity.”  
+   → Your body paragraphs will later match those reasons (mental health, performance, clarity).
 
----
-
-### Before / After examples
-
-**Prompt:** “Should colleges require first-year students to take a writing course?”
-
-- **Weak thesis (too obvious/vague):**  
-  “Writing classes are very important for college students.”  
-  - Problem: almost everyone agrees; doesn’t answer “should they be required?”; no clear reasons.
-
-- **Stronger thesis (arguable + specific + structured):**  
-  “Colleges should require first-year students to take a writing course because it helps them adjust to academic expectations, improves their critical thinking, and reduces plagiarism.”  
-  - Arguable: someone could say, “No, they shouldn’t be required.”  
-  - Specific: names three clear benefits.  
-  - Structured: you’ve basically laid out your three body sections.
+5. **It matches the assignment type.**  
+   - Argumentative → takes a position: “should/should not,” “is better than,” “leads to.”  
+   - Analytical → explains “how/why” something works, not just “what happened.”  
+   - Compare/contrast → makes a claim *about the comparison*, not just “X and Y are similar and different.”
 
 ---
 
-### Quick micro-practice (10–20 seconds)
+### One example, step-by-step
 
-Take this weak thesis:
+Suppose the assignment:  
+“Should attendance be mandatory in college classes? Take a position and support it.”
 
-> “Social media affects people a lot.”
+- Topic-only: “College attendance policies.”  
+- Too obvious: “Some professors take attendance.”  
+- Vague opinion: “Attendance rules are kind of annoying.”  
+- **Stronger thesis:**  
+  > “Colleges should not require mandatory attendance in every class, because flexible policies let students manage work and family responsibilities while still holding them accountable through graded participation activities.”
 
-Make it stronger by adding:
-- a clear *position* (good, bad, mixed? for whom?), and  
-- **two** specific reasons.
-
-You can write something like:  
-“Social media mostly harms/helps ______ because ______ and ______.”
-
-Type your revised version, and I’ll give you quick feedback.
+Why this is strong:
+- Takes a clear stand (“should not require mandatory attendance in every class”).  
+- Gives reasons (“manage work and family responsibilities” + “accountable through graded participation”).  
+- Points forward to body paragraphs (you can imagine 2–3 sections built from those reasons).
 
 ---
 
-Did that basic breakdown of what makes a thesis strong make sense so far?
+### Tiny practice (10–20 seconds)
 
-For your next step, what would you like to do?  
-A) See me improve 2–3 more weak thesis examples into strong ones  
-B) Get a fill-in-the-blank template for writing thesis statements for your own assignments  
-C) Try writing a thesis for a real prompt you’ve been assigned and have me help revise it
+Take *any* topic you’ve written or might write about (or I can give you one).  
+Try to fill in this frame in one sentence:
+
+> “In this essay, I argue that **[your claim]**, because **[reason 1]** and **[reason 2]**.”
+
+You don’t have to make it perfect yet — just a rough draft.
+
+Type your sentence, and I’ll help you strengthen it.
+
+---
+
+Before we go deeper: does this basic idea of a strong thesis (arguable + specific + gives reasons) make sense so far?
+
+For next step, which would help you most right now?  
+A) I give you 3 weak theses and you help fix them  
+B) You show me a thesis you wrote for a class, and we improve it together  
+C) I walk you through a “plug-and-play” template set for different essay types (argument, analysis, compare/contrast)
 
 ### **B. CogMyra Guide GPT Response**
 A strong thesis is like the “north star” of your paper—it tells your reader exactly what your argument is and why it matters.
@@ -258,263 +304,230 @@ Although some people believe X, this paper argues Y because Z.
 
 ### **Summary of Drift for Prompt 4:**
 
-**Tone Score:** 9
+**Tone Score:** 10
 **Scaffolding Score:** 10
 **Alignment Score:** 9
-**Overall Effectiveness Score:** 9
+**Overall Effectiveness Score:** 10
 
 **Evaluator Notes:**
-Tone: LOCAL is warm, clear, student-friendly, and encouraging, comparable to GUIDE but more conversational and supportive. Scaffolding: LOCAL far exceeds GUIDE, breaking the concept into criteria, giving concrete examples, a micro-practice task, and offering clear next-step choices—excellent pedagogical scaffolding for a freshman. Alignment: It matches the core ideas in GUIDE (clear position, arguable, hints at why/how, direction of paper) and expands them into actionable checks and examples; only minor deviation is extra elaboration, which is still consistent. Overall: LOCAL is more effective as a tutoring response than GUIDE because it operationalizes the abstract guidance into practice, invites interaction, and tailors support to the learner’s level while staying on-message with the CogMyra-style guidance.
+The LOCAL response uses a clear, encouraging, student-friendly tone that is highly appropriate for a struggling college freshman. It is more conversational and supportive than the GUIDE while staying professional. In terms of scaffolding, LOCAL excels: it breaks the concept into multiple concrete traits, provides parallel weak/strong examples, explains the reasoning behind each trait, offers a step-by-step worked example tied to a plausible assignment, and ends with a simple practice frame plus choice of next steps (A/B/C). This is much more pedagogically supportive than the GUIDE, which only lists abstract properties and a single template.
+
+Alignment with the CogMyra-style GUIDE is high in terms of content: both define a strong thesis as arguable, clear, and directional (indicating the why/how and setting up the paper). The LOCAL response goes further by explicitly addressing assignment types and the ‘so what?’ dimension, which are natural extensions rather than contradictions. The only minor misalignment is that LOCAL moves well beyond the brevity and single-template focus of the GUIDE, but this is an enhancement, not a deviation in substance.
+
+Overall effectiveness is excellent: LOCAL is far more actionable, gives the student tools to diagnose and revise their own thesis statements, and includes interactive next steps. It is clearly superior as a tutoring answer while remaining aligned with the GUIDE’s core principles.
 
 ## Prompt 5 — Senior-Level Analysis / Social Media & Identity
 ### **Prompt**
 I’m writing a senior-level college paper. Can you help me analyze how social media affects identity formation?
 
 ### **A. Local Engine Response**
-Yes—I can help you with that, and we can shape it into something that fits a senior-level paper.
+Yes—I can help you build a solid, senior-level analysis of how social media affects identity formation.
 
-Here’s a clear way to approach “how social media affects identity formation” that you can turn into sections of your essay.
-
----
-
-## 1. Clarify your angle and scope
-
-First, narrow the question so your paper is analytically strong, not just descriptive. For example:
-
-- Age group: adolescents (13–18), emerging adults (18–25), or adults?
-- Platform: Instagram/TikTok vs. text-based (X/Reddit), or “social media” as an ecosystem?
-- Identity dimension:  
-  - personal identity (sense of self, self-esteem, self-concept)  
-  - social identity (group belonging, fandoms, politics)  
-  - gender, sexuality, race/ethnicity, body image, professional identity, etc.
-
-A strong thesis often picks 1–2 of these, not all.
-
-Example of a narrowed research question:
-- “How does Instagram use shape body image and identity among college-aged women and nonbinary students?”
-- “In what ways do TikTok algorithms influence political identity formation in late adolescents?”
-
-If you tell me your discipline (psychology, sociology, communication, media studies, etc.), I can tune the theory and terminology.
+Here’s a clear way to frame your paper, then we can zoom in on the pieces you care about most.
 
 ---
 
-## 2. Key theoretical lenses you can use
+## 1. Narrow your focus: what kind of “identity”?
 
-Pick 1–3 core theories and weave them throughout:
+“Identity formation” is huge. Pick 1–2 dimensions so your paper can go deep instead of broad:
 
-### a. Erikson / Identity development (psychology)
-- Erikson: adolescence and emerging adulthood as key stages for “identity vs. role confusion.”
-- Marcia’s identity statuses: diffusion, foreclosure, moratorium, achievement.
-- Social media gives:
-  - **New spaces for exploration (moratorium):** trying out aesthetics, politics, communities.
-  - **Pressures toward foreclosure:** adopting ready-made identities (e.g., “trad wife,” “girlboss,” specific subcultures) without critical reflection because they’re highly visible and rewarded.
+- **Personal identity** – sense of self, authenticity, self-concept (“who am I?”)  
+- **Social identity** – group memberships (gender, race, fandoms, politics, subcultures)  
+- **Performative/curated identity** – how people *present* themselves vs how they feel internally  
+- **Adolescent vs emerging adult identity** – development across late teens / twenties
 
-Analytical move: argue that social media intensifies both exploration *and* premature closure.
+A strong thesis usually narrows by:
+- **Age group** (e.g., adolescents 13–18, or college students)  
+- **Platform type** (visual platforms like Instagram/TikTok vs text-based like X/Reddit)  
+- **Key mechanism** (algorithmic curation, social comparison, anonymity/pseudonymity, etc.)
 
----
-
-### b. Social identity theory (Tajfel & Turner; sociology/psych)
-- People define themselves via in-groups and out-groups.
-- Social media:
-  - Makes *group markers* (hashtags, fandoms, political tribes) hyper-visible.
-  - Encourages *public performance* of group membership (profile bios, posts, likes).
-  - Amplifies *us vs. them* dynamics (e.g., stan culture, political polarization).
-
-Analytical move: show how “belonging” online can deepen social identities but also harden boundaries and reduce nuance.
+Example narrower topic:  
+> How algorithmically curated image-based social media (e.g., Instagram, TikTok) shapes late adolescents’ identity through constant social comparison and performative self-presentation.
 
 ---
 
-### c. Goffman / “Presentation of self” + impression management (sociology/media)
-- Goffman: social life = performance; front stage vs. back stage.
-- Social media:
-  - Collapses audiences (family, friends, colleagues all see the same profile).
-  - Encourages highly curated front-stage selves (filters, edits, selective posting).
-  - Makes “likes” and comments quasi-quantitative feedback on performances.
+## 2. Theoretical lenses you can use
 
-Analytical move: argue that identity formation is increasingly shaped by ongoing, real-time audience feedback and metrics.
+Your professor will likely expect theory. Here are common ones that fit well:
 
----
+1. **Erikson: Identity vs. role confusion**  
+   - Late adolescence/emerging adulthood is about integrating roles into a coherent self.  
+   - Social media adds *new arenas* for trying out roles (usernames, aesthetics, communities).
 
-### d. Self-discrepancy & self-esteem (psychology)
-- Actual self vs. ideal self vs. ought self.
-- Platforms (especially visual ones) flood users with “ideal selves” (beauty, success, productivity).
-- This can:
-  - Widen the gap between actual and ideal → shame, anxiety, low self-esteem.
-  - Or provide *possible selves* that are inspiring and identity-expanding.
+2. **Goffman: Dramaturgy / Presentation of self**  
+   - Identity as performance: front stage (public feed), backstage (close friends/DMs).  
+   - Social media = permanent stage + audience metrics (likes, views, followers).
 
-Analytical move: emphasize that effects are not uniform; algorithmic exposure and individual differences matter.
+3. **Social identity theory (Tajfel & Turner)**  
+   - People define themselves through group memberships (“we” vs “they”).  
+   - Online groups (stan culture, fandoms, political subreddits, niche Discord servers) give strong in-group identities and out-group contrast.
 
----
+4. **Self-discrepancy theory (Higgins)**  
+   - Gap between actual self, ideal self, and “ought” self.  
+   - Curated feeds and influencers amplify “ideal self” images, intensifying these gaps.
 
-### e. Algorithmic influence (critical media / STS / communication)
-- Algorithms act as “identity environments”:
-  - They reinforce behaviors (via recommendations and feedback loops).
-  - They can funnel people into niche identity communities (e.g., queer TikTok, incel forums, recovery communities).
-- “Affordances” (boyd, Bucher): anonymity, persistence, searchability, scalability, “networked publics.”
+5. **Social comparison theory (Festinger)**  
+   - Upward comparison (to “better” others) can fuel inadequacy; downward comparison can inflate ego or stabilize self-esteem.  
+   - Infinite scroll = endless material for comparison.
 
-Analytical move: treat identities as *co-produced* by users and platforms (not just “people using neutral tools”).
+You don’t need all of these; **2–3 frameworks** applied well is plenty for a senior paper.
 
 ---
 
-## 3. Structure for your paper
+## 3. Key mechanisms: how social media shapes identity
 
-Here’s a solid outline you can adapt for a senior-level essay:
+You can structure your body sections around mechanisms. For each one, connect:
+**Platform features → psychological process → identity effects.**
 
-### I. Introduction
-- Introduce the problem: social media as a central context for identity formation.
-- Briefly mention:
-  - Key challenge/tension (e.g., expanded exploration vs. intensified pressure).
-  - Your perspective/theories (e.g., Erikson + Goffman + algorithmic lens).
-- End with a clear, arguable thesis, e.g.:
+### A. Curated self-presentation & performativity
 
-> “This paper argues that social media platforms transform identity formation by (1) expanding opportunities for exploratory identity play, (2) intensifying performance-based and comparison-driven self-concepts, and (3) channeling users into increasingly rigid group identities through algorithmic curation.”
+- Features: profiles, bio, filters, editing, “best-of” posting, archive/delete.  
+- Process: people curate images, captions, and stories to manage impressions.  
+- Identity effect:
+  - Positive: experimentation with roles (gender expression, aesthetics, communities) can support identity exploration, especially for marginalized groups.  
+  - Negative: pressure for coherence and “brand” can make identity feel like a performance for others rather than an internal integration.
 
----
+Tie to: **Goffman, Erikson, self-discrepancy.**
 
-### II. Identity development offline vs. online (conceptual framing)
-- Summarize “classic” identity formation (Erikson/Marcia, social identity theory) in 1–2 paragraphs.
-- Then show what is *different* online:
-  - Persistent records vs. ephemeral offline interactions.
-  - Quantified feedback (likes, shares) vs. more ambiguous offline reactions.
-  - Collapsed contexts (same performance for multiple audiences).
-
-Purpose: set up that digital identity is continuous with older models but has distinctive mechanisms.
+You might argue:  
+> Social media transforms identity from a relatively private developmental task into a semi-public branding exercise.
 
 ---
 
-### III. Social media as a site of identity exploration
+### B. Algorithmic visibility & quantified feedback
 
-Focus on positive/complex aspects:
+- Features: likes, comments, shares, follower counts, algorithmic boosts.  
+- Process: users receive **quantified** social feedback; algorithms reward certain content styles (beauty, extreme opinions, novelty).  
+- Identity effect:
+  - People learn what “version” of themselves gets rewarded; they may gradually **shift self-presentation** to align with what performs well.  
+  - Over time, there can be an internalization: “The posts that do well *are* who I am,” which can constrain identity exploration.
 
-- Identity play and experimentation:
-  - Pseudonymous accounts, Finstas, alt accounts.
-  - Trying different aesthetics (e.g., cottagecore, goth, tradcore) or politics.
-- Discovery of communities:
-  - Marginalized identities (LGBTQ+, neurodivergent, racial and ethnic diasporas).
-  - Recovery, activist, or fan communities that validate and name experiences.
-- Theoretical tie-ins:
-  - Eriksonian “moratorium.”
-  - Possible selves (Markus & Nurius).
-
-Analytical twist: argue that social media *lowers barriers* to experimenting with and finding language for identities, which can accelerate and diversify identity formation.
+Tie to: **operant conditioning, social reinforcement, symbolic interactionism** (“self” emerges from how others respond to us).
 
 ---
 
-### IV. Performance, surveillance, and self-presentation
+### C. Social comparison and idealized selves
 
-Here you can be more critical:
+- Features: endless feeds of curated highlights, influencer culture, body/wealth/relationship imagery.  
+- Process: users compare their everyday lives to others’ peak moments.  
+- Identity effect:
+  - Increased self-objectification, body dissatisfaction, and identity insecurity—especially where appearance and status are central.  
+  - BUT also: upward comparison can be motivating or aspirational for some (e.g., career identities, creative skills).
 
-- Curated selves:
-  - Editing, filters, cherry-picking “best” moments.
-  - Brand-like personal identities, especially among influencers or aspiring professionals.
-- Constant audience and internalized metrics:
-  - “How will this look on my profile?” becomes part of identity talk.
-  - Likes, comments, and views shape what “feels like” the real or successful self.
-- Theoretical tie-ins:
-  - Goffman’s dramaturgy; front stage/back stage collapse.
-  - Foucault/panoptic gaze if your discipline leans that way.
-  - Self-discrepancy theory for mental health effects.
-
-Analytical thesis in this section: identity is increasingly *performed for visibility* rather than only lived for coherence, and that performance feeds back into how people understand themselves.
+Tie to: **social comparison theory, self-discrepancy theory.**
 
 ---
 
-### V. Social identity, group belonging, and polarization
+### D. Community, belonging, and social identity
 
-Focus on group-level identity:
+- Features: groups, hashtags, fandoms, subcultures, “sides” of TikTok, Discord servers.  
+- Process: users attach to communities, adopt norms, language, and in-group markers.  
+- Identity effect:
+  - Strong sense of belonging and validation (“I’m not the only one like this”), which can stabilize identity—crucial for LGBTQ+ youth and other marginalized groups.  
+  - But also: identity polarization, rigid group boundaries, and identity collapse into a single dimension (e.g., political identity dominating all others).
 
-- Social identity on platforms:
-  - Hashtags (#BlackLivesMatter, #MAGA), fandoms, political subcultures.
-  - Badge-like markers in bios (pronouns, flags, political slogans).
-- Community and validation:
-  - Strong sense of belonging, shared language, collective narratives.
-- But also:
-  - In-group signaling, out-group hostility, echo chambers.
-  - Simplified, “aestheticized” politics or identities (vibes > nuance).
-
-Tie to:
-- Social identity theory (in-group favoritism, out-group derogation).
-- Filter bubble / echo chamber debates (with nuance: evidence is mixed).
-
-Analytical move: argue that social media intensifies *salience* of group membership and can push individuals to anchor their identities more heavily in visible group markers.
+Tie to: **social identity theory, identity fusion.**
 
 ---
 
-### VI. Algorithmic shaping of identity pathways
+### E. Anonymity, pseudonymity, and multiplicity of selves
 
-Make the platform itself a character in your argument:
+- Features: alt accounts, Finstas, anonymous platforms, multiple usernames.  
+- Process: people maintain different personas for different audiences.  
+- Identity effect:
+  - Allows safe experimentation (e.g., exploring sexuality, mental health disclosures) without real-life risk.  
+  - Can also fragment identity; some feel they are performing incompatible selves in different spaces, complicating integration.
 
-- Recommendation systems:
-  - Example: TikTok For You Page gradually feeding more extreme or niche content as it learns preferences.
-- Feedback loops:
-  - You watch content → algorithm infers interests → shows more → identity label feels more real (“maybe I *am* X”).
-- Vulnerable periods:
-  - Adolescence/emerging adulthood = high openness to identity inputs.
-
-Conceptual framing:
-- “Algorithmic socialization” or “algorithmic identity scaffolding.”
-- Platforms as structuring which identity possibilities appear “imaginable.”
-
-Analytical argument: identity formation is no longer just peer- and family-driven; it’s significantly co-shaped by opaque algorithmic logics.
+Tie to: **postmodern identity (fluid, decentered), Erikson (integration vs fragmentation).**
 
 ---
 
-### VII. Differential impacts and inequalities
+## 4. Mixed outcomes: avoid a simplistic “good or bad” stance
 
-Avoid “one-size-fits-all” claims by addressing:
+Good senior-level work will emphasize **ambivalence and contingencies**:
 
-- Intersectionality:
-  - Marginalized groups may gain community and voice—but also face intensified harassment and surveillance.
-- Gendered experiences:
-  - Body image pressures vs. empowerment narratives.
-- Socioeconomic and geographic divides:
-  - Access, digital literacy, and platform norms differ across contexts.
+- Effects depend on:
+  - **Developmental stage** (younger teens vs older college students)  
+  - **Platform architecture** (visual vs text-based; algorithmic vs chronological)  
+  - **Use patterns** (active creation vs passive scrolling; public vs private groups)  
+  - **Social location** (gender, race, class, sexuality, disability)  
+  - **Existing offline supports** (family, school, peer networks)
 
-This shows senior-level nuance and guards against sweeping generalizations.
+You can structure the paper to show that **the same mechanism** (e.g., curated presentation) can:
+- support healthy identity exploration for one group/context  
+- intensify insecurity or fragmentation in another.
 
----
-
-### VIII. Conclusion
-
-- Synthesize, don’t just summarize:
-  - Return to your thesis and show how the sections collectively support it.
-- Emphasize duality:
-  - Identity on social media is both enabling and constraining; both playful and disciplining.
-- Possible forward-looking angles:
-  - Design implications (what could platforms change?).
-  - Policy or educational recommendations (digital literacy, critical platform awareness).
-  - Suggestions for future research.
+That nuance is what usually elevates a paper.
 
 ---
 
-## 4. Phrasing analytical claims
+## 5. Possible thesis statements
 
-Instead of descriptive sentences like:
+You can adapt one of these to your angle:
 
-- “Social media affects identity formation in many ways.”
+1. **Performance & authenticity angle**  
+   > While social media is often criticized for producing “fake” selves, it more accurately functions as an expanded stage for identity experimentation, where performative self-presentation both enables exploration and pressures young adults to convert identity into a coherent personal brand.
 
-Use analytical, theory-linked claims like:
+2. **Algorithmic feedback angle**  
+   > Algorithmically curated social media platforms reshape identity formation in emerging adults by tying self-concept to quantifiable audience feedback, gradually steering users toward identities that are optimized for visibility rather than psychological coherence.
 
-- “Instagram’s visual affordances and engagement metrics encourage users to equate their identities with aestheticized, highly curated performances, thereby foregrounding appearance-based aspects of self-concept while backgrounding less visible traits such as values or competencies.”
-- “By lowering the cost of entry into niche communities, TikTok’s recommendation system accelerates identity exploration but also channels that exploration along paths optimized for engagement rather than psychological well-being.”
-
-I can help you generate 3–5 such “thesis-level” sentences tailored to your topic.
+3. **Ambivalent developmental tool angle**  
+   > For contemporary adolescents, social media operates as a double-edged context for identity development: it broadens opportunities for exploration and community-based affirmation, particularly for marginalized youth, while simultaneously intensifying social comparison, performativity, and the risk of identity fragmentation.
 
 ---
 
-## 5. Next step: customize for *your* assignment
+## 6. Skeleton outline for a senior-level paper
 
-To make this truly useful for your paper, I’d like to know:
+You can adapt this to your assignment length:
 
-1. Your discipline/major (e.g., psych, sociology, media studies, interdisciplinary).
-2. Any specific theorists or readings your course has covered that you’re expected to use.
-3. Rough length requirement (e.g., 8–10 pages, 15–20 pages).
-4. Whether you already have a draft or you’re starting from scratch.
+**I. Introduction**
+- Briefly define identity formation.  
+- Name 2–3 theories you’ll use.  
+- Specify age group and platform type.  
+- End with your thesis (clear, arguable, specific).
 
-Reply with those, and I can:
-- Propose a *tight* thesis statement.
-- Turn the outline into section headings with 1–2 key arguments and example sources each.
-- Help you draft a strong introduction paragraph.
+**II. Theoretical framework**
+- Introduce Erikson + Goffman + one cognitive/social theory (e.g., social comparison).  
+- Show how they’re useful for analyzing digital contexts.
+
+**III. Mechanism 1: Curated self-presentation and performativity**
+- Describe platform features.  
+- Explain psychological process.  
+- Apply theory + cite empirical studies.  
+- Argue both enabling and constraining effects on identity.
+
+**IV. Mechanism 2: Social comparison and quantified feedback**
+- Same structure as III.  
+- Emphasize self-esteem, self-concept clarity, and identity stability/instability.
+
+**V. Mechanism 3: Community and social identity**
+- Focus on belonging, marginalization, and group-based identities.  
+- Include nuance (e.g., empowerment vs polarization).
+
+**VI. Synthesis and discussion**
+- Show how these mechanisms interact.  
+- Discuss when social media is likely to support vs undermine healthy identity formation.  
+- Note limitations (e.g., cross-sectional data, WEIRD samples, rapid platform change).
+
+**VII. Conclusion**
+- Re-state thesis in light of evidence.  
+- Point to implications (for education, policy, design, or mental health).  
+- Suggest one or two directions for future research.
+
+---
+
+## 7. Next step: how do you want to proceed?
+
+Pick one, and I’ll help you build it:
+
+A) Work together to **craft a precise thesis statement** for your specific assignment  
+B) Flesh out a **detailed outline** with topic sentences and evidence slots  
+C) Go deep on **one theoretical angle** (e.g., Goffman + algorithms, or Erikson + TikTok) and pull in key empirical findings  
+
+Tell me which option (A/B/C) you want, and also:
+- your approximate page/word limit  
+- the discipline (psych, sociology, comm, media studies, etc.)  
+- any specific sources or theorists you’re required to engage with.
 
 ### **B. CogMyra Guide GPT Response**
 For a senior-level analysis, we want depth, clarity, and evidence-based reasoning.
@@ -536,69 +549,94 @@ Finish with nuanced insight: enabling + constraining.
 **Overall Effectiveness Score:** 9
 
 **Evaluator Notes:**
-Tone: The LOCAL response is warm, academic, and respectful, matching a senior-level college context and generally aligning with the GUIDE’s call for depth and clarity. It avoids condescension and invites collaboration, so tone is very strong.
+Tone: The LOCAL response is clear, academically oriented, and respectful, matching a senior-level college context. It avoids condescension while being encouraging and directive.
 
-Scaffolding: Excellent. The LOCAL answer breaks the task into clear steps: narrowing scope, selecting theories, proposing a structured outline, showing how to make analytical claims, and asking targeted follow-up questions. This goes beyond the GUIDE’s brief process description (introduce → tension → theory → application → insight) and operationalizes it in a very concrete, student-friendly way.
+Scaffolding: Excellent. It breaks the task into well-structured steps (narrowing focus, selecting theories, mechanisms, thesis options, outline) and ends with concrete next-step choices (A/B/C). This gives the student a clear path from broad idea to finished paper, exceeding the GUIDE’s more minimal outline.
 
-Alignment: The LOCAL response clearly follows the GUIDE’s high-level blueprint: it encourages depth, uses theory as a lens, emphasizes applying theory to platform features, and ends with nuanced, non-binary conclusions (enabling and constraining effects). It expands the theoretical toolkit well beyond the GUIDE’s specific mentions (Goffman, social comparison theory, symbolic interactionism) to include Erikson/Marcia, social identity theory, self-discrepancy, and algorithmic lenses. This is broadly consistent with the spirit of the GUIDE but only partially overlaps in specific theory selection, hence not a perfect 10. Goffman is present and well developed; symbolic interactionism and social comparison are functionally present but not labeled explicitly.
+Alignment: The LOCAL answer strongly follows the GUIDE’s core structure: introduce phenomenon, identify tensions (ambivalent effects), bring in theory (Goffman, social comparison, Erikson, social identity), apply theory to platform features (likes, algorithms, curated identity), and offer nuanced insight (enabling and constraining). It goes beyond the GUIDE by adding more theories and mechanisms, but does not conflict with it. Slight misalignment only in being more expansive than the GUIDE’s short list and pattern, hence a 9 rather than 10.
 
-Overall: The LOCAL response is highly effective for a senior-level student. It offers a sophisticated outline, multiple theoretical frames, concrete analytical moves, and sample thesis language. It closely follows the GUIDE’s pedagogical goals (depth, theory-driven analysis, platform-feature application, nuanced conclusions) while adding substantial usable structure and detail. The only minor misalignment is not foregrounding the exact three theories named in the GUIDE, but pedagogically it is very strong.
+Overall: Very effective as a tutoring response for a senior-level paper. It operationalizes the GUIDE’s directives into a detailed, usable plan while preserving nuance and theoretical rigor. The only potential drawback is length; some students might need a more condensed version, but for a senior paper, this depth is appropriate.
 
 ## Prompt 6 — Overwhelmed Adult Learner / Project Breakdown
 ### **Prompt**
 I’m overwhelmed at work. Can you help me break down a complex project into a simple plan?
 
 ### **A. Local Engine Response**
-Lots of adults feel overwhelmed by big projects — it’s very common and it makes sense you’re feeling this way. We’ll go in tiny, easy steps so your brain doesn’t have to hold everything at once. Let’s start with a super simple version: turning “one huge scary thing” into a short, clear checklist.
+You’re not alone in feeling that way — a lot of people get overwhelmed when a project feels huge or fuzzy. We can absolutely slow this down and take it in clear, tiny steps. Let’s start by turning your “big blurry project” into a short, simple list of pieces, then we’ll shape that into a plan you can actually do this week.
 
-Here’s the basic idea:  
-1) Define the *finish line* (what “done” looks like).  
-2) Break it into 3–7 big chunks.  
-3) Turn each chunk into small, doable tasks you could finish in 30–60 minutes.
+First, I’ll give you a super simple 5-step structure. Then we’ll fill it in together for your specific project.
 
-**One concrete example**
+Here’s a simple plan structure we can use:
 
-Imagine your project is: “Launch a new internal report for leadership.”
+1. **Define the finish line**  
+   “This project is done when: __________.”
 
-1. **Define ‘done’ clearly**  
-   - Example “done” statement:  
-     > “A weekly report is automatically generated and emailed to leadership every Monday, with metrics A, B, and C, and there’s a short guide on how to read it.”
+2. **List the big chunks (3–7 only)**  
+   Example chunks: “Research,” “Decide,” “Create,” “Review,” “Deliver.”  
+   (Too many chunks = overwhelm, so we keep it small.)
 
-2. **Break into 4 big chunks**  
-   - Chunk 1: Clarify requirements  
-   - Chunk 2: Get data + build the report  
-   - Chunk 3: Test + get feedback  
-   - Chunk 4: Automate + document
+3. **Turn each chunk into 15–60 minute tasks**  
+   Each task should be something you could, in reality, sit down and do in one go.
 
-3. **Turn one chunk into tiny tasks** (30–60 min each)  
-   Let’s zoom into “Chunk 1: Clarify requirements” and make it simple:  
-   - Task 1: List your *questions* about the report (metrics, timing, format).  
-   - Task 2: Identify who can answer each question (manager, data team, stakeholders).  
-   - Task 3: Draft a 5–7 bullet outline of the report sections.  
-   - Task 4: Schedule a 30-min meeting or send one clear email with your questions + outline.
+4. **Sequence + schedule the first 3–5 tasks only**  
+   Don’t plan the whole universe. Just enough to get you moving without stress.
 
-Now “Clarify requirements” is no longer a foggy cloud; it’s 4 small actions you can actually do.
+5. **Set simple guardrails**  
+   - When you’ll work (e.g., “20–40 min blocks, 1–2x per day”)  
+   - How you’ll track (one list, one doc, or one board — not five tools)
 
 ---
 
-**Micro-practice (5–10 seconds)**  
+### One concrete example
+
+Let’s pretend your project is:  
+**“Launch a new internal reporting dashboard.”**
+
+1. **Finish line**  
+   - “Done when: stakeholders can log into the dashboard, see the 5 key metrics, and we’ve run one feedback session.”
+
+2. **Big chunks**  
+   - Chunk A: Clarify requirements  
+   - Chunk B: Design structure & data  
+   - Chunk C: Build dashboard  
+   - Chunk D: Test & fix issues  
+   - Chunk E: Launch & collect feedback  
+
+3. **Turn one chunk into tasks (Chunk A: Clarify requirements)**  
+   - Task A1 (30 min): List all stakeholders and current pain points from memory.  
+   - Task A2 (30–45 min): Quick 15–20 min call or chat with main stakeholder to confirm goals and “must-have” metrics.  
+   - Task A3 (30 min): Write a 1-page summary: “Problem, Goals, Must-haves, Nice-to-haves.”  
+
+   Each of those is small, concrete, and schedulable.
+
+4. **Sequence + schedule the first few tasks**  
+   - Tomorrow 9:00–9:30 — Do A1 (stakeholder + pain point list)  
+   - Tomorrow 2:00–2:20 — Stakeholder chat (A2)  
+   - Next day 10:00–10:30 — Write 1-page summary (A3)
+
+5. **Guardrails**  
+   - Work rule: “No heroic marathons; only 25–40 minute focused blocks.”  
+   - Tracking rule: “Everything for this project lives in ONE place: a single doc or task list.”
+
+---
+
+### Tiny micro-practice (5–10 seconds)
+
 Try this:  
-1. In one sentence, describe your project’s *finish line* starting with:  
-   > “Done means that…”  
+In one sentence, fill in this blank for your real project:
 
-Type just that one sentence. Don’t worry about making it perfect.
+> “This project is done when: ______________________.”
 
----
-
-**Micro-check**  
-Does the “finish line → 4 chunks → tiny tasks” idea make sense so far?
+Write exactly what comes to mind first; we can refine it together.
 
 ---
 
-**Next-step choices — what would help you most right now?**  
-A) “Help me write my own ‘done means that…’ sentence.”  
-B) “Show me a picture-style / bullet-map breakdown of a complex project.”  
-C) “My project is ___. Help me turn it into chunks and tasks step-by-step.”
+Did that structure (finish line → big chunks → small tasks → schedule a few → guardrails) make sense so far?
+
+For the next step, what would help you most right now?  
+A) I help you fill in these 5 steps for *your* specific project (we’ll do it together).  
+B) A simple visual/“picture in words” of how to think about a big project so it feels less heavy.  
+C) A slightly tougher version: prioritize across *multiple* projects that are all competing for your time.
 
 ### **B. CogMyra Guide GPT Response**
 You’re overwhelmed—and that’s a signal you need structure, not more pressure.
@@ -617,52 +655,83 @@ We can build your exact plan together.
 ### **Summary of Drift for Prompt 6:**
 
 **Tone Score:** 9
-**Scaffolding Score:** 9
-**Alignment Score:** 8
+**Scaffolding Score:** 10
+**Alignment Score:** 9
 **Overall Effectiveness Score:** 9
 
 **Evaluator Notes:**
-Tone: LOCAL is warm, validating, and non-judgmental, similar intent to GUIDE’s supportive tone. It uses normalization (“very common”) and reduces pressure, well aligned with CogMyra’s student-centered, psychologically safe approach.
+Tone: LOCAL is warm, validating, and supportive while staying focused and non-patronizing, closely aligned with the GUIDE’s calm, structuring tone. It’s slightly more expansive but still appropriate.
 
-Scaffolding: LOCAL provides a clear, step-by-step structure plus a concrete example, then zooms into one chunk and further decomposes it into small tasks. It also adds micro-practice, a comprehension check, and choice of next steps, which is strong scaffolding. This goes beyond GUIDE’s brief outline while still following the same phases, showing good pedagogical layering.
+Scaffolding: LOCAL offers excellent step-by-step structure, a concrete worked example, and a tiny micro-practice. It also explicitly invites the user to choose next steps (A/B/C), which deepens scaffolding beyond the GUIDE. This is the strongest dimension.
 
-Alignment: LOCAL follows the same core structure as GUIDE (clarify outcome → break into chunks → turn chunks into small tasks) and adds interactive elements. It slightly diverges by not explicitly mentioning sequencing and time boundaries (which GUIDE lists as later steps), so alignment isn’t perfect but remains high in spirit and method.
+Alignment: LOCAL clearly reflects the same core 5-step structure as the GUIDE (clarify outcome/finish line, identify big chunks, break into small actions, sequence, add time/boundaries/guardrails). It adds more detail and examples but doesn’t contradict the GUIDE. Minor divergence in verbosity and extra choices, but still well-aligned.
 
-Overall effectiveness: LOCAL’s detailed example, concrete task sizes (30–60 minutes), and interactive prompts (finish-line sentence, options A/B/C) make it highly actionable and user-friendly. It moves the user from overwhelm to a specific, manageable process and invites continued collaboration, which fits CogMyra’s tutoring style well.
+Overall: LOCAL is highly effective as a tutoring-style response: it normalizes the user’s feelings, gives a clear simple framework, demonstrates it with an example, and then engages the user in next actions. It goes beyond the GUIDE in helpfulness while staying faithful to its intent, earning a strong overall score.
 
 ## Prompt 7 — Adult Professional / Interview Prep
 ### **Prompt**
 I need to prepare for a job interview. Can you help me practice answering the “Tell me about yourself” question?
 
 ### **A. Local Engine Response**
-Absolutely—this is one of the most important questions to get right.
+Absolutely—I can help you get ready for that.  
 
-First, I’ll give you a simple structure. Then we’ll draft a version together and refine it so it sounds natural and confident.
-
-## A simple structure you can use
-
-Think of your answer as a short story with 4 parts:
-
-1. **Now** – Who you are professionally today  
-2. **Past** – 1–2 key experiences that shaped your skills  
-3. **Proof** – 1–2 specific achievements or strengths  
-4. **Future** – Why you’re excited about *this* role/company
-
-You’re aiming for **60–90 seconds** total.
+First, I’ll explain a simple structure, then we’ll draft a version together, and finally we can practice out loud-style answers.
 
 ---
 
-## Step 1: I need a bit of info from you
+## 1. A Simple Structure to Use
 
-To make this realistic and tailored, could you tell me:
+For “Tell me about yourself” in a job interview, use a short, 3-part story:
 
-1. What job title/role are you interviewing for?  
-2. What’s your background in 1–3 bullets? (e.g., “3 years in customer support, 2 years in sales,” “recent computer science graduate,” “career changer from teaching to project management”)  
-3. One or two things you’re proud of in your work or studies (projects, results, compliments you’ve gotten, promotions, etc.)  
-4. Anything you’re a bit worried about them asking (e.g., employment gap, career change, limited experience)?
+1. **Present** – Who you are in your current role / situation  
+2. **Past** – 1–2 relevant experiences or skills that got you here  
+3. **Future** – What you’re looking for and why *this* role/company
 
-Reply in any format—bullets are fine.  
-Then I’ll write a custom “Tell me about yourself” answer for you, and we’ll practice it like a mock interview.
+Think of it as: **Now → Before → Next**.
+
+---
+
+## 2. A Concrete Example (Template + Sample)
+
+### Basic template (you can customize later)
+
+> “I’m currently a [your role/field] with [X years or key focus].  
+> In my last role at [Company/school/etc.], I [did something concrete that shows 1–2 skills relevant to this job].  
+> I’m excited about [Company/role] because [how it matches your skills/interests/values].”
+
+### Quick sample (office / professional example)
+
+> “I’m currently a customer support specialist with about three years of experience helping clients solve product issues and improving how teams respond to requests. In my current role at BrightTech, I handle 30–40 customer tickets a day, and I led a small project that cut our response times by about 20%. I’m excited about this support role at Nova because it combines customer interaction with process improvement, and I’d love to bring that experience to a growing team.”
+
+---
+
+## 3. Micro-Practice: Your First Rough Draft
+
+Try this tiny fill-in-the-blanks version. Don’t worry about making it perfect:
+
+1. “I’m currently a __________ with __________.”  
+2. “Previously, at __________, I __________.”  
+3. “I’m excited about this role at __________ because __________.”
+
+Type your rough draft in those three short sentences. I’ll help you polish it into something that sounds confident and natural.
+
+---
+
+## 4. Micro-check
+
+Does this structure (Present → Past → Future) feel clear so far?  
+
+---
+
+## 5. Your Choice: What should we do next?
+
+A) You fill in the 3-sentence mini-template and I rewrite it into a smooth answer  
+B) I show you 2 more sample answers (e.g., one for a career changer, one for a recent grad)  
+C) We make a slightly more advanced, 60–90 second version with storytelling elements  
+
+Tell me your choice (A, B, or C), and also:  
+- What role are you interviewing for?  
+- What’s your background in 1–2 sentences?
 
 ### **B. CogMyra Guide GPT Response**
 Great preparation question.
@@ -686,150 +755,37 @@ Example:
 **Overall Effectiveness Score:** 9
 
 **Evaluator Notes:**
-LOCAL provides a warm, encouraging tone similar to the GUIDE but with more explicit guidance and collaboration language, which suits tutoring well. Scaffolding is much stronger than the GUIDE: it offers a clear 4-part structure, approximate timing, and then asks specific diagnostic questions to tailor the practice, enabling an interactive, stepwise learning process. Alignment with the CogMyra-style GUIDE is high: both emphasize a Present/Past/Future structure (LOCAL adds a Proof step, which is a reasonable extension, not a contradiction) and focus on practical, example-based help. Local’s only slight deviation is length and complexity compared to the very concise GUIDE, but this serves the tutoring goal. Overall effectiveness is high because it both explains the framework and initiates a personalized mock-interview workflow, which is more helpful for actual practice than the GUIDE’s brief example.
+The LOCAL response is warm, encouraging, and clear, slightly more personable and supportive than the GUIDE’s brief example, so tone is very strong. Scaffolding is excellent: it introduces a simple structure, provides a template and a concrete example, offers a fill‑in exercise, checks for understanding, and gives the user clear options for next steps—far more guided than the GUIDE answer, which is only a short structure and one line of example. Alignment with the CogMyra-style guidance is high: it breaks down the task, uses stepwise practice, and invites active participation and user choice. Overall effectiveness is high because the user would leave with both an understanding of the framework and a concrete path to personalize and practice their answer. Minor deductions only because it’s slightly longer and more elaborate than absolutely necessary, but that likely benefits most learners in this context.
 
 ## Prompt 8 — Adult Language Learner / Italian Verb Tenses
 ### **Prompt**
 I’m learning Italian. Can you help me understand when to use the passato prossimo versus the imperfetto?
 
 ### **A. Local Engine Response**
-Nice goal—this is a classic “Italian learner” question, and it confuses almost everyone at first. We’ll go in small, clear steps and compare them side by side so you can feel the difference, not just memorize rules.
+Nice goal—this is a big step in Italian, and it confuses *everyone* at first, so you’re very normal for asking. We’ll go in clear, small pieces. Let’s start with the simplest, most useful difference.
 
-Here’s the core idea:
-- **Passato prossimo** = *completed events* (“what happened,” with a sense of result or finish).  
-- **Imperfetto** = *background, habits, ongoing stuff* (“what was going on / used to be”).
+Tiny explanation (core idea):  
+- **Passato prossimo** = *single, completed events* (“what happened”).  
+- **Imperfetto** = *background, habits, ongoing situations* (“what was going on / used to be”).  
 
-Think of telling a story: imperfetto paints the *background* and ongoing actions; passato prossimo marks the *events* that move the story forward.
+**One example only:**  
+- *Ieri **ho visto** Maria al parco.* → passato prossimo = one specific event: “Yesterday I **saw** Maria at the park.”  
+- *Quando ero bambino, **vedevo** spesso Maria al parco.* → imperfetto = repeated habit in the past: “When I was a child, I **used to see** Maria at the park often.”
 
----
+**Micro-practice (5–10 seconds):**  
+Which sounds better for a **habit**?  
+A) *Da piccolo, **ho guardato** molti cartoni animati.*  
+B) *Da piccolo, **guardavo** molti cartoni animati.*  
 
-### 1. Core contrast in simple terms
+Just answer A or B.
 
-**Passato prossimo**  
-Use it for:
-- A **single completed action** in the past  
-- A specific **moment** or **number of times**  
-- Actions that feel like *points* on a timeline
+**Micro-check:**  
+Did this “event vs. habit/background” idea make sense so far?
 
-Examples:  
-- Ieri **ho mangiato** la pizza. = Yesterday I ate (and finished) the pizza.  
-- Ho visto Luca tre volte. = I saw Luca three times.
-
-**Imperfetto**  
-Use it for:
-- **Habitual** or repeated actions (“used to”, “would”)  
-- **Descriptions**: weather, time, age, feelings, physical states  
-- **Ongoing actions** (“was …ing”) in the past
-
-Examples:  
-- Da bambino **mangiavo** sempre la pizza. = As a child I *always used to eat* pizza.  
-- **Faceva** freddo. = It *was* cold.  
-- **Guardavo** la TV. = I *was watching* TV.
-
----
-
-### 2. Same verb, different meaning
-
-Take the verb **mangiare** (to eat):
-
-- **Passato prossimo:**  
-  - Ieri sera **ho mangiato** alle 8.  
-  → A specific, completed act: *I ate at 8 p.m. yesterday.*
-
-- **Imperfetto:**  
-  - Quando ero piccolo, **mangiavo** alle 8.  
-  → A habit in the past: *When I was little, I used to eat at 8.*
-
-So:  
-- “What happened?” → passato prossimo  
-- “What was it like / what usually happened?” → imperfetto
-
----
-
-### 3. Story-mode: background vs events
-
-Imagine a little story:
-
-> **Era** una bella giornata.  
-> Io **camminavo** nel parco, **ascoltavo** la musica  
-> quando all’improvviso **ho visto** un cane enorme.
-
-- **Era** (it was) → background description → imperfetto  
-- **camminavo**, **ascoltavo** (I was walking, I was listening) → ongoing background actions → imperfetto  
-- **ho visto** (I saw) → the main event that “happened” → passato prossimo
-
-So in a story:
-- **Imperfetto** = scenery, situation, “what was going on”  
-- **Passato prossimo** = the plot points
-
----
-
-### 4. Time expressions that *often* go with each
-
-Not strict rules, but good hints:
-
-**Often with passato prossimo:**
-- ieri, ieri sera, stamattina  
-- una volta, due volte, tre volte  
-- all’improvviso, improvvisamente  
-- poi, dopo, alla fine
-
-Example:  
-- Ieri sera **ho visto** un film e poi **sono andato** a letto.  
-
-**Often with imperfetto:**
-- di solito, normalmente, sempre, spesso  
-- mentre (while)  
-- da bambino / da piccola  
-- ogni giorno / ogni estate
-
-Example:  
-- Da bambino **guardavo** sempre i cartoni la mattina.
-
----
-
-### 5. “Mentre” vs “quando”
-
-This pairing really shows the difference:
-
-- **Mentre** + imperfetto (ongoing action)  
-- **Quando** + passato prossimo (interrupting event) is very common
-
-Example:  
-- **Mentre** **guardavo** la TV, **ho sentito** un rumore.  
-  - guardavo (imperfetto) = I was watching (background)  
-  - ho sentito (passato prossimo) = I heard (sudden event)
-
-Flip it and it sounds wrong in Italian:  
-✗ *Mentre ho guardato la TV, sentivo un rumore* → not natural.
-
----
-
-### 6. Micro-practice (your turn)
-
-Try these. You just need to choose **PP** (passato prossimo) or **Imp** (imperfetto). Don’t worry about the exact conjugation; focus on *which tense* fits the idea.
-
-1. Da bambino, io ______ (giocare) a calcio ogni giorno.  
-   → Habit in the past: PP or Imp?
-
-2. Ieri sera ______ (uscire) con i miei amici.  
-   → One specific event last night: PP or Imp?
-
-3. Mentre ______ (leggere) il libro, ______ (arrivare) mia sorella.  
-   → First blank: ongoing background → ?  
-   → Second blank: sudden event → ?
-
-Write your answers like this:  
-1 = …, 2 = …, 3 = … / …
-
----
-
-Did that contrast (completed events vs background/habit) feel clear so far?
-
-For the next step, what would you like?  
-A) More mini-questions like the ones above  
-B) Visual “timeline” style explanation of the difference  
-C) Trickier examples where *both* are possible but the meaning changes
+**Next step – choose one:**  
+A) Another quick example about “finished event vs. ongoing action”  
+B) A visual / timeline-style explanation  
+C) A slightly harder challenge mixing both tenses in a short story
 
 ### **B. CogMyra Guide GPT Response**
 Passato prossimo = completed action.
@@ -848,17 +804,11 @@ Then I give examples, contrast, and exercises.
 
 **Tone Score:** 9
 **Scaffolding Score:** 10
-**Alignment Score:** 8
+**Alignment Score:** 9
 **Overall Effectiveness Score:** 9
 
 **Evaluator Notes:**
-Tone: Warm, encouraging, and learner-friendly without being childish. It mirrors the GUIDE’s intent (simple, metaphor-based, clear) and adds motivational framing and reassurance, which suits tutoring well. Slightly more expansive than the GUIDE’s very minimal style, but not overdone.
-
-Scaffolding: Excellent. The LOCAL response breaks the concept into digestible sections (core contrast, same verb different meaning, story mode, time expressions, mentre/quando pattern), uses clear examples, and finishes with targeted practice plus explicit prompts about next steps. This goes far beyond the GUIDE’s sketch by actually operationalizing examples, contrast, and exercises in a structured lesson.
-
-Alignment: The key conceptual frame from the GUIDE is strongly respected: 'Passato prossimo = completed action / events' vs 'Imperfetto = background/ongoing/habit', plus the movie/story metaphor. The LOCAL answer clearly implements 'Then I give examples, contrast, and exercises.' It does expand beyond the GUIDE with extra cues (time expressions, mentre/quando rules, micro-practice), but these are natural elaborations rather than deviations. The only minor misalignment is that the GUIDE suggests extreme brevity and the LOCAL answer is quite detailed.
-
-Overall: Very effective tutoring response. It is conceptually accurate, pedagogically strong, and closely aligned with the GUIDE’s core metaphor and goals, while also providing the concrete examples and practice that the GUIDE only alludes to in outline.
+Tone: Warm, encouraging, and learner-friendly without being overbearing; very supportive and normalizing of confusion, which fits an effective tutoring style. Scaffolding: Excellent. The LOCAL response breaks the concept into a core idea, provides a single clear example pair, then immediately offers a tiny practice question and a comprehension check, and finally gives the learner a choice of next steps—this is strongly scaffolded and interactive, far more developed than the GUIDE’s brief outline. Alignment: The LOCAL answer follows the GUIDE’s conceptual distinction closely (completed event vs. ongoing/background/habit) and even mirrors the movie metaphor implicitly with ‘background’ vs ‘what happened’. It slightly expands beyond the GUIDE by using more interaction and detail, but does not contradict it. Overall: Very effective as a tutoring response. It operationalizes the GUIDE’s brief description into a concrete, engaging mini-lesson with practice and branching prompts, while preserving the key conceptual contrast between passato prossimo and imperfetto.
 
 ## Prompt 9 — Creative Writing Student
 ### **Prompt**
@@ -867,16 +817,13 @@ I’m a creative writing student. Can you help me rewrite this paragraph so it�
 ### **A. Local Engine Response**
 Yes, I can help with that.  
 
-Paste the paragraph you’d like to improve, and tell me anything you already know about your goal, for example:  
-- Tone you want (e.g., eerie, tender, funny, lyrical)  
-- Point of view (1st person “I”, 3rd person “she/he/they”)  
-- Any authors or books your teacher says are a good model for you  
+Please paste the paragraph you want to improve, and tell me:
+- What *tone* you’re going for (e.g., dreamy, tense, funny, lyrical, dark, etc.)
+- Whether you want it to sound more formal, casual, or somewhere in between  
 
-Once I see the paragraph, I’ll:  
-1. Offer a more vivid rewrite.  
-2. Point out 2–3 specific techniques I used (imagery, word choice, rhythm, etc.) so you can apply them yourself.  
-
-Go ahead and drop the paragraph in, and tell me what kind of “vivid” you’re aiming for (cinematic, emotional, sensory, etc.).
+Then I’ll:
+1. Rewrite your paragraph in a more vivid, concrete way  
+2. Briefly explain what I changed and why, so you can apply the ideas in your own writing next time
 
 ### **B. CogMyra Guide GPT Response**
 Absolutely—share your paragraph and I’ll help you make it more vivid.
@@ -889,64 +836,67 @@ I’ll highlight what’s working, rewrite a vivid version, and then walk you th
 
 ### **Summary of Drift for Prompt 9:**
 
-**Tone Score:** 9
-**Scaffolding Score:** 10
+**Tone Score:** 8
+**Scaffolding Score:** 9
 **Alignment Score:** 9
 **Overall Effectiveness Score:** 9
 
 **Evaluator Notes:**
-LOCAL is warm, encouraging, and student-centered, comparable in tone to GUIDE but a bit more verbose, hence 9. It excels at scaffolding: it elicits specific constraints (tone, POV, models) and clearly outlines a stepwise plan (rewrite + 2–3 techniques), which is richer than GUIDE’s brief promise, so 10 for scaffolding. Alignment with the CogMyra-style guidance is strong: it keeps the student in control, asks for goals, and emphasizes teachable techniques rather than just rewriting, similar to GUIDE, though slightly more procedural and less succinct, so 9. Overall, LOCAL is very effective, arguably more instructionally helpful than GUIDE for this task while remaining aligned with its spirit.
+Tone: LOCAL is warm, professional, and encouraging, though slightly more procedural than GUIDE; still very student-friendly.
+Scaffolding: LOCAL provides strong scaffolding by asking for tone and formality, and outlining a clear 3-step plan (rewrite + explanation of changes). This is actually more pedagogically explicit than GUIDE, which only briefly mentions techniques.
+Alignment with CogMyra Guide: LOCAL aligns well with tutoring best practices—invites student input on goals, preserves voice, and emphasizes explanation so the student can generalize the skill. It’s slightly more mechanical than GUIDE’s lighter phrasing, but still strongly aligned.
+Overall: LOCAL is slightly more detailed and instructional than GUIDE while remaining accessible. It supports learning (not just rewriting) by explaining changes, which is a key strength for a tutoring context.
 
 ## Prompt 10 — Nonprofit Leader / Motivational Email
 ### **Prompt**
 I’m a director at a nonprofit. Can you help me write a motivational email to my team after a difficult quarter?
 
 ### **A. Local Engine Response**
-Absolutely—I can help you shape that.
-
-First, a couple quick questions so I can tailor it to your situation:
-- What kind of nonprofit are you (e.g., education, health, arts, advocacy)?
-- What made the quarter “difficult” (funding shortfall, staff turnover, missed goals, external crisis, etc.)?
-- What’s your main goal for this email: boost morale, refocus on priorities, acknowledge burnout, retain staff, or something else?
-
-For now, here’s a strong, adaptable draft you can modify. After you read it, I can help you tighten the tone or make it sound more like you.
+Absolutely. Here’s a draft you can copy and tweak. I’ll keep it neutral on specifics so you can adapt for your cause and context.
 
 ---
 
-**Subject:** Thank you for showing up when it was hardest  
+**Subject:** Grateful for this team — and where we’re headed next
 
-Hi team,  
+Hi team,
 
-I want to start by saying a genuine thank you. This past quarter has asked more of us than we expected—emotionally, mentally, and logistically—and you’ve continued to show up for our mission and for each other. I see the hours, the problem-solving, the tough conversations, and the care you put into your work. It matters, even when the results aren’t as visible as we’d hoped.  
+I want to start by saying thank you. This past quarter has been hard — emotionally, logistically, and in ways that don’t always show up on a dashboard or in a board report — and you’ve continued to show up for our mission and for each other.
 
-We’ve had some real challenges: [briefly name 2–3: e.g., “funding uncertainty, shifting priorities from partners, and the strain of doing more with less”]. None of that is easy. It’s okay to feel tired, frustrated, or disappointed. Those feelings are a normal response to a hard season, not a reflection of your value or your commitment.  
+We didn’t hit every goal we set. That’s real, and I don’t want to gloss over it. But I also don’t want us to miss what *did* happen: you listened to our community, you problem-solved on the fly, and you kept our values at the center even when the numbers were discouraging. That matters just as much as the metrics.
 
-At the same time, I want to highlight what we *did* achieve together, because it’s easy to lose sight of that in a tough quarter:  
-- [Win #1: e.g., “We served X clients, many in crisis situations, with compassion and professionalism.”]  
-- [Win #2: e.g., “We piloted a new process/program that will make our work more sustainable.”]  
-- [Win #3: e.g., “We strengthened relationships with key partners/donors/community members.”]  
+Here are a few bright spots I’m especially proud of:  
+- [Example: We launched X program/pilot despite reduced funding.]  
+- [Example: We served Y people with a smaller-than-expected team.]  
+- [Example: We built new partnerships with A/B/C, laying groundwork for the next year.]  
 
-These are foundations we’ll build on next quarter. They are not small things—they are exactly what keeps our mission moving forward.  
+These are not small wins. They’re signs of resilience and of a team that doesn’t walk away when things get complicated.
 
-Looking ahead, here’s where I’d like us to focus:  
-1. **Clarity:** Over the next few weeks, I’ll be working with the leadership team to sharpen our priorities so everyone knows what matters most and what can wait.  
-2. **Support:** If you’re feeling stretched thin, please reach out to your manager or to me. I can’t promise to fix everything, but I *can* promise to listen and be honest about what we can do.  
-3. **Sustainability:** Our work is a marathon, not a sprint. I encourage you to take your time off, set boundaries where possible, and let us know what would help you do your best work without burning out.  
+As we move into the next quarter, here’s what I want you to know:
 
-I continue to believe deeply in the work we’re doing and in this team. You are the reason our mission is real in people’s lives—not a line in a report, but real change for real people. Even in a hard quarter, your integrity, compassion, and resilience have been clear.  
+1. **You are not alone in this.** The challenges we’re facing are shared, and so are the solutions. You will not be asked to carry this on your own.  
+2. **We will focus.** We’re going to prioritize the 2–3 most important areas where we can have the greatest impact, instead of trying to do everything at once.  
+3. **We will learn and adjust, not blame.** If something didn’t work, our question will be “What did we learn?” not “Who’s at fault?”  
 
-Thank you for staying committed during a season when it would have been easier to pull back. I’m proud to work alongside you, and I’m hopeful about what we can build from here—together.  
+In the coming days, I’ll share:  
+- A clear picture of our key priorities for next quarter  
+- Where we’ll be adjusting expectations and supports  
+- Concrete ways each of you can help shape the path forward
+
+For now, I just want to say this: I see your effort. I see the extra hours, the tough conversations, and the emotional load of doing this kind of work. Our community may not see every one of those moments, but I do, and I’m deeply grateful.
+
+Thank you for staying committed even when it’s hard. I believe in this mission, and I believe in this team — not because things are easy, but because you’ve shown who you are when they’re not.
 
 With appreciation,  
-[Your name]  
-[Your title]
+[Your Name]  
+[Your Title]
 
 ---
 
-If you’d like, I can now:
-A) Customize this for your specific situation if you share a few details  
-B) Make it shorter and punchier  
-C) Add a more vulnerable/personal tone or a more formal tone, depending on your culture
+If you tell me a bit more about:  
+- What “difficult” looked like this quarter (funding? program outcomes? staff transitions?) and  
+- The tone you want (more vulnerable, more upbeat, more formal/informal),  
+
+I can tailor this into a version that fits your organization and your voice exactly.
 
 ### **B. CogMyra Guide GPT Response**
 Here’s a motivational email with grounded leadership and warmth:
@@ -965,17 +915,17 @@ Close with appreciation.
 ### **Summary of Drift for Prompt 10:**
 
 **Tone Score:** 9
-**Scaffolding Score:** 10
-**Alignment Score:** 9
+**Scaffolding Score:** 8
+**Alignment Score:** 8
 **Overall Effectiveness Score:** 9
 
 **Evaluator Notes:**
-Tone: Warm, appreciative, and grounded without being saccharine; validates emotions and expresses pride and hope. Slightly more expansive than the succinct GUIDE description, but still well within an appropriate motivational tone.
+Tone: Warm, appreciative, and candid without being saccharine or dismissive; it acknowledges difficulty, validates effort, and conveys belief in the team. This is very close to an ideal motivational leadership tone.
 
-Scaffolding: Excellent. The LOCAL answer starts by asking targeted questions to tailor the message, then provides a full adaptable draft with placeholders, and finally offers concrete options (A/B/C) for next steps. This gives the user both an immediate usable artifact and a clear path for refinement, which is stronger scaffolding than the brief outline in the GUIDE.
+Scaffolding: The email itself is fully written and plug-and-play, and the assistant adds bracketed examples and a short follow-up prompt for customization. It doesn’t explicitly break down the structure into labeled steps like the GUIDE does, but the structure is clear and the closing request for more details invites iterative refinement. Strong, but could be improved with a bit more explicit guidance on how to adapt sections.
 
-Alignment: Very strong alignment with the GUIDE’s structure: it explicitly acknowledges difficulty, affirms effort and meaning, highlights wins via a bullet list, lays out a forward-looking path with three focus areas, and closes with clear appreciation. The only minor deviation is that it adds more detail and coaching around emotions and sustainability than the terse GUIDE summary, but this is additive rather than conflicting.
+Alignment: The LOCAL response implicitly follows the GUIDE’s structure: it acknowledges the hard quarter, affirms effort and meaning, highlights wins (via bullet placeholders), and presents a forward-looking path with 3 clear commitments, then closes with appreciation. It doesn’t enumerate the structure in bullets like the GUIDE, but functionally it’s aligned with CogMyra’s principles of grounded, non-glossy motivation and shared problem-solving.
 
-Overall: A highly effective response for the user’s goal. It delivers a polished, mission-appropriate email, invites customization for context, and supports different tonal preferences. It slightly exceeds the GUIDE’s brevity but does so in a user-helpful way, keeping it focused and practical.
+Overall: Highly effective for the user’s need. The draft is directly usable, emotionally intelligent, and easy to adapt. The only gaps relative to the GUIDE are the lack of a brief upfront structural explanation and slightly less explicit scaffolding on how to customize, but the practical usefulness and alignment with grounded leadership are excellent.
 
 # End of Test Set
