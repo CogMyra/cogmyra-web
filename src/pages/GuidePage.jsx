@@ -1,206 +1,130 @@
-import React, { useState } from "react";
+// src/pages/GuidePage.jsx
+// Simple CogMyra Guide page wired to /api/chat
+
+import { useState } from "react";
 
 export default function GuidePage() {
+  const [input, setInput] = useState("");
   const [messages, setMessages] = useState([
     {
-      id: "welcome-1",
       role: "assistant",
       content:
-        "Hi, I’m CogMyra Guide. Tell me a little about who you are and what you’re working on, and we’ll build a learning path together.",
+        "Hello, I’m the CogMyra Guide. Tell me what you’re working on, and I’ll coach you step by step.",
     },
   ]);
-  const [input, setInput] = useState("");
-  const [isSending, setIsSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e) {
     e.preventDefault();
+    setError("");
+
     const trimmed = input.trim();
-    if (!trimmed || isSending) return;
+    if (!trimmed) return;
 
-    setError(null);
-
-    // Add user message to local state
-    const userMessage = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: trimmed,
-    };
-    setMessages((prev) => [...prev, userMessage]);
+    const userMessage = { role: "user", content: trimmed };
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput("");
-    setIsSending(true);
+    setLoading(true);
 
     try {
-      // Build messages payload for backend
-      const payloadMessages = [
-        // We only send the conversational history; backend injects system prompt
-        ...messages.map((m) => ({
-          role: m.role,
-          content: m.content,
-        })),
-        {
-          role: "user",
-          content: trimmed,
-        },
-      ];
-
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: payloadMessages }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: newMessages,
+          debug: false,
+        }),
       });
 
       if (!res.ok) {
-        throw new Error(`Chat API error: ${res.status}`);
+        const text = await res.text();
+        throw new Error(`API error ${res.status}: ${text}`);
       }
 
       const data = await res.json();
 
-      // Extract assistant reply from OpenAI-style payload
-      const replyContent =
-        data?.choices?.[0]?.message?.content ??
-        "I’m here with you, but I couldn’t generate a full response just now.";
+      const replyText =
+        typeof data.reply === "string"
+          ? data.reply
+          : JSON.stringify(data.reply);
 
       const assistantMessage = {
-        id: `assistant-${Date.now()}`,
         role: "assistant",
-        content: replyContent,
+        content: replyText,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Chat error:", err);
-      setError(
-        "I’m having trouble completing that request right now. Please try again in a moment."
-      );
+      setError("Something went wrong talking to the Guide. Please try again.");
     } finally {
-      setIsSending(false);
+      setLoading(false);
     }
   }
 
   return (
-    <div className="guide-page" style={{ minHeight: "100vh", background: "#050510", color: "#f5f5f5" }}>
-      <header
-        style={{
-          padding: "1.5rem 2rem",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div>
-          <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 600 }}>CogMyra Guide</h1>
-          <p style={{ margin: "0.25rem 0 0", opacity: 0.8, fontSize: "0.9rem" }}>
-            Your personalized AI learning coach.
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-950 text-slate-50 flex flex-col">
+      <header className="border-b border-slate-800 px-4 py-3">
+        <h1 className="text-xl font-semibold tracking-tight">
+          CogMyra Guide
+        </h1>
+        <p className="text-sm text-slate-400">
+          Personalized AI learning coach (local prototype).
+        </p>
       </header>
 
-      <main
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          maxWidth: "900px",
-          margin: "0 auto",
-          padding: "1.5rem 1rem 2rem",
-          gap: "1rem",
-        }}
-      >
-        <section
-          style={{
-            flex: 1,
-            borderRadius: "0.75rem",
-            border: "1px solid rgba(255,255,255,0.08)",
-            padding: "1rem",
-            background: "radial-gradient(circle at top, #181834, #050510)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem",
-            maxHeight: "60vh",
-            overflowY: "auto",
-          }}
-        >
-          {messages.map((m) => (
+      <main className="flex-1 flex flex-col max-w-3xl w-full mx-auto px-4 py-4 gap-3">
+        <div className="flex-1 border border-slate-800 rounded-xl bg-slate-900/60 p-3 space-y-3 overflow-y-auto">
+          {messages.map((m, idx) => (
             <div
-              key={m.id}
-              style={{
-                alignSelf: m.role === "user" ? "flex-end" : "flex-start",
-                maxWidth: "80%",
-                padding: "0.75rem 1rem",
-                borderRadius: "0.75rem",
-                background:
-                  m.role === "user"
-                    ? "rgba(99, 102, 241, 0.9)"
-                    : "rgba(15, 23, 42, 0.9)",
-                color: "#f9fafb",
-                fontSize: "0.9rem",
-                whiteSpace: "pre-wrap",
-              }}
+              key={idx}
+              className={`rounded-lg px-3 py-2 text-sm ${
+                m.role === "assistant"
+                  ? "bg-slate-800 text-slate-50"
+                  : "bg-sky-900/60 text-sky-50"
+              }`}
             >
-              {m.content}
+              <div className="text-xs uppercase tracking-wide mb-1 opacity-70">
+                {m.role === "assistant" ? "Guide" : "You"}
+              </div>
+              <div className="whitespace-pre-wrap leading-relaxed">
+                {m.content}
+              </div>
             </div>
           ))}
-        </section>
+        </div>
 
         {error && (
-          <div
-            style={{
-              padding: "0.75rem 1rem",
-              borderRadius: "0.5rem",
-              background: "rgba(220, 38, 38, 0.1)",
-              border: "1px solid rgba(248, 113, 113, 0.4)",
-              fontSize: "0.85rem",
-            }}
-          >
+          <div className="text-xs text-red-400 bg-red-950/40 border border-red-800 rounded-lg px-3 py-2">
             {error}
           </div>
         )}
 
         <form
           onSubmit={handleSubmit}
-          style={{
-            display: "flex",
-            gap: "0.75rem",
-            marginTop: "0.5rem",
-          }}
+          className="flex items-end gap-2 border border-slate-800 rounded-xl bg-slate-900/70 px-3 py-2"
         >
           <textarea
+            className="flex-1 bg-transparent border-none outline-none text-sm resize-none min-h-[2.5rem] max-h-32"
+            placeholder="Ask the CogMyra Guide a question, describe a learner, or paste an assignment..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Tell CogMyra Guide who you are and what you’re working on..."
-            rows={2}
-            style={{
-              flex: 1,
-              resize: "vertical",
-              borderRadius: "0.75rem",
-              border: "1px solid rgba(148, 163, 184, 0.5)",
-              padding: "0.75rem 0.9rem",
-              background: "rgba(15, 23, 42, 0.9)",
-              color: "#f9fafb",
-              fontSize: "0.9rem",
-              outline: "none",
-            }}
+            disabled={loading}
           />
           <button
             type="submit"
-            disabled={isSending || !input.trim()}
-            style={{
-              padding: "0.75rem 1.25rem",
-              borderRadius: "0.75rem",
-              border: "none",
-              background: isSending || !input.trim() ? "#4b5563" : "#6366f1",
-              color: "#f9fafb",
-              fontWeight: 500,
-              fontSize: "0.9rem",
-              cursor: isSending || !input.trim() ? "not-allowed" : "pointer",
-              minWidth: "90px",
-            }}
+            disabled={loading}
+            className="shrink-0 px-3 py-1.5 text-sm rounded-lg border border-sky-500 bg-sky-600 hover:bg-sky-500 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isSending ? "Thinking…" : "Send"}
+            {loading ? "Thinking..." : "Send"}
           </button>
         </form>
       </main>
     </div>
   );
 }
+
