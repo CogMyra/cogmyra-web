@@ -1,5 +1,5 @@
 // src/pages/GuidePage.jsx
-// Simple CogMyra Guide page wired to /api/chat
+// CogMyra Guide page wired to the deployed API endpoint
 
 import { useState } from "react";
 
@@ -9,7 +9,7 @@ export default function GuidePage() {
     {
       role: "assistant",
       content:
-  "Hello, I’m the CogMyra Guide. Tell me what you're working on, and I’ll help you one step at a time.",
+        "Hello, I’m the CogMyra Guide. Tell me what you're working on, and I’ll help you one step at a time.",
     },
   ]);
   const [loading, setLoading] = useState(false);
@@ -29,16 +29,21 @@ export default function GuidePage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: newMessages,
-          debug: false,
-        }),
-      });
+      // IMPORTANT: Call the deployed Cloudflare API endpoint
+      const res = await fetch(
+        "https://53028ac1.cogmyra-web.pages.dev/api/chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-app-key": "supersecuretempkey123", // must match APP_GATE_KEY
+          },
+          body: JSON.stringify({
+            messages: newMessages,
+            debug: false,
+          }),
+        }
+      );
 
       if (!res.ok) {
         const text = await res.text();
@@ -69,9 +74,7 @@ export default function GuidePage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 flex flex-col">
       <header className="border-b border-slate-800 px-4 py-3">
-        <h1 className="text-xl font-semibold tracking-tight">
-          CogMyra Guide
-        </h1>
+        <h1 className="text-xl font-semibold tracking-tight">CogMyra Guide</h1>
         <p className="text-sm text-slate-400">
           Personalized AI learning coach (local prototype).
         </p>
@@ -127,4 +130,3 @@ export default function GuidePage() {
     </div>
   );
 }
-

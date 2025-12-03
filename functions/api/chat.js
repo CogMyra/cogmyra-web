@@ -1,7 +1,26 @@
 // functions/api/chat.js
 // CogMyra Engine v1: Chat endpoint with CMG retrieval + prompt assembly
+// Now with CORS + OPTIONS preflight support
 
 import { OpenAI } from "openai";
+
+// Shared CORS headers for all responses
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, x-app-key",
+};
+
+// Helper to build JSON responses with CORS
+function jsonResponse(obj, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      ...CORS_HEADERS,
+    },
+  });
+}
 
 // Helper: retrieve top CMG chunks from Cloudflare Vectorize
 async function retrieveCmgContext(env, openai, userText) {
@@ -62,8 +81,26 @@ async function retrieveCmgContext(env, openai, userText) {
 
 export async function onRequest({ request, env }) {
   try {
-    if (request.method !== "POST") {
-      return new Response("Method Not Allowed", { status: 405 });
+    const { method } = request;
+
+    // Handle CORS preflight
+    if (method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          ...CORS_HEADERS,
+        },
+      });
+    }
+
+    if (method !== "POST") {
+      return jsonResponse({ error: "Method Not Allowed" }, 405);
+    }
+
+    // Auth gate: require correct x-app-key header
+    const appKey = request.headers.get("x-app-key");
+    if (!env.APP_GATE_KEY || appKey !== env.APP_GATE_KEY) {
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
     // Parse incoming body
@@ -83,10 +120,7 @@ export async function onRequest({ request, env }) {
     }
 
     if (!Array.isArray(messages) || messages.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "No messages provided" }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
-      );
+      return jsonResponse({ error: "No messages provided" }, 400);
     }
 
     // Last user message text for retrieval
@@ -155,18 +189,9 @@ ${cmgContext}
       };
     }
 
-    return new Response(JSON.stringify(payload), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return jsonResponse(payload, 200);
   } catch (err) {
     console.error("Chat handler error:", err);
-    return new Response(
-      JSON.stringify({ error: "Internal Server Error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    );
+    return jsonResponse({ error: "Internal Server Error" }, 500);
   }
 }
-
