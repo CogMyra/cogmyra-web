@@ -14,3 +14,5 @@ dist
 *.save
 *.log
 .DS_Store
+.dev.vars
+cmg_evals/

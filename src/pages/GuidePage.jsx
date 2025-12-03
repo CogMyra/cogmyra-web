@@ -1,7 +1,12 @@
 // src/pages/GuidePage.jsx
-// CogMyra Guide page wired to the deployed API endpoint
+// Simple CogMyra Guide page wired to the deployed /api/chat
 
 import { useState } from "react";
+
+// During local dev, call the production Pages API so we don't need
+// Wrangler running. You can override this with VITE_COGMYRA_API_BASE.
+const API_BASE =
+  import.meta.env.VITE_COGMYRA_API_BASE || "https://cogmyra-web.pages.dev";
 
 export default function GuidePage() {
   const [input, setInput] = useState("");
@@ -29,21 +34,17 @@ export default function GuidePage() {
     setLoading(true);
 
     try {
-      // IMPORTANT: Call the deployed Cloudflare API endpoint
-      const res = await fetch(
-        "https://53028ac1.cogmyra-web.pages.dev/api/chat",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-app-key": "supersecuretempkey123", // must match APP_GATE_KEY
-          },
-          body: JSON.stringify({
-            messages: newMessages,
-            debug: false,
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE}/api/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-app-key": "supersecuretempkey123",
+        },
+        body: JSON.stringify({
+          messages: newMessages,
+          debug: false,
+        }),
+      });
 
       if (!res.ok) {
         const text = await res.text();
@@ -74,7 +75,9 @@ export default function GuidePage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 flex flex-col">
       <header className="border-b border-slate-800 px-4 py-3">
-        <h1 className="text-xl font-semibold tracking-tight">CogMyra Guide</h1>
+        <h1 className="text-xl font-semibold tracking-tight">
+          CogMyra Guide
+        </h1>
         <p className="text-sm text-slate-400">
           Personalized AI learning coach (local prototype).
         </p>

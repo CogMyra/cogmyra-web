@@ -1,25 +1,28 @@
 // functions/api/chat.js
-// CogMyra Engine v1: Chat endpoint with CMG retrieval + prompt assembly
-// Now with CORS + OPTIONS preflight support
+// CogMyra Engine v1: Chat endpoint with CMG retrieval + prompt assembly + structured logging
 
 import { OpenAI } from "openai";
 
-// Shared CORS headers for all responses
+// --- CORS headers (for browser + local dev) ---
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, x-app-key",
 };
 
-// Helper to build JSON responses with CORS
-function jsonResponse(obj, status = 200) {
-  return new Response(JSON.stringify(obj), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      ...CORS_HEADERS,
-    },
-  });
+// --- tiny logging helper (structured JSON) ---
+function logEvent(type, data = {}) {
+  try {
+    const payload = {
+      type,
+      ts: new Date().toISOString(),
+      ...data,
+    };
+    // Cloudflare Workers log viewer will show these JSON lines
+    console.log(JSON.stringify(payload));
+  } catch (err) {
+    console.error("logEvent failed:", err);
+  }
 }
 
 // Helper: retrieve top CMG chunks from Cloudflare Vectorize
@@ -59,6 +62,11 @@ async function retrieveCmgContext(env, openai, userText) {
   if (!res.ok) {
     const text = await res.text();
     console.error("Vectorize query failed:", res.status, res.statusText, text);
+    logEvent("vectorize_error", {
+      status: res.status,
+      statusText: res.statusText,
+      text: text.slice(0, 500),
+    });
     // Fail soft: return no context instead of killing chat
     return { context: "", matches: [] };
   }
@@ -80,27 +88,42 @@ async function retrieveCmgContext(env, openai, userText) {
 }
 
 export async function onRequest({ request, env }) {
-  try {
-    const { method } = request;
+  const start = Date.now();
 
-    // Handle CORS preflight
+  try {
+    const method = request.method || "GET";
+
+    // Handle OPTIONS for CORS
     if (method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: {
-          ...CORS_HEADERS,
-        },
+        headers: CORS_HEADERS,
       });
     }
 
     if (method !== "POST") {
-      return jsonResponse({ error: "Method Not Allowed" }, 405);
+      return new Response("Method Not Allowed", {
+        status: 405,
+        headers: CORS_HEADERS,
+      });
     }
 
     // Auth gate: require correct x-app-key header
     const appKey = request.headers.get("x-app-key");
     if (!env.APP_GATE_KEY || appKey !== env.APP_GATE_KEY) {
-      return jsonResponse({ error: "Unauthorized" }, 401);
+      logEvent("auth_denied", {
+        ip: request.headers.get("cf-connecting-ip") || "unknown",
+      });
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        {
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+            ...CORS_HEADERS,
+          },
+        },
+      );
     }
 
     // Parse incoming body
@@ -120,7 +143,16 @@ export async function onRequest({ request, env }) {
     }
 
     if (!Array.isArray(messages) || messages.length === 0) {
-      return jsonResponse({ error: "No messages provided" }, 400);
+      return new Response(
+        JSON.stringify({ error: "No messages provided" }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            ...CORS_HEADERS,
+          },
+        },
+      );
     }
 
     // Last user message text for retrieval
@@ -171,6 +203,8 @@ ${cmgContext}
       ],
     });
 
+    const latencyMs = Date.now() - start;
+
     const assistantMessage = completion.choices[0]?.message ?? {
       role: "assistant",
       content: "",
@@ -189,9 +223,42 @@ ${cmgContext}
       };
     }
 
-    return jsonResponse(payload, 200);
+    // --- structured success log ---
+    logEvent("chat_success", {
+      model,
+      latencyMs,
+      messageCount: messages.length,
+      lastUserChars: (lastUserText || "").length,
+      ip: request.headers.get("cf-connecting-ip") || "unknown",
+    });
+
+    return new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        ...CORS_HEADERS,
+      },
+    });
   } catch (err) {
+    const latencyMs = Date.now() - start;
     console.error("Chat handler error:", err);
-    return jsonResponse({ error: "Internal Server Error" }, 500);
+
+    // --- structured error log ---
+    logEvent("chat_error", {
+      latencyMs,
+      errorMessage: err?.message || String(err),
+      stack: err?.stack ? String(err.stack).slice(0, 1000) : undefined,
+    });
+
+    return new Response(
+      JSON.stringify({ error: "Internal Server Error" }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          ...CORS_HEADERS,
+        },
+      },
+    );
   }
 }
