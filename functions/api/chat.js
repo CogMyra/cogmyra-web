@@ -108,22 +108,23 @@ export async function onRequest({ request, env }) {
       });
     }
 
-    // Auth gate: require correct x-app-key header
+    // --- Auth gate (optional) ---
+    // If APP_GATE_KEY is configured, enforce x-app-key.
+    // If it's NOT configured (e.g. local dev), do NOT block the request.
     const appKey = request.headers.get("x-app-key");
-    if (!env.APP_GATE_KEY || appKey !== env.APP_GATE_KEY) {
-      logEvent("auth_denied", {
-        ip: request.headers.get("cf-connecting-ip") || "unknown",
-      });
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        {
+    if (env.APP_GATE_KEY) {
+      if (appKey !== env.APP_GATE_KEY) {
+        logEvent("auth_denied", {
+          ip: request.headers.get("cf-connecting-ip") || "unknown",
+        });
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401,
           headers: {
             "Content-Type": "application/json",
             ...CORS_HEADERS,
           },
-        },
-      );
+        });
+      }
     }
 
     // Parse incoming body
@@ -197,10 +198,7 @@ ${cmgContext}
 
     const completion = await openai.chat.completions.create({
       model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...messages,
-      ],
+      messages: [{ role: "system", content: systemPrompt }, ...messages],
     });
 
     const latencyMs = Date.now() - start;
