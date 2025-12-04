@@ -26,72 +26,124 @@ function basicMarkdownToHtml(text) {
   return html;
 }
 
-const DEFAULT_STARTER_PROMPT =
-  "Hi! I’m the CogMyra Guide. Tell me a little about yourself and what you’re working on, and I’ll help you one step at a time.";
-
-const PERSONA_PROMPTS = {
-  kid: "Hi! I’m the CogMyra Guide. How old are you, what grade are you in, and what would you like help with today?",
-  college:
-    "Hi! I’m the CogMyra Guide. Are you an undergraduate or graduate student, and what class or project are you working on right now?",
-  pro: "Hi! I’m the CogMyra Guide. What kind of work do you do, and what are you trying to learn, plan, or solve today?",
-};
-
 export default function GuidePage() {
+  const [userType, setUserType] = useState(null); // "kid" | "college" | "pro" | null
+  const [input, setInput] = useState("");
   const [messages, setMessages] = useState([
     {
       role: "assistant",
       content:
-        "Welcome to the CogMyra Guide.\n\nI’m here to act as your personal learning coach—helping you think clearly, build skills, and move step by step through whatever you’re working on.",
+        "Welcome to the CogMyra Guide.\n\nI'm here to act as your personal learning coach—helping you think clearly, build skills, and move step by step through whatever you’re working on.",
     },
   ]);
-  const [inputValue, setInputValue] = useState(DEFAULT_STARTER_PROMPT);
   const [isLoading, setIsLoading] = useState(false);
-  const [persona, setPersona] = useState(null); // "kid" | "college" | "pro" | null
+  const [pendingReply, setPendingReply] = useState("");
+  const [displayedReply, setDisplayedReply] = useState("");
   const messagesEndRef = useRef(null);
 
-  // Auto-scroll to bottom when messages change
+  // Scroll to bottom when messages or streaming text change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [messages, displayedReply]);
 
-  // Helper: get the current starter text based on persona (or default)
-  function getStarterPromptForPersona(nextPersona) {
-    if (!nextPersona) return DEFAULT_STARTER_PROMPT;
-    return PERSONA_PROMPTS[nextPersona] || DEFAULT_STARTER_PROMPT;
-  }
+  // Typing effect for assistant replies
+  useEffect(() => {
+    if (!pendingReply) return;
 
-  function handlePersonaClick(nextPersona) {
-    // If the user clicks the same button again, keep it selected (no toggle off)
-    setPersona(nextPersona);
+    setDisplayedReply("");
+    let index = 0;
 
-    // Only override the input if the user hasn't started typing something custom
-    if (!inputValue || inputValue === DEFAULT_STARTER_PROMPT || PERSONA_PROMPTS[persona]) {
-      const starter = getStarterPromptForPersona(nextPersona);
-      setInputValue(starter);
+    const interval = setInterval(() => {
+      index += 3; // characters per tick
+      setDisplayedReply(pendingReply.slice(0, index));
+
+      if (index >= pendingReply.length) {
+        clearInterval(interval);
+
+        // When typing finishes, push the full reply into messages
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: pendingReply },
+        ]);
+        setPendingReply("");
+        setDisplayedReply("");
+      }
+    }, 20); // ms per tick
+
+    return () => clearInterval(interval);
+  }, [pendingReply]);
+
+  // Starter text based on selected user type
+  const getStarterPrompt = () => {
+    if (userType === "kid") {
+      return (
+        "Hi! I’m the CogMyra Guide.\n\n" +
+        "How old are you, what grade are you in, and how are you feeling today? " +
+        "Tell me something you’re curious about or working on, and I’ll help you one step at a time."
+      );
     }
-  }
+    if (userType === "college") {
+      return (
+        "Hi! I’m the CogMyra Guide.\n\n" +
+        "Are you in undergraduate or graduate school, and what are you working on or worried about right now? " +
+        "Tell me the class, assignment, or goal, and I’ll help you break it into clear, doable steps."
+      );
+    }
+    if (userType === "pro") {
+      return (
+        "Hi! I’m the CogMyra Guide.\n\n" +
+        "Tell me a bit about your role, what you’re trying to learn or accomplish, and what feels most challenging right now. " +
+        "I’ll help you think clearly, plan strategically, and move toward the outcome you care about."
+      );
+    }
+    // default / no selection
+    return (
+      "Hi! I’m the CogMyra Guide.\n\n" +
+      "Tell me what you’re working on, how you’re feeling about it, and what you’d like help with. " +
+      "I’ll walk with you step by step."
+    );
+  };
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    const trimmed = inputValue.trim();
+  const starterPrompt = getStarterPrompt();
+
+  async function handleSend() {
+    const trimmed = input.trim();
     if (!trimmed || isLoading) return;
 
-    const userMessage = { role: "user", content: trimmed };
+    // Add persona hint into the first user message of this turn
+    let personaPrefix = "";
+    if (userType === "kid") {
+      personaPrefix =
+        "[Learner profile: child / K–12 student. Use warm, playful, concrete language and short steps.]\n\n";
+    } else if (userType === "college") {
+      personaPrefix =
+        "[Learner profile: college / university student. Use academically rigorous but accessible tone, with clear structure and scaffolding.]\n\n";
+    } else if (userType === "pro") {
+      personaPrefix =
+        "[Learner profile: working professional. Use clear, efficient, applied language with strategic framing.]\n\n";
+    }
 
-    // If no persona has been explicitly chosen, we rely on the text itself
-    // (DEFAULT_STARTER_PROMPT already invites basic onboarding context).
+    const userMessage = {
+      role: "user",
+      content: personaPrefix + trimmed,
+    };
+
     const updatedMessages = [...messages, userMessage];
+
     setMessages(updatedMessages);
-    setInputValue("");
+    setInput("");
     setIsLoading(true);
+    setPendingReply("");
+    setDisplayedReply("");
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-app-key": import.meta.env.VITE_APP_GATE_KEY || "",
         },
         body: JSON.stringify({
           messages: updatedMessages,
@@ -99,31 +151,31 @@ export default function GuidePage() {
       });
 
       if (!res.ok) {
-        console.error("Chat API error", res.status, res.statusText);
+        const errorText = await res.text();
+        console.error("Chat error:", errorText);
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
             content:
-              "I ran into an issue reaching the CogMyra engine. Please try again in a moment.",
+              "I ran into a problem trying to respond. If this keeps happening, please try again in a moment or refresh the page.",
           },
         ]);
       } else {
         const data = await res.json();
-        const replyText = data.reply || "";
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: replyText },
-        ]);
+        const reply = data.reply || "";
+
+        // Trigger the typing effect
+        setPendingReply(reply);
       }
     } catch (err) {
-      console.error("Chat request failed:", err);
+      console.error("Network error:", err);
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
           content:
-            "Something went wrong reaching the CogMyra engine. If this keeps happening, please try refreshing the page.",
+            "I wasn’t able to reach the CogMyra engine just now. Please check your connection and try again.",
         },
       ]);
     } finally {
@@ -131,141 +183,156 @@ export default function GuidePage() {
     }
   }
 
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }
+
+  // Render messages, including streaming reply if present
+  const renderedMessages =
+    pendingReply && displayedReply
+      ? [
+          ...messages,
+          { role: "assistant", content: displayedReply, _streaming: true },
+        ]
+      : messages;
+
   return (
     <div className="guide-page">
-      {/* Top nav / header */}
       <header className="guide-header">
-        <div className="guide-header-inner">
-          <Link to="/" className="logo-link">
-            <span className="logo-text">CogMyra</span>
+        <div className="guide-logo">CogMyra</div>
+        <nav className="guide-nav">
+          <Link to="/" className="guide-nav-link">
+            Home
           </Link>
-          <nav className="guide-nav">
-            <Link to="/" className="nav-link">
-              Home
-            </Link>
-            <Link to="/guide" className="nav-link nav-link-active">
-              Guide
-            </Link>
-          </nav>
-        </div>
+          <span className="guide-nav-current">Guide</span>
+        </nav>
       </header>
 
-      {/* Main content layout */}
       <main className="guide-main">
         <section className="guide-intro">
           <h1 className="guide-title">CogMyra Guide</h1>
-          <p className="guide-subtitle">
+          <p className="guide-tagline">
             A personalized learning coach that adapts to who you are, how
             you&apos;re feeling, and what you&apos;re trying to accomplish.
           </p>
 
-          {/* User type selector row */}
           <div className="user-type-section">
-            <p className="user-type-label">Who are you today?</p>
+            <h2 className="user-type-title">Who are you today?</h2>
             <div className="user-type-buttons">
               <button
                 type="button"
                 className={
-                  "user-type-button" +
-                  (persona === "kid" ? " user-type-button-active" : "")
+                  userType === "kid"
+                    ? "user-type-button active"
+                    : "user-type-button"
                 }
-                onClick={() => handlePersonaClick("kid")}
+                onClick={() => setUserType("kid")}
               >
-                I’m a Kid in School
+                I&apos;m a Kid in School
               </button>
               <button
                 type="button"
                 className={
-                  "user-type-button" +
-                  (persona === "college" ? " user-type-button-active" : "")
+                  userType === "college"
+                    ? "user-type-button active"
+                    : "user-type-button"
                 }
-                onClick={() => handlePersonaClick("college")}
+                onClick={() => setUserType("college")}
               >
-                I’m a College Student
+                I&apos;m a College Student
               </button>
               <button
                 type="button"
                 className={
-                  "user-type-button" +
-                  (persona === "pro" ? " user-type-button-active" : "")
+                  userType === "pro"
+                    ? "user-type-button active"
+                    : "user-type-button"
                 }
-                onClick={() => handlePersonaClick("pro")}
+                onClick={() => setUserType("pro")}
               >
-                I’m a Professional
+                I&apos;m a Professional
               </button>
             </div>
-            <p className="user-type-helper">
+            <p className="user-type-help">
               Selecting one helps the Guide tune its tone and questions to your
               context. If you’re not sure, you can just start typing below.
             </p>
           </div>
         </section>
 
-        {/* Chat panel */}
-        <section className="guide-chat-panel">
-          <div className="chat-window">
+        <section className="guide-chat-section">
+          <div className="chat-container">
             <div className="chat-messages">
-              {messages.map((m, idx) => {
-                const isUser = m.role === "user";
-                return (
-                  <div
-                    key={idx}
-                    className={
-                      "chat-message " + (isUser ? "chat-message-user" : "chat-message-assistant")
-                    }
-                  >
-                    <div className="chat-message-inner">
-                      {isUser ? (
-                        <p className="chat-text-user">{m.content}</p>
-                      ) : (
-                        <div
-                          className="chat-text-assistant"
-                          dangerouslySetInnerHTML={{
-                            __html: basicMarkdownToHtml(m.content),
-                          }}
-                        />
-                      )}
-                    </div>
+              {renderedMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={
+                    msg.role === "assistant"
+                      ? "chat-message assistant"
+                      : "chat-message user"
+                  }
+                >
+                  <div className="chat-message-role">
+                    {msg.role === "assistant" ? "Guide" : "You"}
                   </div>
-                );
-              })}
-              {isLoading && (
-                <div className="chat-message chat-message-assistant">
-                  <div className="chat-message-inner">
-                    <p className="chat-text-assistant">
-                      Thinking through the best way to help you…
-                    </p>
+                  <div
+                    className="chat-message-content"
+                    dangerouslySetInnerHTML={{
+                      __html: basicMarkdownToHtml(msg.content),
+                    }}
+                  />
+                </div>
+              ))}
+
+              {isLoading && !pendingReply && (
+                <div className="chat-message assistant">
+                  <div className="chat-message-role">Guide</div>
+                  <div className="chat-message-content typing-indicator">
+                    <span className="dot" />
+                    <span className="dot" />
+                    <span className="dot" />
                   </div>
                 </div>
               )}
+
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input bar */}
-            <form className="chat-input-bar" onSubmit={handleSubmit}>
+            <div className="chat-input-area">
+              <div className="starter-prompt">
+                {starterPrompt.split("\n").map((line, i) => (
+                  <p key={i}>{line}</p>
+                ))}
+              </div>
+
               <textarea
                 className="chat-input"
-                rows={2}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder={getStarterPromptForPersona(persona)}
+                placeholder="Tell me what you’re working on or what you’d like help with..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                rows={3}
               />
-              <button
-                type="submit"
-                className="chat-send-button"
-                disabled={isLoading || !inputValue.trim()}
-              >
-                {isLoading ? "Sending..." : "Send"}
-              </button>
-            </form>
 
-            {/* Soft onboarding hint if no persona selected */}
-            {!persona && (
-              <p className="chat-onboarding-hint">
-                Tip: You can pick “Kid,” “College,” or “Professional” above so
-                the Guide can tune its tone and questions more precisely to you.
-              </p>
-            )}
+              <div className="chat-input-footer">
+                <span className="chat-tip">
+                  Tip: You can pick “Kid,” “College,” or “Professional” above so
+                  the Guide can tune its tone and questions more precisely to
+                  you.
+                </span>
+                <button
+                  type="button"
+                  className="chat-send-button"
+                  onClick={handleSend}
+                  disabled={isLoading || !input.trim()}
+                >
+                  {isLoading ? "Thinking…" : "Send"}
+                </button>
+              </div>
+            </div>
           </div>
         </section>
       </main>
