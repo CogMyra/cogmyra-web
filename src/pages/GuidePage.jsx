@@ -17,445 +17,257 @@ function basicMarkdownToHtml(text) {
   // Bold: **text**
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
-  // Headings: lines starting with ##
-  html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
-  html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
-  html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
+  // Italic: *text*
+  html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
 
-  // Bullet lists: lines starting with "- " or "* "
-  // Group consecutive bullets into <ul> blocks
-  const lines = html.split("\n");
-  let inList = false;
-  const out = [];
-
-  for (const line of lines) {
-    const bulletMatch = /^[-*]\s+(.*)/.exec(line.trim());
-    if (bulletMatch) {
-      if (!inList) {
-        out.push("<ul>");
-        inList = true;
-      }
-      out.push(`<li>${bulletMatch[1]}</li>`);
-    } else {
-      if (inList) {
-        out.push("</ul>");
-        inList = false;
-      }
-      if (line.trim().length > 0) {
-        out.push(`<p>${line}</p>`);
-      } else {
-        out.push("");
-      }
-    }
-  }
-  if (inList) out.push("</ul>");
-
-  html = out.join("\n");
+  // Line breaks
+  html = html.replace(/\n/g, "<br />");
 
   return html;
 }
 
-const API_URL = "/api/chat";
-const appKey = import.meta.env.VITE_APP_GATE_KEY;
+const DEFAULT_STARTER_PROMPT =
+  "Hi! I’m the CogMyra Guide. Tell me a little about yourself and what you’re working on, and I’ll help you one step at a time.";
 
-const PERSONA_CONFIG = {
-  kid: {
-    label: "I’m a Kid in School",
-    description: "Ages 6–17 • School support",
-    intro:
-      "CogMyra_ Hello! How old are you, what would you like to learn about, and how are you feeling today?",
-  },
-  college: {
-    label: "I’m a College Student",
-    description: "Undergrad or grad • Classes, papers, exams",
-    intro:
-      "CogMyra_ Hello! Are you an undergraduate or graduate student, and what are you studying? Tell me which class or assignment you’re working on and how you’re feeling about it, and I’ll help you work through it one step at a time.",
-  },
-  professional: {
-    label: "I’m a Professional",
-    description: "Work projects • Skills • Leadership",
-    intro:
-      "CogMyra_ Hello! What kind of work do you do, and what are you working on right now? Tell me your role, your field, and what you’d like to make progress on, and I’ll help you one step at a time.",
-  },
+const PERSONA_PROMPTS = {
+  kid: "Hi! I’m the CogMyra Guide. How old are you, what grade are you in, and what would you like help with today?",
+  college:
+    "Hi! I’m the CogMyra Guide. Are you an undergraduate or graduate student, and what class or project are you working on right now?",
+  pro: "Hi! I’m the CogMyra Guide. What kind of work do you do, and what are you trying to learn, plan, or solve today?",
 };
 
 export default function GuidePage() {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        "Welcome to the CogMyra Guide.\n\nI’m here to act as your personal learning coach—helping you think clearly, build skills, and move step by step through whatever you’re working on.",
+    },
+  ]);
+  const [inputValue, setInputValue] = useState(DEFAULT_STARTER_PROMPT);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedPersona, setSelectedPersona] = useState("college");
+  const [persona, setPersona] = useState(null); // "kid" | "college" | "pro" | null
+  const messagesEndRef = useRef(null);
 
-  // Typing effect state
-  const [pendingAssistantText, setPendingAssistantText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [typingIndex, setTypingIndex] = useState(0);
-
-  const scrollRef = useRef(null);
-
-  // Scroll to bottom when messages change
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, isTyping, typingIndex]);
+  }, [messages]);
 
-  // Typing effect: reveal assistant text gradually
-  useEffect(() => {
-    if (!isTyping || !pendingAssistantText) return;
+  // Helper: get the current starter text based on persona (or default)
+  function getStarterPromptForPersona(nextPersona) {
+    if (!nextPersona) return DEFAULT_STARTER_PROMPT;
+    return PERSONA_PROMPTS[nextPersona] || DEFAULT_STARTER_PROMPT;
+  }
 
-    const interval = setInterval(() => {
-      setTypingIndex((prev) => {
-        const next = prev + 3; // characters per tick
-        if (next >= pendingAssistantText.length) {
-          // Finish typing
-          setIsTyping(false);
-          setMessages((prevMessages) => {
-            const updated = [...prevMessages];
-            const lastIndex = updated.length - 1;
-            if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
-              updated[lastIndex] = {
-                ...updated[lastIndex],
-                content: pendingAssistantText,
-              };
-            }
-            return updated;
-          });
-          return pendingAssistantText.length;
-        }
+  function handlePersonaClick(nextPersona) {
+    // If the user clicks the same button again, keep it selected (no toggle off)
+    setPersona(nextPersona);
 
-        // Update last assistant message with partial text
-        setMessages((prevMessages) => {
-          const updated = [...prevMessages];
-          const lastIndex = updated.length - 1;
-          if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
-            updated[lastIndex] = {
-              ...updated[lastIndex],
-              content: pendingAssistantText.slice(0, next),
-            };
-          }
-          return updated;
-        });
-
-        return next;
-      });
-    }, 20);
-
-    return () => clearInterval(interval);
-  }, [isTyping, pendingAssistantText]);
-
-  // Initialize with the default persona intro (once)
-  useEffect(() => {
-    const persona = PERSONA_CONFIG[selectedPersona];
-    setMessages([
-      {
-        role: "assistant",
-        content: persona.intro,
-      },
-    ]);
-  }, []); // only on first mount
-
-  function handlePersonaChange(key) {
-    setSelectedPersona(key);
-
-    const persona = PERSONA_CONFIG[key];
-
-    // If there is no conversation yet or only the initial intro, reset to this intro
-    setMessages([
-      {
-        role: "assistant",
-        content: persona.intro,
-      },
-    ]);
+    // Only override the input if the user hasn't started typing something custom
+    if (!inputValue || inputValue === DEFAULT_STARTER_PROMPT || PERSONA_PROMPTS[persona]) {
+      const starter = getStarterPromptForPersona(nextPersona);
+      setInputValue(starter);
+    }
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    const trimmed = inputValue.trim();
+    if (!trimmed || isLoading) return;
 
-    const userContent = input.trim();
+    const userMessage = { role: "user", content: trimmed };
 
-    // Add user message locally
-    const newMessages = [
-      ...messages,
-      { role: "user", content: userContent },
-    ];
-    setMessages(newMessages);
-    setInput("");
+    // If no persona has been explicitly chosen, we rely on the text itself
+    // (DEFAULT_STARTER_PROMPT already invites basic onboarding context).
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    setInputValue("");
     setIsLoading(true);
 
-    try
-    {
-      // Build a persona hint to send on the very first turn
-      let personaPrefix = "";
-      if (messages.length === 1 && messages[0].role === "assistant") {
-        // First real user turn in this session
-        if (selectedPersona === "kid") {
-          personaPrefix =
-            "[Persona: Kid in school, ages 6–17. Use encouraging, concrete language and short steps.] ";
-        } else if (selectedPersona === "college") {
-          personaPrefix =
-            "[Persona: College student (undergrad or graduate). Use academically rigorous but approachable language with clear structure.] ";
-        } else if (selectedPersona === "professional") {
-          personaPrefix =
-            "[Persona: Working professional. Use concise, outcome-oriented, applied language with clear steps.] ";
-        }
-      }
-
-      const apiMessages =
-        personaPrefix && newMessages.length > 0
-          ? [
-              // First user message includes persona prefix
-              ...newMessages.slice(0, newMessages.length - 1),
-              {
-                role: "user",
-                content: `${personaPrefix}${userContent}`,
-              },
-            ]
-          : newMessages;
-
-const res = await fetch("https://cogmyra.com/api/chat", {
+    try {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-app-key": appKey || "",
         },
         body: JSON.stringify({
-          messages: apiMessages,
+          messages: updatedMessages,
         }),
       });
 
       if (!res.ok) {
-        throw new Error(`API error: ${res.status}`);
+        console.error("Chat API error", res.status, res.statusText);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content:
+              "I ran into an issue reaching the CogMyra engine. Please try again in a moment.",
+          },
+        ]);
+      } else {
+        const data = await res.json();
+        const replyText = data.reply || "";
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: replyText },
+        ]);
       }
-
-      const data = await res.json();
-      const assistantText = data.reply || "";
-
-      // Add an empty assistant message which will be filled by the typing effect
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { role: "assistant", content: "" },
-      ]);
-      setPendingAssistantText(assistantText);
-      setTypingIndex(0);
-      setIsTyping(true);
     } catch (err) {
-      console.error(err);
+      console.error("Chat request failed:", err);
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
           content:
-            "I ran into a problem reaching the CogMyra engine. Please try again in a moment.",
+            "Something went wrong reaching the CogMyra engine. If this keeps happening, please try refreshing the page.",
         },
       ]);
-      setIsTyping(false);
-      setPendingAssistantText("");
-      setTypingIndex(0);
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F5F2] text-slate-900 flex flex-col">
-      {/* Top bar */}
-      <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link
-            to="/"
-            className="text-lg sm:text-xl font-semibold text-slate-900 tracking-[0.18em]"
-          >
-            CogMyra_
+    <div className="guide-page">
+      {/* Top nav / header */}
+      <header className="guide-header">
+        <div className="guide-header-inner">
+          <Link to="/" className="logo-link">
+            <span className="logo-text">CogMyra</span>
           </Link>
-
-          <div className="text-[11px] sm:text-xs font-medium text-slate-500">
-            Personalized Learning Coach
-          </div>
+          <nav className="guide-nav">
+            <Link to="/" className="nav-link">
+              Home
+            </Link>
+            <Link to="/guide" className="nav-link nav-link-active">
+              Guide
+            </Link>
+          </nav>
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10 lg:flex-row lg:items-start">
-          {/* Left column: intro + persona buttons */}
-          <div className="w-full lg:w-1/3 space-y-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900">
-                CogMyra Guide
-              </h1>
-              <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-                A focused space to work through concepts, assignments, and skills
-                with a guide that adapts to who you are and what you’re trying
-                to learn.
-              </p>
-            </div>
+      {/* Main content layout */}
+      <main className="guide-main">
+        <section className="guide-intro">
+          <h1 className="guide-title">CogMyra Guide</h1>
+          <p className="guide-subtitle">
+            A personalized learning coach that adapts to who you are, how
+            you&apos;re feeling, and what you&apos;re trying to accomplish.
+          </p>
 
-            <div className="space-y-2">
-              <div className="text-[11px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                WHO’S USING COGMYRA?
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(PERSONA_CONFIG).map(([key, config]) => {
-                  const isActive = selectedPersona === key;
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => handlePersonaChange(key)}
-                      className={`rounded-full border px-3 py-1.5 text-xs text-left transition ${
-                        isActive
-                          ? "border-emerald-600 bg-emerald-50 text-emerald-900 shadow-sm"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-emerald-500 hover:text-emerald-900"
-                      }`}
-                    >
-                      <div className="font-semibold">{config.label}</div>
-                      <div className="text-[10px] text-slate-500">
-                        {config.description}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+          {/* User type selector row */}
+          <div className="user-type-section">
+            <p className="user-type-label">Who are you today?</p>
+            <div className="user-type-buttons">
+              <button
+                type="button"
+                className={
+                  "user-type-button" +
+                  (persona === "kid" ? " user-type-button-active" : "")
+                }
+                onClick={() => handlePersonaClick("kid")}
+              >
+                I’m a Kid in School
+              </button>
+              <button
+                type="button"
+                className={
+                  "user-type-button" +
+                  (persona === "college" ? " user-type-button-active" : "")
+                }
+                onClick={() => handlePersonaClick("college")}
+              >
+                I’m a College Student
+              </button>
+              <button
+                type="button"
+                className={
+                  "user-type-button" +
+                  (persona === "pro" ? " user-type-button-active" : "")
+                }
+                onClick={() => handlePersonaClick("pro")}
+              >
+                I’m a Professional
+              </button>
             </div>
-
-            <div className="rounded-xl border border-slate-200 bg-white/80 p-3 text-[11px] text-slate-600 leading-relaxed">
-              CogMyra remembers context within this session and tailors
-              explanations, practice, and feedback to your path. Use plain
-              language—this space is for genuine thinking, not performance.
-            </div>
+            <p className="user-type-helper">
+              Selecting one helps the Guide tune its tone and questions to your
+              context. If you’re not sure, you can just start typing below.
+            </p>
           </div>
+        </section>
 
-          {/* Right column: chat card */}
-          <div className="w-full lg:flex-1 flex justify-center">
-            <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white/90 shadow-sm flex flex-col overflow-hidden">
-              {/* Chat header */}
-              <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/80 px-4 py-2.5">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-xs font-medium text-slate-700">
-                    Session active
-                  </span>
-                </div>
-                <div className="text-[11px] text-slate-500">
-                  Persona:{" "}
-                  <span className="font-medium text-slate-700">
-                    {PERSONA_CONFIG[selectedPersona].label}
-                  </span>
-                </div>
-              </div>
-
-              {/* Messages */}
-              <div
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-slate-50/60"
-              >
-                {messages.map((msg, idx) => {
-                  const isUser = msg.role === "user";
-                  const isAssistant = msg.role === "assistant";
-
-                  return (
-                    <div
-                      key={idx}
-                      className={`flex ${
-                        isUser ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      <div
-                        className={`max-w-[90%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                          isUser
-                            ? "bg-slate-900 text-slate-50"
-                            : "bg-white border border-slate-200 text-slate-800 chat-response"
-                        }`}
-                      >
-                        <div className="mb-1 text-[10px] font-semibold tracking-[0.18em] uppercase text-slate-500">
-                          {isUser ? "YOU" : "COGMYRA"}
-                        </div>
-
-                        {isAssistant ? (
-                          <div
-                            className="text-sm leading-relaxed"
-                            dangerouslySetInnerHTML={{
-                              __html: basicMarkdownToHtml(msg.content),
-                            }}
-                          />
-                        ) : (
-                          <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                            {msg.content}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {isLoading && !isTyping && (
-                  <div className="flex justify-start">
-                    <div className="max-w-[90%] rounded-2xl bg-white border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 flex items-center gap-2">
-                      <span className="text-[10px] font-semibold tracking-[0.18em] text-slate-500">
-                        COGMYRA
-                      </span>
-                      <span className="inline-flex gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce delay-75" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce delay-150" />
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Input area */}
-              <form
-                onSubmit={handleSubmit}
-                className="border-t border-slate-200 bg-white px-4 py-3 space-y-2"
-              >
-                <div className="flex items-end gap-2">
-                  <textarea
-                    rows={2}
-                    className="flex-1 resize-none rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 shadow-inner focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    placeholder="Tell CogMyra what you’re working on or what you’d like to understand better…"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                  />
-                  <button
-                    type="submit"
-                    disabled={isLoading || !input.trim()}
-                    className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
+        {/* Chat panel */}
+        <section className="guide-chat-panel">
+          <div className="chat-window">
+            <div className="chat-messages">
+              {messages.map((m, idx) => {
+                const isUser = m.role === "user";
+                return (
+                  <div
+                    key={idx}
+                    className={
+                      "chat-message " + (isUser ? "chat-message-user" : "chat-message-assistant")
+                    }
                   >
-                    Send
-                  </button>
-                </div>
-
-                {/* Controls row: speaker + mic (UI only / future wiring) */}
-                <div className="flex items-center justify-between text-[11px] text-slate-500">
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600 hover:border-emerald-500 hover:text-emerald-800"
-                      title="Voice output (coming soon)"
-                    >
-                      <span aria-hidden="true">🔊</span>
-                      <span>Read aloud</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600 hover:border-emerald-500 hover:text-emerald-800"
-                      title="Voice input (coming soon)"
-                    >
-                      <span aria-hidden="true">🎤</span>
-                      <span>Speak instead</span>
-                    </button>
+                    <div className="chat-message-inner">
+                      {isUser ? (
+                        <p className="chat-text-user">{m.content}</p>
+                      ) : (
+                        <div
+                          className="chat-text-assistant"
+                          dangerouslySetInnerHTML={{
+                            __html: basicMarkdownToHtml(m.content),
+                          }}
+                        />
+                      )}
+                    </div>
                   </div>
-
-                  <div className="text-[10px] text-slate-400">
-                    CogMyra sessions are private to you in this prototype.
+                );
+              })}
+              {isLoading && (
+                <div className="chat-message chat-message-assistant">
+                  <div className="chat-message-inner">
+                    <p className="chat-text-assistant">
+                      Thinking through the best way to help you…
+                    </p>
                   </div>
                 </div>
-              </form>
+              )}
+              <div ref={messagesEndRef} />
             </div>
+
+            {/* Input bar */}
+            <form className="chat-input-bar" onSubmit={handleSubmit}>
+              <textarea
+                className="chat-input"
+                rows={2}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={getStarterPromptForPersona(persona)}
+              />
+              <button
+                type="submit"
+                className="chat-send-button"
+                disabled={isLoading || !inputValue.trim()}
+              >
+                {isLoading ? "Sending..." : "Send"}
+              </button>
+            </form>
+
+            {/* Soft onboarding hint if no persona selected */}
+            {!persona && (
+              <p className="chat-onboarding-hint">
+                Tip: You can pick “Kid,” “College,” or “Professional” above so
+                the Guide can tune its tone and questions more precisely to you.
+              </p>
+            )}
           </div>
-        </div>
+        </section>
       </main>
     </div>
   );
