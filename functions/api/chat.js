@@ -2,6 +2,7 @@
 // CogMyra Engine v1: Chat endpoint with CMG retrieval + prompt assembly + structured logging
 
 import { OpenAI } from "openai";
+import { CMG_SYSTEM_PROMPT } from "../../config/cmgPrompt.js";
 
 // --- CORS headers (for browser + local dev) ---
 const CORS_HEADERS = {
@@ -178,7 +179,22 @@ export async function onRequest({ request, env }) {
     );
 
     // 2) Build the combined system prompt
-    const baseSystem = env.COGMYRA_SYSTEM_PROMPT || "";
+    // CMG_SYSTEM_PROMPT from config is the primary source of truth.
+    // Optionally allow env.COGMYRA_SYSTEM_PROMPT as a fallback override.
+    const baseSystem =
+      (CMG_SYSTEM_PROMPT && CMG_SYSTEM_PROMPT.trim()) ||
+      env.COGMYRA_SYSTEM_PROMPT ||
+      "";
+
+    const FORMAT_HINT = `
+# Response formatting rules
+When responding, always format using clean, readable Markdown:
+- Use **bold** for short section headings.
+- Use bullet points for lists.
+- Use numbered lists for ordered steps or sequences.
+- Leave a blank line between paragraphs or list blocks.
+- Do not use decorative borders, emojis, or ASCII art unless the user explicitly asks.
+`;
 
     const cmgKnowledgeBlock = cmgContext
       ? `
@@ -191,7 +207,7 @@ ${cmgContext}
 `
       : "";
 
-    const systemPrompt = `${baseSystem}\n\n${cmgKnowledgeBlock}`.trim();
+    const systemPrompt = `${baseSystem}\n\n${cmgKnowledgeBlock}\n\n${FORMAT_HINT}`.trim();
 
     // 3) Call Chat Completions with system + user messages
     const model = env.MODEL || "gpt-5.1";
