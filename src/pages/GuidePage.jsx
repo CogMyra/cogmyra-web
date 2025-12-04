@@ -33,6 +33,32 @@ const PERSONAS = {
   },
 };
 
+// Very simple Markdown → HTML helper for assistant replies
+function basicMarkdownToHtml(text) {
+  if (!text) return "";
+
+  let html = text;
+
+  // Escape HTML first
+  html = html
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Headings
+  html = html.replace(/^### (.*)$/gim, "<h3>$1</h3>");
+  html = html.replace(/^## (.*)$/gim, "<h2>$1</h2>");
+  html = html.replace(/^# (.*)$/gim, "<h1>$1</h1>");
+
+  // Bold
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+  // Basic line breaks between paragraphs
+  html = html.replace(/\n{2,}/g, "<br/><br/>");
+
+  return html;
+}
+
 function buildPersonaSystemMessage(personaKey) {
   const persona = PERSONAS[personaKey] ?? PERSONAS.college;
   return {
@@ -87,7 +113,7 @@ export default function GuidePage() {
     }
   }, []);
 
-  // Change persona + reset opening prompt (only resets assistant side)
+  // Change persona + reset opening prompt (assistant only)
   const handlePersonaChange = (key) => {
     setPersona(key);
     const intro = PERSONAS[key].intro;
@@ -102,7 +128,6 @@ export default function GuidePage() {
     setIsSending(true);
     setError("");
 
-    // Add user message locally
     const userMessage = { role: "user", content: trimmed };
     const baseMessages = [...messages, userMessage];
 
@@ -110,7 +135,6 @@ export default function GuidePage() {
     setInput("");
 
     try {
-      // Build messages for API: persona system + history
       const apiMessages = [
         buildPersonaSystemMessage(persona),
         ...baseMessages.map((m) => ({
@@ -140,12 +164,12 @@ export default function GuidePage() {
       const data = await res.json();
       const fullReply = data.reply || "";
 
-      // Typing effect: append assistant message and reveal text gradually
+      // Typing effect
       setIsTyping(true);
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       let index = 0;
-      const speedMs = 12; // typing speed per character
+      const speedMs = 12;
 
       const intervalId = setInterval(() => {
         index++;
@@ -290,7 +314,12 @@ export default function GuidePage() {
                       <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                         COGMYRA
                       </div>
-                      <p className="whitespace-pre-wrap">{m.content}</p>
+                      <div
+                        className="whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{
+                          __html: basicMarkdownToHtml(m.content),
+                        }}
+                      />
                     </div>
                   ) : (
                     <div className="ml-auto max-w-[85%] rounded-2xl bg-emerald-700 px-4 py-3 text-sm leading-relaxed text-white">
