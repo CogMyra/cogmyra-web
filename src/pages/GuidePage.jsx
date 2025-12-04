@@ -1,340 +1,372 @@
 // src/pages/GuidePage.jsx
-import { useState, useEffect, useRef } from "react";
+
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-// Simple helper: convert a small subset of Markdown to HTML
-function basicMarkdownToHtml(text) {
-  if (!text) return "";
+const APP_KEY = import.meta.env.VITE_APP_GATE_KEY || "";
+console.log("APP_KEY (frontend) =", APP_KEY);
 
-  let html = text;
+const PERSONAS = {
+  kid: {
+    label: "I’m a Kid in School",
+    badge: "Kid in School",
+    intro:
+      "CogMyra_ Hello! How old are you, what would you like to learn about, and how are you feeling today?",
+    system:
+      "The learner is a child or teen (roughly ages 6–17) using CogMyra for school. Use warm, clear, age-appropriate language, lots of concrete examples, and step-by-step scaffolding.",
+  },
+  college: {
+    label: "I’m a College Student",
+    badge: "College Student",
+    intro:
+      "CogMyra_ Hello! Are you an undergraduate or graduate student, and what are you studying? Tell me which class or assignment you’re working on and how you’re feeling about it, and I’ll help you work through it one step at a time.",
+    system:
+      "The learner is a college or graduate student (roughly ages 18–25). Support with reading, writing, studying, exams, research, and complex concepts using rigorous but accessible explanations.",
+  },
+  professional: {
+    label: "I’m a Professional",
+    badge: "Professional",
+    intro:
+      "CogMyra_ Hello! What kind of work do you do, and what are you working on right now? Tell me your role, your field, and what you’d like to make progress on, and I’ll help you one step at a time.",
+    system:
+      "The learner is a working professional (25+) using CogMyra for projects, communication, leadership, and skill-building in a real-world context. Be concise, applied, and outcome-focused.",
+  },
+};
 
-  // Escape basic HTML characters first
-  html = html
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
-  // Bold: **text**
-  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-
-  // Italic: *text*
-  html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
-
-  // Line breaks
-  html = html.replace(/\n/g, "<br />");
-
-  return html;
+function buildPersonaSystemMessage(personaKey) {
+  const persona = PERSONAS[personaKey] ?? PERSONAS.college;
+  return {
+    role: "system",
+    content: `Learner persona:\n${persona.system}`,
+  };
 }
 
 export default function GuidePage() {
-  const [userType, setUserType] = useState(null); // "kid" | "college" | "pro" | null
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "Welcome to the CogMyra Guide.\n\nI'm here to act as your personal learning coach—helping you think clearly, build skills, and move step by step through whatever you’re working on.",
-    },
+  const [persona, setPersona] = useState("college");
+  const [messages, setMessages] = useState(() => [
+    { role: "assistant", content: PERSONAS.college.intro },
   ]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [pendingReply, setPendingReply] = useState("");
-  const [displayedReply, setDisplayedReply] = useState("");
-  const messagesEndRef = useRef(null);
+  const [input, setInput] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
 
-  // Scroll to bottom when messages or streaming text change
+  const scrollRef = useRef(null);
+  const speechRecognitionRef = useRef(null);
+  const recognitionActiveRef = useRef(false);
+
+  // Auto-scroll on new messages
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, displayedReply]);
+  }, [messages, isTyping]);
 
-  // Typing effect for assistant replies
+  // Initialize basic speech recognition if available
   useEffect(() => {
-    if (!pendingReply) return;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.interimResults = false;
+      rec.lang = "en-US";
 
-    setDisplayedReply("");
-    let index = 0;
+      rec.onresult = (event) => {
+        const transcript = event.results[0]?.[0]?.transcript || "";
+        if (transcript) {
+          setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        }
+      };
 
-    const interval = setInterval(() => {
-      index += 3; // characters per tick
-      setDisplayedReply(pendingReply.slice(0, index));
+      rec.onend = () => {
+        recognitionActiveRef.current = false;
+      };
 
-      if (index >= pendingReply.length) {
-        clearInterval(interval);
-
-        // When typing finishes, push the full reply into messages
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: pendingReply },
-        ]);
-        setPendingReply("");
-        setDisplayedReply("");
-      }
-    }, 20); // ms per tick
-
-    return () => clearInterval(interval);
-  }, [pendingReply]);
-
-  // Starter text based on selected user type
-  const getStarterPrompt = () => {
-    if (userType === "kid") {
-      return (
-        "Hi! I’m the CogMyra Guide.\n\n" +
-        "How old are you, what grade are you in, and how are you feeling today? " +
-        "Tell me something you’re curious about or working on, and I’ll help you one step at a time."
-      );
+      speechRecognitionRef.current = rec;
     }
-    if (userType === "college") {
-      return (
-        "Hi! I’m the CogMyra Guide.\n\n" +
-        "Are you in undergraduate or graduate school, and what are you working on or worried about right now? " +
-        "Tell me the class, assignment, or goal, and I’ll help you break it into clear, doable steps."
-      );
-    }
-    if (userType === "pro") {
-      return (
-        "Hi! I’m the CogMyra Guide.\n\n" +
-        "Tell me a bit about your role, what you’re trying to learn or accomplish, and what feels most challenging right now. " +
-        "I’ll help you think clearly, plan strategically, and move toward the outcome you care about."
-      );
-    }
-    // default / no selection
-    return (
-      "Hi! I’m the CogMyra Guide.\n\n" +
-      "Tell me what you’re working on, how you’re feeling about it, and what you’d like help with. " +
-      "I’ll walk with you step by step."
-    );
+  }, []);
+
+  // Change persona + reset opening prompt (only resets assistant side)
+  const handlePersonaChange = (key) => {
+    setPersona(key);
+    const intro = PERSONAS[key].intro;
+    setMessages([{ role: "assistant", content: intro }]);
+    setError("");
   };
 
-  const starterPrompt = getStarterPrompt();
-
-  async function handleSend() {
+  const handleSend = async () => {
     const trimmed = input.trim();
-    if (!trimmed || isLoading) return;
+    if (!trimmed || isSending) return;
 
-    // Add persona hint into the first user message of this turn
-    let personaPrefix = "";
-    if (userType === "kid") {
-      personaPrefix =
-        "[Learner profile: child / K–12 student. Use warm, playful, concrete language and short steps.]\n\n";
-    } else if (userType === "college") {
-      personaPrefix =
-        "[Learner profile: college / university student. Use academically rigorous but accessible tone, with clear structure and scaffolding.]\n\n";
-    } else if (userType === "pro") {
-      personaPrefix =
-        "[Learner profile: working professional. Use clear, efficient, applied language with strategic framing.]\n\n";
-    }
+    setIsSending(true);
+    setError("");
 
-    const userMessage = {
-      role: "user",
-      content: personaPrefix + trimmed,
-    };
+    // Add user message locally
+    const userMessage = { role: "user", content: trimmed };
+    const baseMessages = [...messages, userMessage];
 
-    const updatedMessages = [...messages, userMessage];
-
-    setMessages(updatedMessages);
+    setMessages(baseMessages);
     setInput("");
-    setIsLoading(true);
-    setPendingReply("");
-    setDisplayedReply("");
 
     try {
-      const res = await fetch("/api/chat", {
+      // Build messages for API: persona system + history
+      const apiMessages = [
+        buildPersonaSystemMessage(persona),
+        ...baseMessages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+      ];
+
+      const res = await fetch("https://cogmyra.com/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-app-key": import.meta.env.VITE_APP_GATE_KEY || "",
+          ...(APP_KEY ? { "x-app-key": APP_KEY } : {}),
         },
-        body: JSON.stringify({
-          messages: updatedMessages,
-        }),
+        body: JSON.stringify({ messages: apiMessages }),
       });
 
       if (!res.ok) {
-        const errorText = await res.text();
-        console.error("Chat error:", errorText);
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content:
-              "I ran into a problem trying to respond. If this keeps happening, please try again in a moment or refresh the page.",
-          },
-        ]);
-      } else {
-        const data = await res.json();
-        const reply = data.reply || "";
-
-        // Trigger the typing effect
-        setPendingReply(reply);
+        console.error("Chat API error status:", res.status);
+        const text = await res.text().catch(() => "");
+        console.error("Response body:", text);
+        setError("Something went wrong talking to the Guide. Please try again.");
+        setIsSending(false);
+        return;
       }
-    } catch (err) {
-      console.error("Network error:", err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "I wasn’t able to reach the CogMyra engine just now. Please check your connection and try again.",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
-  function handleKeyDown(e) {
+      const data = await res.json();
+      const fullReply = data.reply || "";
+
+      // Typing effect: append assistant message and reveal text gradually
+      setIsTyping(true);
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+
+      let index = 0;
+      const speedMs = 12; // typing speed per character
+
+      const intervalId = setInterval(() => {
+        index++;
+        const current = fullReply.slice(0, index);
+
+        setMessages((prev) => {
+          const cloned = [...prev];
+          const lastIdx = cloned.length - 1;
+          if (lastIdx >= 0 && cloned[lastIdx].role === "assistant") {
+            cloned[lastIdx] = { ...cloned[lastIdx], content: current };
+          }
+          return cloned;
+        });
+
+        if (index >= fullReply.length) {
+          clearInterval(intervalId);
+          setIsTyping(false);
+        }
+      }, speedMs);
+
+      setIsSending(false);
+    } catch (err) {
+      console.error("Chat request failed:", err);
+      setError("Something went wrong talking to the Guide. Please try again.");
+      setIsSending(false);
+      setIsTyping(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  }
+  };
 
-  // Render messages, including streaming reply if present
-  const renderedMessages =
-    pendingReply && displayedReply
-      ? [
-          ...messages,
-          { role: "assistant", content: displayedReply, _streaming: true },
-        ]
-      : messages;
+  const handlePlayReply = () => {
+    const lastAssistant = [...messages]
+      .reverse()
+      .find((m) => m.role === "assistant" && m.content.trim().length > 0);
+
+    if (!lastAssistant) return;
+
+    if (!("speechSynthesis" in window)) {
+      alert("Text-to-speech isn’t available in this browser.");
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(lastAssistant.content);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleVoiceInput = () => {
+    const rec = speechRecognitionRef.current;
+    if (!rec) {
+      alert("Voice input isn’t available in this browser.");
+      return;
+    }
+
+    if (!recognitionActiveRef.current) {
+      recognitionActiveRef.current = true;
+      rec.start();
+    } else {
+      recognitionActiveRef.current = false;
+      rec.stop();
+    }
+  };
 
   return (
-    <div className="guide-page">
-      <header className="guide-header">
-        <div className="guide-logo">CogMyra</div>
-        <nav className="guide-nav">
-          <Link to="/" className="guide-nav-link">
-            Home
+    <div className="min-h-screen bg-[#E2E7E5] text-slate-900 flex flex-col">
+      {/* Header */}
+      <header className="w-full border-b border-slate-300 bg-[#E2E7E5]/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <Link
+            to="/"
+            className="text-lg sm:text-xl font-semibold text-slate-900"
+          >
+            CogMyra_
           </Link>
-          <span className="guide-nav-current">Guide</span>
-        </nav>
+          <div className="hidden sm:flex items-center gap-2 text-xs text-emerald-800">
+            <span className="h-1.5 w-6 rounded-full bg-emerald-500" />
+            <span className="font-medium tracking-wide">CMG Engine v1</span>
+          </div>
+        </div>
       </header>
 
-      <main className="guide-main">
-        <section className="guide-intro">
-          <h1 className="guide-title">CogMyra Guide</h1>
-          <p className="guide-tagline">
-            A personalized learning coach that adapts to who you are, how
-            you&apos;re feeling, and what you&apos;re trying to accomplish.
-          </p>
-
-          <div className="user-type-section">
-            <h2 className="user-type-title">Who are you today?</h2>
-            <div className="user-type-buttons">
-              <button
-                type="button"
-                className={
-                  userType === "kid"
-                    ? "user-type-button active"
-                    : "user-type-button"
-                }
-                onClick={() => setUserType("kid")}
-              >
-                I&apos;m a Kid in School
-              </button>
-              <button
-                type="button"
-                className={
-                  userType === "college"
-                    ? "user-type-button active"
-                    : "user-type-button"
-                }
-                onClick={() => setUserType("college")}
-              >
-                I&apos;m a College Student
-              </button>
-              <button
-                type="button"
-                className={
-                  userType === "pro"
-                    ? "user-type-button active"
-                    : "user-type-button"
-                }
-                onClick={() => setUserType("pro")}
-              >
-                I&apos;m a Professional
-              </button>
-            </div>
-            <p className="user-type-help">
-              Selecting one helps the Guide tune its tone and questions to your
-              context. If you’re not sure, you can just start typing below.
+      {/* Main */}
+      <main className="flex-1">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
+          {/* Title */}
+          <div className="mb-6">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900">
+              CogMyra Guide
+            </h1>
+            <p className="mt-1 text-sm text-slate-600">
+              Personalized Learning Coach
             </p>
           </div>
-        </section>
 
-        <section className="guide-chat-section">
-          <div className="chat-container">
-            <div className="chat-messages">
-              {renderedMessages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={
-                    msg.role === "assistant"
-                      ? "chat-message assistant"
-                      : "chat-message user"
-                  }
+          {/* Persona buttons */}
+          <div className="mb-4 flex flex-wrap gap-3">
+            {Object.entries(PERSONAS).map(([key, value]) => {
+              const isActive = key === persona;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handlePersonaChange(key)}
+                  className={`rounded-full border px-4 py-1.5 text-sm transition ${
+                    isActive
+                      ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                      : "border-slate-300 bg-white text-slate-800 hover:border-emerald-500 hover:text-emerald-800"
+                  }`}
                 >
-                  <div className="chat-message-role">
-                    {msg.role === "assistant" ? "Guide" : "You"}
-                  </div>
-                  <div
-                    className="chat-message-content"
-                    dangerouslySetInnerHTML={{
-                      __html: basicMarkdownToHtml(msg.content),
-                    }}
-                  />
+                  {value.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Error banner */}
+          {error && (
+            <div className="mb-4 rounded-md border border-rose-300 bg-rose-50 px-4 py-2 text-sm text-rose-800">
+              {error}
+            </div>
+          )}
+
+          {/* Chat card */}
+          <div className="rounded-3xl bg-white shadow-lg border border-slate-200 p-4 sm:p-6 flex flex-col min-h-[420px]">
+            {/* Messages area */}
+            <div
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto space-y-4 pr-1"
+            >
+              {messages.map((m, idx) => (
+                <div key={idx} className="flex">
+                  {m.role === "assistant" ? (
+                    <div className="max-w-[85%] rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-relaxed">
+                      <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        COGMYRA
+                      </div>
+                      <p className="whitespace-pre-wrap">{m.content}</p>
+                    </div>
+                  ) : (
+                    <div className="ml-auto max-w-[85%] rounded-2xl bg-emerald-700 px-4 py-3 text-sm leading-relaxed text-white">
+                      <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-100">
+                        YOU
+                      </div>
+                      <p className="whitespace-pre-wrap">{m.content}</p>
+                    </div>
+                  )}
                 </div>
               ))}
 
-              {isLoading && !pendingReply && (
-                <div className="chat-message assistant">
-                  <div className="chat-message-role">Guide</div>
-                  <div className="chat-message-content typing-indicator">
-                    <span className="dot" />
-                    <span className="dot" />
-                    <span className="dot" />
+              {isTyping && (
+                <div className="mt-1 flex">
+                  <div className="rounded-2xl bg-slate-100 border border-slate-200 px-3 py-2 text-xs text-slate-500">
+                    CogMyra_ is thinking…
                   </div>
                 </div>
               )}
-
-              <div ref={messagesEndRef} />
             </div>
 
-            <div className="chat-input-area">
-              <div className="starter-prompt">
-                {starterPrompt.split("\n").map((line, i) => (
-                  <p key={i}>{line}</p>
-                ))}
-              </div>
-
-              <textarea
-                className="chat-input"
-                placeholder="Tell me what you’re working on or what you’d like help with..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                rows={3}
-              />
-
-              <div className="chat-input-footer">
-                <span className="chat-tip">
-                  Tip: You can pick “Kid,” “College,” or “Professional” above so
-                  the Guide can tune its tone and questions more precisely to
-                  you.
-                </span>
+            {/* Input area */}
+            <div className="mt-4 border-t border-slate-200 pt-4">
+              <div className="flex items-end gap-3">
+                <textarea
+                  rows={2}
+                  className="flex-1 resize-none rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 shadow-inner focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                  placeholder="Ask a question, paste an assignment, or tell CogMyra what you’re working on…"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
                 <button
                   type="button"
-                  className="chat-send-button"
                   onClick={handleSend}
-                  disabled={isLoading || !input.trim()}
+                  disabled={isSending || !input.trim()}
+                  className={`rounded-full px-5 py-2 text-sm font-semibold shadow-sm ${
+                    isSending || !input.trim()
+                      ? "bg-slate-300 text-slate-600 cursor-not-allowed"
+                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                  }`}
                 >
-                  {isLoading ? "Thinking…" : "Send"}
+                  {isSending ? "Sending…" : "Send"}
                 </button>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handlePlayReply}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1 hover:border-emerald-500 hover:text-emerald-700 transition"
+                  >
+                    <span role="img" aria-hidden="true">
+                      🔊
+                    </span>
+                    <span>Play reply</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleVoiceInput}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1 hover:border-emerald-500 hover:text-emerald-700 transition"
+                  >
+                    <span role="img" aria-hidden="true">
+                      🎙️
+                    </span>
+                    <span>Voice input</span>
+                  </button>
+                </div>
+                <div className="hidden sm:block">
+                  CogMyra remembers this conversation while your tab is open.
+                </div>
               </div>
             </div>
           </div>
-        </section>
+        </div>
       </main>
     </div>
   );
