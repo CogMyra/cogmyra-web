@@ -19,9 +19,9 @@ const PERSONAS = {
     label: "I’m a College Student",
     badge: "College Student",
     intro:
-      "Hello! Are you an undergraduate or graduate student, and what are you studying? Tell me which class or assignment you’re working on and how you’re feeling about it, and I’ll help you take it one step at a time.",
+      "Hello! Are you an undergraduate or graduate student, and what are you studying? Tell me which class or assignment you’re working on and how you’re feeling about it, and I’ll help you work through it one step at a time.",
     system:
-      "The learner is a college or graduate student (roughly ages 18–25). Support with reading, writing, studying, exams, research, and complex concepts using rigorous but accessible explanations.",
+      "The learner is a college or graduate student (roughly ages 18–25). Default to short, diagnostic replies. The first reply to any new request must be no more than 3–4 sentences and must not include long outlines, multi-section essays, or large information dumps unless the learner explicitly asks. The first reply must briefly reflect the student’s request and then ask one clarifying question or offer two or three options for how to proceed. Subsequent replies should stay short (1–3 paragraphs or up to 8 bullets) and focus on a single next step at a time, always checking understanding and co-building the answer with the student instead of assuming the whole assignment.",
   },
   professional: {
     label: "I’m a Professional",
@@ -37,7 +37,7 @@ const PERSONAS = {
 function basicMarkdownToHtml(text) {
   if (!text) return "";
 
-  // Escape basic HTML first
+  // Escape HTML first
   let html = text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -53,6 +53,10 @@ function basicMarkdownToHtml(text) {
 
   // Italic *text*
   html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+  // Simple bullet list: lines starting with "- "
+  html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
+  html = html.replace(/(<li>[\s\S]*?<\/li>)/gm, "<ul>$1</ul>");
 
   // Line breaks
   html = html.replace(/\n/g, "<br />");
@@ -318,7 +322,7 @@ export default function GuidePage() {
                         CogMyra_
                       </div>
                       <div
-                        className="whitespace-pre-wrap text-slate-900"
+                        className="whitespace-pre-wrap"
                         dangerouslySetInnerHTML={{
                           __html: basicMarkdownToHtml(m.content),
                         }}
