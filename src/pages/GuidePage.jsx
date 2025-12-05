@@ -19,14 +19,13 @@ const PERSONAS = {
     label: "I’m a College Student",
     badge: "College Student",
     intro:
-      "Hello! Are you an undergraduate or graduate student, and what are you studying? Tell me which class or assignment you’re working on and how you’re feeling about it, and I’ll help you take it one step at a time.",
-    system: [
-      "The learner is a college or graduate student (roughly ages 18–25). Support with reading, writing, studying, exams, research, and complex concepts using rigorous but accessible explanations.",
-      "For the very first reply in a new conversation, keep the answer short (about 1–3 short paragraphs or up to 6 bullets) and focus on clarifying the task: which course, what assignment, what stage they are at, and how they are feeling about it.",
-      "Subsequent replies must be short (1–3 paragraphs max) and focus on one step at a time: clarify the situation, propose a next move, and then check understanding or ask what they want to do next.",
-      "Never assume the full assignment or dump a full essay, outline, or multi-section response unless the learner explicitly asks for that full format. Co-build the work with them through iterative, guided steps.",
+      "Hello! Are you an undergraduate or graduate student, and what are you studying? Tell me which class or assignment you’re working on and how you’re feeling about it, and I’ll help you work through it one step at a time.",
+    system:
+      "The learner is a college or graduate student (roughly ages 18–25). Support with reading, writing, studying, exams, research, and complex concepts using rigorous but accessible explanations. " +
+      "For the very first reply in a new conversation, keep the answer short (about 1–3 short paragraphs or up to 6 bullets) and focus on clarifying the task: which course, what assignment, what stage they are at, and how they are feeling about it. " +
+      "Subsequent replies must be short (1–3 paragraphs max) and focus on one step at a time: clarify the situation, propose a next move, and then check understanding or ask what they want to do next. " +
+      "Never assume the full assignment or dump a full essay, outline, or multi-section response unless the learner explicitly asks for that full format. Co-build the work with them through iterative, guided steps. " +
       "Hard constraints: 1) Default to short, focused turns (1–3 short paragraphs or up to 8 bullets). 2) Avoid long, multi-section essays unless the learner clearly requests a full outline or detailed explanation. 3) Frequently ask small diagnostic questions to confirm understanding and adjust difficulty.",
-    ].join(" "),
   },
   professional: {
     label: "I’m a Professional",
@@ -34,7 +33,7 @@ const PERSONAS = {
     intro:
       "Hello! What kind of work do you do, and what are you working on right now? Tell me your role, your field, and what you’d like to make progress on, and I’ll help you one step at a time.",
     system:
-      "The learner is a working professional (25+) using CogMyra for projects, communication, leadership, and skill-building in real-world contexts. Be concise, applied, and outcome-focused.",
+      "The learner is a working professional (25+) using CogMyra for projects, communication, leadership, and skill-building in a real-world context. Be concise, applied, and outcome-focused.",
   },
 };
 
@@ -60,12 +59,14 @@ export default function GuidePage() {
   const speechRecognitionRef = useRef(null);
   const recognitionActiveRef = useRef(false);
 
+  // Auto-scroll on new messages
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isTyping]);
 
+  // Initialize basic speech recognition if available
   useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -90,9 +91,11 @@ export default function GuidePage() {
     }
   }, []);
 
+  // Change persona + reset opening prompt (only resets assistant side)
   const handlePersonaChange = (key) => {
     setPersona(key);
-    setMessages([{ role: "assistant", content: PERSONAS[key].intro }]);
+    const intro = PERSONAS[key].intro;
+    setMessages([{ role: "assistant", content: intro }]);
     setError("");
   };
 
@@ -103,6 +106,7 @@ export default function GuidePage() {
     setIsSending(true);
     setError("");
 
+    // Add user message locally
     const userMessage = { role: "user", content: trimmed };
     const baseMessages = [...messages, userMessage];
 
@@ -110,9 +114,13 @@ export default function GuidePage() {
     setInput("");
 
     try {
+      // Build messages for API: persona system + history
       const apiMessages = [
         buildPersonaSystemMessage(persona),
-        ...baseMessages.map((m) => ({ role: m.role, content: m.content })),
+        ...baseMessages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
       ];
 
       const res = await fetch("https://cogmyra.com/api/chat", {
@@ -125,9 +133,10 @@ export default function GuidePage() {
       });
 
       if (!res.ok) {
+        console.error("Chat API error status:", res.status);
         const text = await res.text().catch(() => "");
-        console.error("Chat error:", res.status, text);
-        setError("Something went wrong. Please try again.");
+        console.error("Response body:", text);
+        setError("Something went wrong talking to the Guide. Please try again.");
         setIsSending(false);
         return;
       }
@@ -135,11 +144,12 @@ export default function GuidePage() {
       const data = await res.json();
       const fullReply = data.reply || "";
 
+      // Typing effect: append assistant message and reveal text gradually
       setIsTyping(true);
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       let index = 0;
-      const speedMs = 12;
+      const speedMs = 12; // typing speed per character
 
       const intervalId = setInterval(() => {
         index++;
@@ -148,7 +158,9 @@ export default function GuidePage() {
         setMessages((prev) => {
           const cloned = [...prev];
           const lastIdx = cloned.length - 1;
-          cloned[lastIdx] = { ...cloned[lastIdx], content: current };
+          if (lastIdx >= 0 && cloned[lastIdx].role === "assistant") {
+            cloned[lastIdx] = { ...cloned[lastIdx], content: current };
+          }
           return cloned;
         });
 
@@ -161,7 +173,7 @@ export default function GuidePage() {
       setIsSending(false);
     } catch (err) {
       console.error("Chat request failed:", err);
-      setError("Something went wrong. Please try again.");
+      setError("Something went wrong talking to the Guide. Please try again.");
       setIsSending(false);
       setIsTyping(false);
     }
@@ -177,19 +189,18 @@ export default function GuidePage() {
   const handlePlayReply = () => {
     const lastAssistant = [...messages]
       .reverse()
-      .find((m) => m.role === "assistant" && m.content.trim());
+      .find((m) => m.role === "assistant" && m.content.trim().length > 0);
 
     if (!lastAssistant) return;
 
     if (!("speechSynthesis" in window)) {
-      alert("Text-to-speech not available.");
+      alert("Text-to-speech isn’t available in this browser.");
       return;
     }
 
     const utterance = new SpeechSynthesisUtterance(lastAssistant.content);
     utterance.rate = 1;
     utterance.pitch = 1;
-
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   };
@@ -197,7 +208,7 @@ export default function GuidePage() {
   const handleVoiceInput = () => {
     const rec = speechRecognitionRef.current;
     if (!rec) {
-      alert("Voice input not available.");
+      alert("Voice input isn’t available in this browser.");
       return;
     }
 
@@ -212,9 +223,13 @@ export default function GuidePage() {
 
   return (
     <div className="min-h-screen bg-[#E2E7E5] text-slate-900 flex flex-col">
+      {/* Header */}
       <header className="w-full border-b border-slate-300 bg-[#E2E7E5]/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link to="/" className="text-lg sm:text-xl font-semibold text-slate-900">
+          <Link
+            to="/"
+            className="text-lg sm:text-xl font-semibold text-slate-900"
+          >
             CogMyra_
           </Link>
           <div className="hidden sm:flex items-center gap-2 text-xs text-emerald-800">
@@ -224,15 +239,20 @@ export default function GuidePage() {
         </div>
       </header>
 
+      {/* Main */}
       <main className="flex-1">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
+          {/* Title */}
           <div className="mb-6">
             <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900">
               CogMyra Guide
             </h1>
-            <p className="mt-1 text-sm text-slate-600">Personalized Learning Coach</p>
+            <p className="mt-1 text-sm text-slate-600">
+              Personalized Learning Coach
+            </p>
           </div>
 
+          {/* Persona buttons */}
           <div className="mb-4 flex flex-wrap gap-3">
             {Object.entries(PERSONAS).map(([key, value]) => {
               const isActive = key === persona;
@@ -253,14 +273,20 @@ export default function GuidePage() {
             })}
           </div>
 
+          {/* Error banner */}
           {error && (
             <div className="mb-4 rounded-md border border-rose-300 bg-rose-50 px-4 py-2 text-sm text-rose-800">
               {error}
             </div>
           )}
 
+          {/* Chat card */}
           <div className="rounded-3xl bg-white shadow-lg border border-slate-200 p-4 sm:p-6 flex flex-col min-h-[420px]">
-            <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 pr-1">
+            {/* Messages area */}
+            <div
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto space-y-4 pr-1"
+            >
               {messages.map((m, idx) => (
                 <div key={idx} className="flex">
                   {m.role === "assistant" ? (
@@ -271,7 +297,7 @@ export default function GuidePage() {
                       <p className="whitespace-pre-wrap">{m.content}</p>
                     </div>
                   ) : (
-                    <div className="ml-auto max-w-[85%] rounded-2xl bg-emerald-700 px-4 py-3 text-sm text-white leading-relaxed">
+                    <div className="ml-auto max-w-[85%] rounded-2xl bg-emerald-700 px-4 py-3 text-sm leading-relaxed text-white">
                       <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-100">
                         YOU
                       </div>
@@ -290,12 +316,13 @@ export default function GuidePage() {
               )}
             </div>
 
+            {/* Input area */}
             <div className="mt-4 border-t border-slate-200 pt-4">
               <div className="flex items-end gap-3">
                 <textarea
                   rows={2}
                   className="flex-1 resize-none rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 shadow-inner focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-400"
-                  placeholder="Type a question or assignment…"
+                  placeholder="Ask a question, paste an assignment, or tell CogMyra what you’re working on…"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -321,17 +348,25 @@ export default function GuidePage() {
                     onClick={handlePlayReply}
                     className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1 hover:border-emerald-500 hover:text-emerald-700 transition"
                   >
-                    🔊 <span>Play reply</span>
+                    <span role="img" aria-hidden="true">
+                      🔊
+                    </span>
+                    <span>Play reply</span>
                   </button>
                   <button
                     type="button"
                     onClick={handleVoiceInput}
                     className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1 hover:border-emerald-500 hover:text-emerald-700 transition"
                   >
-                    🎙️ <span>Voice input</span>
+                    <span role="img" aria-hidden="true">
+                      🎙️
+                    </span>
+                    <span>Voice input</span>
                   </button>
                 </div>
-                <div className="hidden sm:block">CogMyra remembers this conversation while your tab is open.</div>
+                <div className="hidden sm:block">
+                  CogMyra remembers this conversation while your tab is open.
+                </div>
               </div>
             </div>
           </div>
