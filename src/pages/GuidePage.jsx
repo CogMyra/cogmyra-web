@@ -11,21 +11,17 @@ const PERSONAS = {
     label: "I’m a Kid in School",
     badge: "Kid in School",
     intro:
-      "Hello! How old are you, what grade are you in, and what would you like to learn about today?",
+      "Hello! How old are you, what would you like to learn about, and how are you feeling today?",
     system:
-      "The learner is a child or teen (roughly ages 6–17). Use warm, simple, concrete language. Explain ideas with clear examples, short steps, and frequent check-ins. Prioritize encouragement, safety, and foundational understanding over depth.",
+      "The learner is a child or teen (roughly ages 6–17) using CogMyra for school. Use warm, clear, age-appropriate language, lots of concrete examples, and step-by-step scaffolding.",
   },
   college: {
     label: "I’m a College Student",
     badge: "College Student",
     intro:
-      "Hello! Are you an undergraduate or graduate student, and what are you studying? Tell me which class or assignment you’re working on and how you’re feeling about it, and I’ll help you work through it one step at a time.",
+      "Hello! Are you an undergraduate or graduate student, and what are you studying? Tell me which class or assignment you’re working on and how you’re feeling about it, and I’ll help you take it one step at a time.",
     system:
-      "The learner is a college or graduate student (roughly ages 18–25). Support with reading, writing, studying, exams, research, and complex concepts using rigorous but accessible explanations. " +
-      "For the very first reply in a new conversation, keep the answer short (about 1–3 short paragraphs or up to 6 bullets) and focus on clarifying the task: which course, what assignment, what stage they are at, and how they are feeling about it. " +
-      "Subsequent replies must be short (1–3 paragraphs max) and focus on one step at a time: clarify the situation, propose a next move, and then check understanding or ask what they want to do next. " +
-      "Never assume the full assignment or dump a full essay, outline, or multi-section response unless the learner explicitly asks for that full format. Co-build the work with them through iterative, guided steps. " +
-      "Hard constraints: 1) Default to short, focused turns (1–3 short paragraphs or up to 8 bullets). 2) Avoid long, multi-section essays unless the learner clearly requests a full outline or detailed explanation. 3) Frequently ask small diagnostic questions to confirm understanding and adjust difficulty.",
+      "The learner is a college or graduate student (roughly ages 18–25). Support with reading, writing, studying, exams, and research using rigorous but accessible explanations. Always start by clarifying the course, the specific assignment, and how the learner is feeling about it.",
   },
   professional: {
     label: "I’m a Professional",
@@ -36,6 +32,36 @@ const PERSONAS = {
       "The learner is a working professional (25+) using CogMyra for projects, communication, leadership, and skill-building in a real-world context. Be concise, applied, and outcome-focused.",
   },
 };
+
+// Very small Markdown → HTML helper for assistant messages
+function basicMarkdownToHtml(text) {
+  if (!text) return "";
+
+  let html = text;
+
+  // Escape basic HTML first
+  html = html
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Headings: ###, ##, #
+  html = html.replace(/^### (.*)$/gm, "<h3>$1</h3>");
+  html = html.replace(/^## (.*)$/gm, "<h2>$1</h2>");
+  html = html.replace(/^# (.*)$/gm, "<h1>$1</h1>");
+
+  // Bold: **text**
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+  // Italic: *text*
+  html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+  // Line breaks
+  html = html.replace(/\n{2,}/g, "<br/><br/>");
+  html = html.replace(/\n/g, "<br/>");
+
+  return html;
+}
 
 function buildPersonaSystemMessage(personaKey) {
   const persona = PERSONAS[personaKey] ?? PERSONAS.college;
@@ -294,7 +320,12 @@ export default function GuidePage() {
                       <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                         CogMyra_
                       </div>
-                      <p className="whitespace-pre-wrap">{m.content}</p>
+                      <p
+                        className="whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{
+                          __html: basicMarkdownToHtml(m.content),
+                        }}
+                      ></p>
                     </div>
                   ) : (
                     <div className="ml-auto max-w-[85%] rounded-2xl bg-emerald-700 px-4 py-3 text-sm leading-relaxed text-white">
