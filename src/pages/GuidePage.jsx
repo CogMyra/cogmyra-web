@@ -20,17 +20,8 @@ const PERSONAS = {
     badge: "College Student",
     intro:
       "CogMyra_ Hello! Are you an undergraduate or graduate student, and what are you studying? Tell me which class or assignment you’re working on and how you’re feeling about it, and I’ll help you work through it one step at a time.",
-    system: `
-The learner is a college or graduate student (18–25). Your default behavior must be concise and diagnostic.
-First reply on any topic must be no more than 3–4 sentences and must NOT include outlines, long definitions, examples, or argument structures unless the learner specifically asks.
-First reply MUST: (1) briefly reflect the student's request, and (2) ask one clarification question or offer two or three short options for how to proceed.
-Subsequent replies should be short (1–3 paragraphs max) and focus on one step at a time: clarify, propose the next step, then check understanding.
-Never assume the full assignment. Always co-build the response with the student through iterative, guided steps.
-Hard constraints:
-1) Default to short, focused turns: 1–3 short paragraphs or up to 8 bullets.
-2) Avoid multi-section essays unless the learner explicitly asks for a full outline or detailed explanation.
-3) Keep asking small, targeted questions so you can adjust difficulty, scope, and direction based on the student's answers.
-`.trim(),
+    system:
+      "The learner is a college or graduate student (roughly ages 18–25). Default to short, diagnostic replies. The first reply to any new request must be no more than 3–4 sentences and must not include long outlines, multi-section essays, or large information dumps unless the learner explicitly asks. The first reply must briefly reflect the student’s request and then ask one clarifying question or offer two or three options for how to proceed. Subsequent replies should stay short (1–3 paragraphs or up to 8 bullets) and focus on a single next step at a time, always checking understanding and co-building the answer with the student instead of assuming the whole assignment.",
   },
   professional: {
     label: "I’m a Professional",
@@ -41,32 +32,6 @@ Hard constraints:
       "The learner is a working professional (25+) using CogMyra for projects, communication, leadership, and skill-building in a real-world context. Be concise, applied, and outcome-focused.",
   },
 };
-
-// Very simple Markdown → HTML helper for assistant replies
-function basicMarkdownToHtml(text) {
-  if (!text) return "";
-
-  let html = text;
-
-  // Escape HTML first
-  html = html
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
-  // Headings
-  html = html.replace(/^### (.*)$/gim, "<h3>$1</h3>");
-  html = html.replace(/^## (.*)$/gim, "<h2>$1</h2>");
-  html = html.replace(/^# (.*)$/gim, "<h1>$1</h1>");
-
-  // Bold
-  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-
-  // Basic line breaks between paragraphs
-  html = html.replace(/\n{2,}/g, "<br/><br/>");
-
-  return html;
-}
 
 function buildPersonaSystemMessage(personaKey) {
   const persona = PERSONAS[personaKey] ?? PERSONAS.college;
@@ -122,7 +87,7 @@ export default function GuidePage() {
     }
   }, []);
 
-  // Change persona + reset opening prompt (assistant only)
+  // Change persona + reset opening prompt (only resets assistant side)
   const handlePersonaChange = (key) => {
     setPersona(key);
     const intro = PERSONAS[key].intro;
@@ -137,6 +102,7 @@ export default function GuidePage() {
     setIsSending(true);
     setError("");
 
+    // Add user message locally
     const userMessage = { role: "user", content: trimmed };
     const baseMessages = [...messages, userMessage];
 
@@ -144,6 +110,7 @@ export default function GuidePage() {
     setInput("");
 
     try {
+      // Build messages for API: persona system + history
       const apiMessages = [
         buildPersonaSystemMessage(persona),
         ...baseMessages.map((m) => ({
@@ -173,12 +140,12 @@ export default function GuidePage() {
       const data = await res.json();
       const fullReply = data.reply || "";
 
-      // Typing effect
+      // Typing effect: append assistant message and reveal text gradually
       setIsTyping(true);
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       let index = 0;
-      const speedMs = 12;
+      const speedMs = 12; // typing speed per character
 
       const intervalId = setInterval(() => {
         index++;
@@ -323,12 +290,7 @@ export default function GuidePage() {
                       <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                         COGMYRA
                       </div>
-                      <div
-                        className="whitespace-pre-wrap"
-                        dangerouslySetInnerHTML={{
-                          __html: basicMarkdownToHtml(m.content),
-                        }}
-                      />
+                      <p className="whitespace-pre-wrap">{m.content}</p>
                     </div>
                   ) : (
                     <div className="ml-auto max-w-[85%] rounded-2xl bg-emerald-700 px-4 py-3 text-sm leading-relaxed text-white">
