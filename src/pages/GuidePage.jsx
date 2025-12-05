@@ -34,27 +34,39 @@ const PERSONAS = {
 };
 
 // Very small Markdown → HTML helper for assistant messages
+  ...
+
 function basicMarkdownToHtml(text) {
   if (!text) return "";
 
   let html = text;
 
-  // Escape basic HTML first
+  // Escape HTML
   html = html
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  // Headings: ###, ##, #
-  html = html.replace(/^### (.*)$/gm, "<h3>$1</h3>");
-  html = html.replace(/^## (.*)$/gm, "<h2>$1</h2>");
-  html = html.replace(/^# (.*)$/gm, "<h1>$1</h1>");
+  // Headings
+  html = html.replace(/^### (.*)$/gm, "<h3 class='font-semibold text-base mb-1'>$1</h3>");
+  html = html.replace(/^## (.*)$/gm, "<h2 class='font-semibold text-lg mb-1'>$1</h2>");
+  html = html.replace(/^# (.*)$/gm, "<h1 class='font-semibold text-xl mb-1'>$1</h1>");
 
-  // Bold: **text**
+  // Bold
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
-  // Italic: *text*
+  // Italic
   html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+  // Numbered lists
+  html = html.replace(/^\d+\.\s+(.*)$/gm, "<li class='ml-4 list-decimal'>$1</li>");
+  html = html.replace(/(<li.+list-decimal.+<\/li>)/g, "<ol class='mb-2'>$1</ol>");
+
+  // Bulleted lists
+  html = html.replace(/^[\-•]\s+(.*)$/gm, "<li class='ml-4 list-disc'>$1</li>");
+  html = html.replace(/(<li.+list-disc.+<\/li>)/g, "<ul class='mb-2'>$1</ul>");
+
+  // Emojis already pass through safely
 
   // Line breaks
   html = html.replace(/\n{2,}/g, "<br/><br/>");
@@ -317,8 +329,8 @@ export default function GuidePage() {
                 <div key={idx} className="flex">
                   {m.role === "assistant" ? (
                     <div className="max-w-[85%] rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-relaxed">
-                      <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                        CogMyra_
+                    <div className="mb-1 text-[10px] font-semibold tracking-[0.18em] text-slate-500">
+                      CogMyra_
                       </div>
                       <p
                         className="whitespace-pre-wrap"
