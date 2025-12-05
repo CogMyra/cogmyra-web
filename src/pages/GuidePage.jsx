@@ -21,7 +21,7 @@ const PERSONAS = {
     intro:
       "Hello! Are you an undergraduate or graduate student, and what are you studying? Tell me which class or assignment you’re working on and how you’re feeling about it, and I’ll help you take it one step at a time.",
     system:
-      "The learner is a college or graduate student (roughly ages 18–25). Support with reading, writing, studying, exams, and research using rigorous but accessible explanations. Always start by clarifying the course, the specific assignment, and how the learner is feeling about it.",
+      "The learner is a college or graduate student (roughly ages 18–25). Support with reading, writing, studying, exams, research, and complex concepts using rigorous but accessible explanations.",
   },
   professional: {
     label: "I’m a Professional",
@@ -34,43 +34,28 @@ const PERSONAS = {
 };
 
 // Very small Markdown → HTML helper for assistant messages
-  ...
-
 function basicMarkdownToHtml(text) {
   if (!text) return "";
 
-  let html = text;
-
-  // Escape HTML
-  html = html
+  // Escape basic HTML first
+  let html = text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
   // Headings
-  html = html.replace(/^### (.*)$/gm, "<h3 class='font-semibold text-base mb-1'>$1</h3>");
-  html = html.replace(/^## (.*)$/gm, "<h2 class='font-semibold text-lg mb-1'>$1</h2>");
-  html = html.replace(/^# (.*)$/gm, "<h1 class='font-semibold text-xl mb-1'>$1</h1>");
+  html = html.replace(/^### (.*)$/gm, "<h3>$1</h3>");
+  html = html.replace(/^## (.*)$/gm, "<h2>$1</h2>");
+  html = html.replace(/^# (.*)$/gm, "<h1>$1</h1>");
 
-  // Bold
+  // Bold **text**
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
-  // Italic
+  // Italic *text*
   html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
 
-  // Numbered lists
-  html = html.replace(/^\d+\.\s+(.*)$/gm, "<li class='ml-4 list-decimal'>$1</li>");
-  html = html.replace(/(<li.+list-decimal.+<\/li>)/g, "<ol class='mb-2'>$1</ol>");
-
-  // Bulleted lists
-  html = html.replace(/^[\-•]\s+(.*)$/gm, "<li class='ml-4 list-disc'>$1</li>");
-  html = html.replace(/(<li.+list-disc.+<\/li>)/g, "<ul class='mb-2'>$1</ul>");
-
-  // Emojis already pass through safely
-
   // Line breaks
-  html = html.replace(/\n{2,}/g, "<br/><br/>");
-  html = html.replace(/\n/g, "<br/>");
+  html = html.replace(/\n/g, "<br />");
 
   return html;
 }
@@ -329,15 +314,15 @@ export default function GuidePage() {
                 <div key={idx} className="flex">
                   {m.role === "assistant" ? (
                     <div className="max-w-[85%] rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-relaxed">
-                    <div className="mb-1 text-[10px] font-semibold tracking-[0.18em] text-slate-500">
-                      CogMyra_
+                      <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        CogMyra_
                       </div>
-                      <p
-                        className="whitespace-pre-wrap"
+                      <div
+                        className="whitespace-pre-wrap text-slate-900"
                         dangerouslySetInnerHTML={{
                           __html: basicMarkdownToHtml(m.content),
                         }}
-                      ></p>
+                      />
                     </div>
                   ) : (
                     <div className="ml-auto max-w-[85%] rounded-2xl bg-emerald-700 px-4 py-3 text-sm leading-relaxed text-white">
