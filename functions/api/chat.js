@@ -2,7 +2,7 @@
 // CogMyra Engine v1: Chat endpoint with CMG retrieval + prompt assembly + structured logging + basic rate limiting
 
 import { OpenAI } from "openai";
-import { CMG_SYSTEM_PROMPT } from "../../config/cmgPrompt.js";
+import { CMG_SYSTEM_PROMPT, CMG_PROMPT_VERSION } from "../cmgPrompt.js";
 
 // --- CORS headers (for browser + local dev) ---
 const CORS_HEADERS = {
