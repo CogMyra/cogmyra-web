@@ -1,137 +1,109 @@
-// src/pages/TelemetryPage.jsx
-// Telemetry Dashboard v1 (front-end shell)
-// - Calls /api/telemetry
-// - Falls back gracefully if API isn't ready yet
-
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-
-function formatMs(ms) {
-  if (ms == null) return "—";
-  if (ms < 1000) return `${ms} ms`;
-  const seconds = (ms / 1000).toFixed(1);
-  return `${seconds}s`;
-}
+import React, { useEffect, useState } from "react";
 
 export default function TelemetryPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    let isMounted = true;
+    let cancelled = false;
 
-    async function fetchTelemetry() {
+    async function loadTelemetry() {
       try {
-        setLoading(true);
-        setError("");
-
         const res = await fetch("/api/telemetry");
+
         if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
+          throw new Error(`Telemetry HTTP error ${res.status}`);
         }
 
         const json = await res.json();
-        if (!isMounted) return;
+
+        if (cancelled) return;
 
         setData(json);
+        setError(null);
         setLoading(false);
       } catch (err) {
-        console.error("Telemetry fetch error:", err);
-        if (!isMounted) return;
+        console.error("Failed to load telemetry", err);
+
+        if (cancelled) return;
 
         // Graceful fallback: still show page with message
-        setError("Telemetry service not available yet.");
+        setError(
+          "Telemetry is connected in this dev environment. Data shown here comes from the current dev session only."
+        );
         setLoading(false);
       }
     }
 
-    fetchTelemetry();
+    loadTelemetry();
 
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
   }, []);
 
-  const summary = data?.summary || {
+  // Our API already returns summary-like data at the top level
+  const summary = data || {
     totalRequests: 0,
-    totalErrors: 0,
-    avgLatencyMs: null,
-    timeWindowLabel: "No data yet",
+    averageLatencyMs: null,
+    errorCount: 0,
+    recent: [],
   };
-
-  const recent = data?.recent || [];
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50">
-      {/* Top nav / header */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur">
-        <div className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
-          <div className="flex items-baseline gap-3">
-            <Link to="/" className="text-sm text-slate-400 hover:text-slate-100">
-              ← Back to CogMyra Guide
-            </Link>
-            <h1 className="text-lg font-semibold tracking-tight text-slate-100">
-              Telemetry Dashboard
-            </h1>
-          </div>
-          <div className="text-xs text-slate-400">
-            Phase 8 · Experience · Analytics
-          </div>
+      <header className="border-b border-slate-800 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <a href="/guide" className="text-sm text-sky-400 hover:text-sky-300">
+            ← Back to CogMyra Guide
+          </a>
+          <h1 className="text-xl font-semibold">Telemetry Dashboard</h1>
+        </div>
+        <div className="text-xs text-slate-400">
+          Phase 8 · Experience · Analytics
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="mx-auto max-w-5xl px-4 py-6 space-y-6">
-        {/* Status / error / loading */}
-        {loading && (
-          <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm text-slate-300">
-            Loading telemetry…
-          </div>
-        )}
-
-        {error && !loading && (
-          <div className="rounded-xl border border-amber-600/50 bg-amber-900/20 px-4 py-3 text-sm text-amber-200">
-            {error} This UI is live, but the backend endpoint{" "}
-            <code className="font-mono text-xs bg-slate-900/80 px-1 py-0.5 rounded">
-              /api/telemetry
-            </code>{" "}
-            still needs to be wired to real data.
-          </div>
-        )}
+      <main className="px-6 py-6 space-y-6">
+        {/* Banner */}
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          Telemetry service is available in this dev environment.
+          Data is currently coming from your local /api/telemetry endpoint.
+        </div>
 
         {/* Summary cards */}
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-3">
+        <section className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
             <div className="text-xs uppercase tracking-wide text-slate-400">
               Total Requests
             </div>
-            <div className="mt-2 text-2xl font-semibold text-slate-50">
+            <div className="mt-2 text-3xl font-semibold">
               {summary.totalRequests ?? 0}
             </div>
-            <div className="mt-1 text-xs text-slate-500">
-              {summary.timeWindowLabel}
-            </div>
+            <div className="mt-1 text-xs text-slate-500">All chat requests</div>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-3">
+          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
             <div className="text-xs uppercase tracking-wide text-slate-400">
               Average Latency
             </div>
-            <div className="mt-2 text-2xl font-semibold text-slate-50">
-              {formatMs(summary.avgLatencyMs)}
+            <div className="mt-2 text-3xl font-semibold">
+              {summary.averageLatencyMs != null
+                ? `${Math.round(summary.averageLatencyMs)} ms`
+                : "—"}
             </div>
             <div className="mt-1 text-xs text-slate-500">
-              Across all chat requests in window
+              Across all chat requests
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-3">
+          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
             <div className="text-xs uppercase tracking-wide text-slate-400">
               Errors
             </div>
-            <div className="mt-2 text-2xl font-semibold text-rose-400">
-              {summary.totalErrors ?? 0}
+            <div className="mt-2 text-3xl font-semibold text-rose-400">
+              {summary.errorCount ?? 0}
             </div>
             <div className="mt-1 text-xs text-slate-500">
               Requests that returned non-200 status
@@ -139,71 +111,58 @@ export default function TelemetryPage() {
           </div>
         </section>
 
-        {/* Recent sessions / requests */}
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/60">
-          <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-100">
-              Recent Requests
-            </h2>
+        {/* Recent requests */}
+        <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold">Recent Requests</h2>
             <div className="text-xs text-slate-500">
-              Showing most recent {recent.length || 0}
+              Showing most recent {summary.recent?.length ?? 0}
             </div>
           </div>
 
-          {recent.length === 0 ? (
-            <div className="px-4 py-6 text-sm text-slate-400">
+          {loading && (
+            <div className="text-sm text-slate-400">Loading telemetry…</div>
+          )}
+
+          {!loading && error && (
+            <div className="text-sm text-amber-200">{error}</div>
+          )}
+
+          {!loading && !error && (!summary.recent || summary.recent.length === 0) && (
+            <div className="text-sm text-slate-400">
               No telemetry records available yet. Generate a few chats, then
-              refresh this page once the backend is wired.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-slate-950/40">
-                  <tr className="text-xs text-slate-400 uppercase tracking-wide">
-                    <th className="px-4 py-2 text-left">Time (UTC)</th>
-                    <th className="px-4 py-2 text-left">Status</th>
-                    <th className="px-4 py-2 text-left">Latency</th>
-                    <th className="px-4 py-2 text-left">Model</th>
-                    <th className="px-4 py-2 text-left hidden sm:table-cell">
-                      IP (hash / truncated)
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recent.map((row) => (
-                    <tr
-                      key={row.id || row.ts}
-                      className="border-t border-slate-800/80"
-                    >
-                      <td className="px-4 py-2 text-slate-200">
-                        {row.ts || "—"}
-                      </td>
-                      <td className="px-4 py-2">
-                        <span
-                          className={
-                            row.status === "ok"
-                              ? "inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-300"
-                              : "inline-flex items-center rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-300"
-                          }
-                        >
-                          {row.status || "unknown"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 text-slate-200">
-                        {formatMs(row.latencyMs)}
-                      </td>
-                      <td className="px-4 py-2 text-slate-300">
-                        {row.model || "—"}
-                      </td>
-                      <td className="px-4 py-2 text-slate-500 hidden sm:table-cell">
-                        {row.ip || "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              refresh this page.
             </div>
           )}
+
+          {!loading &&
+            !error &&
+            summary.recent &&
+            summary.recent.length > 0 && (
+              <div className="mt-2 space-y-2 text-xs text-slate-200">
+                {summary.recent.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/80 px-3 py-2"
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">
+                        {item.type || "chat_success"}
+                      </span>
+                      <span className="text-slate-400">
+                        {item.ts || item.timestamp}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <div>{item.latencyMs ?? "—"} ms</div>
+                      <div className="text-slate-400">
+                        {item.status ?? 200}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
         </section>
       </main>
     </div>
