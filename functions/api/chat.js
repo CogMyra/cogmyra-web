@@ -1,5 +1,5 @@
 // functions/api/chat.js
-// CogMyra Engine v1: Chat endpoint with CMG retrieval + prompt assembly + structured logging
+// CogMyra Engine v1: Chat endpoint with CMG retrieval + prompt assembly + structured logging + basic rate limiting
 
 import { OpenAI } from "openai";
 import { CMG_SYSTEM_PROMPT } from "../../config/cmgPrompt.js";
@@ -24,6 +24,64 @@ function logEvent(type, data = {}) {
   } catch (err) {
     console.error("logEvent failed:", err);
   }
+}
+
+// --- Basic in-memory IP rate limiting (best-effort, beta-safe) ---
+const DEFAULT_RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const DEFAULT_RATE_LIMIT_MAX_REQUESTS = 30;  // 30 req/min per IP by default
+
+// Map<ip, { count: number, windowStart: number }>
+const rateLimitBuckets = new Map();
+
+/**
+ * Best-effort IP-based rate limiting using Worker memory.
+ * This is NOT a hard guarantee across all edge locations,
+ * but it is sufficient for beta protection and abuse detection.
+ */
+function checkRateLimit(request, env) {
+  const ip = request.headers.get("cf-connecting-ip") || "unknown";
+
+  // Allow turning rate limiting off by setting RATE_LIMIT_MAX_REQUESTS=0
+  const maxRequests =
+    Number(env.RATE_LIMIT_MAX_REQUESTS || DEFAULT_RATE_LIMIT_MAX_REQUESTS);
+  if (!maxRequests || maxRequests <= 0) {
+    return { allowed: true, ip, remaining: null };
+  }
+
+  const windowMs =
+    Number(env.RATE_LIMIT_WINDOW_MS || DEFAULT_RATE_LIMIT_WINDOW_MS) ||
+    DEFAULT_RATE_LIMIT_WINDOW_MS;
+
+  const now = Date.now();
+  const bucket = rateLimitBuckets.get(ip) || {
+    count: 0,
+    windowStart: now,
+  };
+
+  // If outside the window, reset
+  if (now - bucket.windowStart >= windowMs) {
+    bucket.count = 0;
+    bucket.windowStart = now;
+  }
+
+  bucket.count += 1;
+  rateLimitBuckets.set(ip, bucket);
+
+  const remaining = Math.max(maxRequests - bucket.count, 0);
+
+  if (bucket.count > maxRequests) {
+    logEvent("rate_limited", {
+      ip,
+      windowStart: new Date(bucket.windowStart).toISOString(),
+      count: bucket.count,
+      maxRequests,
+      windowMs,
+    });
+
+    return { allowed: false, ip, remaining: 0, resetAt: bucket.windowStart + windowMs };
+  }
+
+  return { allowed: true, ip, remaining, resetAt: bucket.windowStart + windowMs };
 }
 
 // Helper: retrieve top CMG chunks from Cloudflare Vectorize
@@ -89,7 +147,7 @@ async function retrieveCmgContext(env, openai, userText) {
 }
 
 export async function onRequest({ request, env }) {
-  const start = Date.now();
+const start = Date.now();
 
   try {
     const method = request.method || "GET";
@@ -110,22 +168,52 @@ export async function onRequest({ request, env }) {
     }
 
     // --- Auth gate (optional) ---
-    // If APP_GATE_KEY is configured, enforce x-app-key.
-    // If it's NOT configured (e.g. local dev), do NOT block the request.
+    // In production: enforce APP_GATE_KEY via x-app-key header.
+    // In local dev (localhost / 127.0.0.1): skip the gate to avoid friction.
+    const url = new URL(request.url);
+    const isLocalDev =
+      url.hostname === "localhost" || url.hostname === "127.0.0.1";
+
     const appKey = request.headers.get("x-app-key");
-    if (env.APP_GATE_KEY) {
+    if (env.APP_GATE_KEY && !isLocalDev) {
       if (appKey !== env.APP_GATE_KEY) {
         logEvent("auth_denied", {
           ip: request.headers.get("cf-connecting-ip") || "unknown",
+          got: appKey || null,
         });
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          {
+            status: 401,
+            headers: {
+              "Content-Type": "application/json",
+              ...CORS_HEADERS,
+            },
+          },
+        );
+      }
+    }
+
+    // --- Rate limiting (per IP, per window) ---
+    const rate = checkRateLimit(request, env);
+    if (!rate.allowed) {
+      const retryAfterSeconds = Math.ceil(
+        ((rate.resetAt || Date.now()) - Date.now()) / 1000,
+      );
+
+      return new Response(
+        JSON.stringify({
+          error: "Rate limit exceeded. Please wait and try again.",
+        }),
+        {
+          status: 429,
           headers: {
             "Content-Type": "application/json",
+            "Retry-After": String(Math.max(retryAfterSeconds, 1)),
             ...CORS_HEADERS,
           },
-        });
-      }
+        },
+      );
     }
 
     // Parse incoming body
