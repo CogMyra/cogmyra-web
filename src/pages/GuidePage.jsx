@@ -1,227 +1,214 @@
-// src/pages/GuidePage.jsx
-
-import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 /**
- * Render basic rich text:
- * - Splits on double newlines into blocks.
- * - Turns lines starting with "- " into <ul><li>.
- * - Everything else becomes a <p>.
+ * Persona configurations
  */
-function renderFormattedText(text) {
-  if (!text) return null;
 
-  const blocks = text.split(/\n\n+/);
-
-  return blocks.map((block, index) => {
-    const trimmed = block.trim();
-    if (!trimmed) return null;
-
-    // Bullet list block: one or more lines starting with "- "
-    if (/^- /.test(trimmed) || /\n- /.test(trimmed)) {
-      const items = trimmed
-        .split("\n")
-        .map((line) => line.trim())
-        .filter((line) => line.startsWith("- "))
-        .map((line) => line.replace(/^- /, "").trim());
-
-      if (!items.length) {
-        return (
-          <p
-            key={index}
-            className="mb-2 whitespace-pre-wrap text-slate-800 leading-relaxed"
-          >
-            {trimmed}
-          </p>
-        );
-      }
-
-      return (
-        <ul
-          key={index}
-          className="mb-2 list-disc list-inside space-y-1 text-slate-800 leading-relaxed"
-        >
-          {items.map((item, i) => (
-            <li key={i}>{item}</li>
-          ))}
-        </ul>
-      );
-    }
-
-    // Default: paragraph block
-    return (
-      <p
-        key={index}
-        className="mb-2 whitespace-pre-wrap text-slate-800 leading-relaxed"
-      >
-        {trimmed}
-      </p>
-    );
-  });
-}
-
-/**
- * Typewriter wrapper that works with rich formatting.
- * It gradually reveals the text, and at each step we run the same
- * formatter that we use for full messages.
- */
-function TypewriterFormatted({ text, speed = 12, active }) {
+// =======================================
+// Typewriter hook (safe, UI-only)
+// =======================================
+function useTypewriter(text, speed = 18) {
   const [displayed, setDisplayed] = useState("");
-  const lastTextRef = useRef(text);
 
   useEffect(() => {
-    // If this instance is not active (older assistant messages),
-    // just show full text immediately.
-    if (!active) {
-      setDisplayed(text || "");
-      lastTextRef.current = text;
-      return;
-    }
-
     if (!text) {
       setDisplayed("");
-      lastTextRef.current = "";
       return;
-    }
-
-    // Reset when a *different* assistant message arrives.
-    if (lastTextRef.current !== text) {
-      lastTextRef.current = text;
-      setDisplayed("");
     }
 
     let i = 0;
-    let cancelled = false;
+    setDisplayed("");
 
-    function tick() {
-      if (cancelled) return;
-
-      i += 2; // a couple of characters at a time feels smooth
-      if (i >= text.length) {
-        setDisplayed(text);
-        return;
-      }
+    const interval = setInterval(() => {
+      i++;
       setDisplayed(text.slice(0, i));
-      window.setTimeout(tick, speed);
-    }
+      if (i >= text.length) clearInterval(interval);
+    }, speed);
 
-    tick();
+    return () => clearInterval(interval);
+  }, [text, speed]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [text, speed, active]);
-
-  return <>{renderFormattedText(displayed)}</>;
+  return displayed;
 }
 
-// --- Persona configs -------------------------------------------------
+const MARKDOWN_COMPONENTS = {
+  p: (props) => (
+    <p className="whitespace-pre-wrap leading-relaxed" {...props} />
+  ),
+  ul: (props) => <ul className="list-disc pl-5 space-y-1" {...props} />,
+  ol: (props) => <ol className="list-decimal pl-5 space-y-1" {...props} />,
+  li: (props) => <li className="my-0" {...props} />,
+  strong: (props) => <strong className="font-semibold" {...props} />,
+  em: (props) => <em className="italic" {...props} />,
+  a: (props) => (
+    <a
+      className="underline text-emerald-700 hover:text-emerald-800"
+      target="_blank"
+      rel="noreferrer"
+      {...props}
+    />
+  ),
+  code: ({ inline, children, ...props }) =>
+    inline ? (
+      <code
+        className="rounded bg-slate-100 px-1 py-0.5 text-[0.9em]"
+        {...props}
+      >
+        {children}
+      </code>
+    ) : (
+      <pre className="overflow-x-auto rounded bg-slate-900 p-3 text-slate-100">
+        <code {...props}>{children}</code>
+      </pre>
+    ),
+};
+
+function TypewriterMarkdown({ text }) {
+  const typed = useTypewriter(text);
+  return (
+    <ReactMarkdown components={MARKDOWN_COMPONENTS}>
+      {typed}
+    </ReactMarkdown>
+  );
+}
 
 const PERSONA_CONFIG = {
   kid: {
-    label: "Kid in School",
-    headerLabel: "Kid in School",
-    initialAssistant:
-      "Hi! I’m the CogMyra Guide. How old are you, what grade are you in, and how are you feeling today? Tell me what you’re working on or what you’d like to learn about, and I’ll help one step at a time.",
-    placeholder:
-      "Tell me your age, grade, and what you’d like help with today.",
+    id: "kid",
+    personaLabel: "Kid in School",
+    intro:
+      "Hi! I’m the CogMyra Guide. Tell me your age, grade, and what you’re working on, and we’ll take tiny steps together.",
   },
   college: {
-    label: "College Student",
-    headerLabel: "College Student",
-    initialAssistant:
-      "Hello, I’m the CogMyra Guide. Tell me what you’re working on, and I’ll help you one step at a time.",
-    placeholder:
-      "Tell me your program, whether you’re undergrad or grad, and what you’re working on.",
+    id: "college",
+    personaLabel: "College Student",
+    intro:
+      "Hi, I’m the CogMyra Guide. Tell me what you’re working on or stuck on, and I’ll help you one step at a time.",
   },
-  professional: {
-    label: "Professional",
-    headerLabel: "Professional",
-    initialAssistant:
-      "Hi, I’m the CogMyra Guide. Tell me your role, what you’re working on, and what you’d like to make progress on today. I’ll help you one step at a time.",
-    placeholder:
-      "Tell me your role and the project or task you’d like help with today.",
+  pro: {
+    id: "pro",
+    personaLabel: "Professional",
+    intro:
+      "Hi, I’m the CogMyra Guide. Tell me your role, context, and what you’re trying to accomplish, and we’ll take it step by step together.",
   },
 };
 
-const API_BASE = import.meta.env.DEV ? "http://localhost:8789" : "";
+/**
+ * TYPEWRITER HOOK (safe + minimal)
+ */
 
-// --- Main page -------------------------------------------------------
+function useTypewriterIntro(fullText, speed = 18) {
+  const safeText = typeof fullText === "string" ? fullText : "";
+  const [text, setText] = useState("");
 
-export default function GuidePage() {
-  const [persona, setPersona] = useState("college");
+  useEffect(() => {
+    setText("");
+    if (!safeText) return;
+
+    let i = 0;
+    const interval = setInterval(() => {
+      i += 1;
+      setText(safeText.slice(0, i));
+      if (i >= safeText.length) clearInterval(interval);
+    }, speed);
+
+    return () => clearInterval(interval);
+  }, [safeText, speed]);
+
+  return text;
+}
+
+function GuidePage() {
+  const [personaId, setPersonaId] = useState("college");
+  const personaConfig = PERSONA_CONFIG[personaId];
+  const typedIntro = useTypewriterIntro(personaConfig.intro);
+
   const [messages, setMessages] = useState([]);
-  const [inputValue, setInputValue] = useState(""); // always user-typed only
+  const [inputValue, setInputValue] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [error, setError] = useState(null);
-  const [isTesting, setIsTesting] = useState(false);
-  const messagesEndRef = useRef(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const personaConfig = PERSONA_CONFIG[persona];
+  // Stable session ID
+  const [sessionId] = useState(
+    () =>
+      (typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `sess-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
+  );
 
-  // Seed initial assistant message whenever persona changes
+  // Reset when persona changes
   useEffect(() => {
-    setMessages([
-      {
-        id: "assistant-initial",
-        role: "assistant",
-        from: "assistant",
-        text: personaConfig.initialAssistant,
-      },
-    ]);
+    setMessages([]);
     setInputValue("");
-    setError(null);
-  }, [persona, personaConfig.initialAssistant]);
+    setErrorMessage("");
+  }, [personaId]);
 
-  // Scroll to bottom on new message
+  // First intro bubble re-renders whenever persona changes
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    setMessages([]);
+  }, [personaConfig.intro]);
+
+  const chatScrollRef = useRef(null);
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop =
+        chatScrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, typedIntro, isSending]);
 
-  async function sendMessage(userText) {
-    if (!userText.trim()) return;
+  /**
+   * SEND MESSAGE
+   */
+  const handleSend = async () => {
+    if (!inputValue.trim() || isSending) return;
 
-    setIsSending(true);
-    setError(null);
-
+    const userText = inputValue.trim();
     const userMessage = {
       id: `user-${Date.now()}`,
       role: "user",
       from: "user",
-      text: userText.trim(),
+      text: userText,
     };
 
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
+    setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
+    setIsSending(true);
+    setErrorMessage("");
 
     try {
+      const apiMessages = [...messages, userMessage].map((m) => ({
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: m.text,
+      }));
+
       const payload = {
-        messages: newMessages.map((m) => ({
-          role: m.role,
-          content: m.text,
-        })),
-        persona: personaConfig.label,
+        messages: apiMessages,
+        persona: personaConfig.personaLabel,
+        session_id: sessionId,
       };
 
-      const res = await fetch(`${API_BASE}/api/chat`, {
+      const res = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        throw new Error(`Request failed with status ${res.status}`);
+        throw new Error("Upstream error");
       }
 
       const data = await res.json();
+
       const assistantContent =
-        data?.message?.content || "Sorry, I had trouble replying just now.";
+        (data.message?.content ?? null) ||
+        (data.choices?.[0]?.message?.content ?? null) ||
+        data.content ||
+        data.output_text;
+
+      if (!assistantContent) {
+        throw new Error("Invalid assistant reply format");
+      }
 
       const assistantMessage = {
         id: `assistant-${Date.now()}`,
@@ -232,199 +219,154 @@ export default function GuidePage() {
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (err) {
-      console.error("Error sending message:", err);
-      setError("Something went wrong sending your message. Please try again.");
+      console.error("Chat error:", err);
+      setErrorMessage("Something went wrong. Please try again.");
     } finally {
-      setIsSending(false);
-      setIsTesting(false);
+      setTimeout(() => setIsSending(false), 300);
     }
-  }
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    if (isSending) return;
-    sendMessage(inputValue);
-  }
-
-  function handleKeyDown(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  }
-
-  // Simple “Test” shortcut
-  function handleTestClick() {
-    if (isSending) return;
-    setIsTesting(true);
-    const sample =
-      persona === "kid"
-        ? "Tell me about how trees grow."
-        : persona === "professional"
-        ? "Help me plan my work for the next two hours."
-        : "I have an exam coming up and I’m not sure how to study.";
-    sendMessage(sample);
-  }
-
-  const isLastAssistant = (index) => {
-    // last assistant message index
-    const lastIndex = [...messages]
-      .reverse()
-      .findIndex((m) => m.role === "assistant");
-    if (lastIndex === -1) return false;
-    const lastAssistantGlobalIndex = messages.length - 1 - lastIndex;
-    return index === lastAssistantGlobalIndex;
   };
 
-  const currentPlaceholder = personaConfig.placeholder;
-
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Top nav */}
-      <header className="border-b bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-semibold tracking-tight text-slate-900">
-              CogMyra Guide
-            </span>
-            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 border border-emerald-100">
-              Beta
-            </span>
-          </div>
-          <nav className="text-sm">
-            <Link
-              to="/"
-              className="text-slate-500 hover:text-slate-900 transition-colors"
-            >
-              Home
-            </Link>
-          </nav>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-slate-100 text-slate-900">
       <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6">
-        {/* Persona selector */}
-        <section className="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-500">
-            Who are you today?
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            This helps the Guide adapt tone, pacing, and examples.
-          </p>
 
-          <div className="mt-4 flex flex-wrap gap-3">
-            {[
-              { id: "kid", label: "I’m a Kid in School" },
-              { id: "college", label: "I’m a College Student" },
-              { id: "professional", label: "I’m a Professional" },
-            ].map((opt) => {
-              const selected = persona === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setPersona(opt.id)}
-                  className={[
-                    "rounded-full px-4 py-2 text-sm font-medium border transition-colors",
-                    selected
-                      ? "bg-sky-600 text-white border-sky-600 shadow-sm"
-                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100",
-                  ].join(" ")}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Chat card */}
-        <section className="flex-1 rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900">
-                Chat with the CogMyra Guide
-              </h2>
-              <p className="text-xs text-slate-500">
-                Persona: {personaConfig.headerLabel}
-              </p>
-            </div>
+        {/* Persona Selector */}
+        <section className="rounded-xl bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
             <button
-              type="button"
-              onClick={handleTestClick}
-              disabled={isSending}
-              className="rounded-full bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => setPersonaId("kid")}
+              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                personaId === "kid"
+                  ? "bg-emerald-600 text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
             >
-              {isTesting ? "Testing…" : "test"}
+              I’m a Kid in School
+            </button>
+
+            <button
+              onClick={() => setPersonaId("college")}
+              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                personaId === "college"
+                  ? "bg-emerald-600 text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              I’m a College Student
+            </button>
+
+            <button
+              onClick={() => setPersonaId("pro")}
+              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                personaId === "pro"
+                  ? "bg-emerald-600 text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              I’m a Professional
             </button>
           </div>
 
-          <div className="flex flex-col gap-3 rounded-2xl bg-slate-50/80 p-4 max-h-[480px] overflow-y-auto border border-slate-100">
-            {messages.map((msg, index) => {
-              const isUser = msg.role === "user";
-              const bubbleBase =
-                "max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow-sm";
-              const bubbleClasses = isUser
-                ? `${bubbleBase} ml-auto bg-sky-600 text-white`
-                : `${bubbleBase} bg-white text-slate-900`;
+          <p className="text-xs text-slate-500 mt-2">
+            Persona: {personaConfig.personaLabel}
+          </p>
+        </section>
 
-              return (
+        {/* Guide Header */}
+        <h1 className="text-3xl font-semibold tracking-tight">
+          CogMyra Guide{" "}
+          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-sm font-medium text-emerald-700">
+            Beta
+          </span>
+        </h1>
+
+        {/* Chat Section */}
+        <section className="flex flex-1 flex-col gap-4 rounded-xl bg-white p-4 shadow-sm">
+          <div
+            ref={chatScrollRef}
+            className="flex-1 space-y-4 overflow-y-auto rounded-lg bg-slate-50 p-3 text-sm"
+          >
+            {/* Typewriter Intro */}
+            {typedIntro && (
+              <div className="flex justify-start">
+                <div className="max-w-[85%] rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900">
+                  {typedIntro}
+                </div>
+              </div>
+            )}
+
+            {/* Messages */}
+            {messages.map((m) => (
+              <div
+                key={m.id}
+                className={`flex ${
+                  m.from === "user" ? "justify-end" : "justify-start"
+                }`}
+              >
                 <div
-                  key={msg.id}
-                  className={`flex w-full ${
-                    isUser ? "justify-end" : "justify-start"
+                  className={`max-w-[85%] rounded-lg px-3 py-2 ${
+                    m.from === "user"
+                      ? "bg-emerald-600 text-white"
+                      : "bg-white text-slate-900 border border-slate-200"
                   }`}
                 >
-                  <div className={bubbleClasses}>
-                    {isUser ? (
-                      <p className="whitespace-pre-wrap leading-relaxed">
-                        {msg.text}
-                      </p>
-                    ) : (
-                      <TypewriterFormatted
-                        text={msg.text}
-                        active={isLastAssistant(index)}
-                        speed={12}
-                      />
-                    )}
+
+{m.from === "assistant" ? (
+  <TypewriterMarkdown text={m.text} />
+) : (
+  m.text
+)}
+                </div>
+              </div>
+            ))}
+
+            {/* Typing Indicator */}
+            {isSending && (
+              <div className="flex justify-start">
+                <div className="max-w-[75%] rounded-2xl bg-slate-200 px-4 py-3 text-sm text-slate-700 shadow">
+                  <div className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-slate-500 animate-bounce" />
+                    <span className="h-2 w-2 rounded-full bg-slate-500 animate-bounce [animation-delay:0.12s]" />
+                    <span className="h-2 w-2 rounded-full bg-slate-500 animate-bounce [animation-delay:0.24s]" />
                   </div>
                 </div>
-              );
-            })}
-            <div ref={messagesEndRef} />
+              </div>
+            )}
           </div>
 
-          {error && (
-            <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-              {error}
+          {errorMessage && (
+            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+              {errorMessage}
             </div>
           )}
 
-          {/* Input */}
-          <form onSubmit={handleSubmit} className="mt-4 space-y-2">
-            <textarea
-              className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 disabled:bg-slate-50 disabled:text-slate-400"
-              rows={3}
+          {/* Input Area */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            className="flex items-center gap-2"
+          >
+            <input
+              type="text"
+              className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              placeholder="Tell me what you're working on..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={currentPlaceholder}
-              disabled={isSending}
             />
-
-            <div className="flex items-center justify-between text-xs text-slate-500">
-              <p>Press Enter to send, Shift+Enter for a new line.</p>
-              <button
-                type="submit"
-                disabled={isSending}
-                className="inline-flex items-center justify-center rounded-full bg-sky-600 px-4 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isSending ? "Sending…" : "Send"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={isSending}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {isSending ? "Sending…" : "Send"}
+            </button>
           </form>
         </section>
       </main>
     </div>
   );
 }
+
+export default GuidePage;
