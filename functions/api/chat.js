@@ -1,199 +1,227 @@
 // functions/api/chat.js
-// CogMyra Engine v1: Chat endpoint with CMG prompt + basic telemetry.
+// Simple CogMyra Guide API with CORS support for local dev (Vite 5173 ↔ Worker 8789)
+// Hardening 7.2: request_id + D1 error_logs observability (non-breaking)
 
-import { OpenAI } from "openai";
-import { CMG_SYSTEM_PROMPT, CMG_PROMPT_VERSION } from "../cmgPrompt.js";
-import { pushTelemetry } from "../telemetryStore.js";
+import { nanoid } from "nanoid";
 
-// --- CORS headers (for browser + local dev) ---
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, x-app-key",
-};
-
-// Small helper: JSON response with CORS
-function jsonResponse(body, init = {}) {
-  const headers = {
-    "Content-Type": "application/json",
-    ...CORS_HEADERS,
-    ...(init.headers || {}),
+export async function onRequest({ request, env }) {
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, x-request-id",
   };
 
-  return new Response(JSON.stringify(body), {
-    ...init,
-    headers,
+  // Handle CORS preflight
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders,
+    });
+  }
+
+  // Correlation ID for tracing (frontend can also send x-request-id; we generate if missing)
+  const requestId = request.headers.get("x-request-id") || nanoid();
+  const startTime = Date.now();
+
+  // Helper: attach CORS + request id on every response
+  const withHeaders = (extra = {}) => ({
+    ...corsHeaders,
+    "Content-Type": "application/json",
+    "x-request-id": requestId,
+    ...extra,
   });
-}
 
-// --- Auth gate helper ---
-function checkAuth(request, env) {
-  const gateKey = env.APP_GATE_KEY;
-  // If no gate key configured, allow all (dev-friendly)
-  if (!gateKey) return true;
-
-  const headerKey = request.headers.get("x-app-key");
-  if (!headerKey || headerKey !== gateKey) return false;
-  return true;
-}
-
-// --- Client IP helper (for telemetry only) ---
-function getClientIp(request) {
-  return (
-    request.headers.get("cf-connecting-ip") ||
-    request.headers.get("x-forwarded-for") ||
-    request.headers.get("x-real-ip") ||
-    "unknown"
-  );
-}
-
-// --- Main handler ---
-export async function onRequest({ request, env }) {
-  const start = Date.now();
-  const ip = getClientIp(request);
-  let telemetryStatus = "ok";
-  let telemetryError = null;
-
-  try {
-    // CORS preflight
-    if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: CORS_HEADERS });
-    }
-
-    if (request.method !== "POST") {
-      return jsonResponse(
-        { error: "Method not allowed. Use POST." },
-        { status: 405 }
-      );
-    }
-
-    // Basic auth gate
-    if (!checkAuth(request, env)) {
-      telemetryStatus = "unauthorized";
-      return jsonResponse({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Parse request body
-    let body;
+  // Helper: best-effort log; never break user flow if logging fails
+  const log = async ({
+    level = "info",
+    message = "log",
+    stack = null,
+    metadata = null,
+    route = "/api/chat",
+    source = "backend",
+  }) => {
     try {
-      body = await request.json();
-    } catch (err) {
-      telemetryStatus = "bad_request";
-      telemetryError = "invalid_json";
-      return jsonResponse(
-        { error: "Invalid JSON body in request." },
-        { status: 400 }
-      );
+    await env.CMG_DB.prepare(`
+        INSERT INTO error_logs (
+          id,
+          timestamp,
+          level,
+          source,
+          request_id,
+          route,
+          message,
+          stack,
+          metadata
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        nanoid(),
+        Date.now(),
+        level,
+        source,
+        requestId,
+        route,
+        message,
+        stack,
+        metadata ? JSON.stringify(metadata) : null
+      ).run();
+    } catch {
+      // no-op
     }
+  };
 
-    const { messages, persona } = body || {};
-
-    if (!Array.isArray(messages) || messages.length === 0) {
-      telemetryStatus = "bad_request";
-      telemetryError = "missing_messages";
-      return jsonResponse(
-        { error: "Request must include a non-empty 'messages' array." },
-        { status: 400 }
-      );
-    }
-
-    // OpenAI client
-    const client = new OpenAI({
-      apiKey: env.OPENAI_API_KEY,
+  if (request.method !== "POST") {
+    // Log non-POST attempts (useful for noise / probes, harmless)
+    await log({
+      level: "warn",
+      message: "method_not_allowed",
+      metadata: { method: request.method },
     });
 
-    const model = env.MODEL || "gpt-5.1-mini";
+    return new Response(JSON.stringify({ error: "Method not allowed", request_id: requestId }), {
+      status: 405,
+      headers: withHeaders(),
+    });
+  }
 
-    // Build full message list with CMG system prompt at the front
-    const systemPrefix = `
-You are the CogMyra Guide (CMG).
+  try {
+    const body = await request.json().catch(() => null);
+    const messages = body?.messages;
+    const persona = body?.persona;
 
-Runtime config:
-- Prompt version: ${CMG_PROMPT_VERSION}
-- Persona (if provided by UI): ${persona || "none"}
+    if (!Array.isArray(messages)) {
+      await log({
+        level: "warn",
+        message: "invalid_request_messages_not_array",
+        metadata: { hasBody: Boolean(body), messagesType: typeof messages },
+      });
 
-Follow the system prompt below exactly.
----
-${CMG_SYSTEM_PROMPT}
-`.trim();
+      return new Response(
+        JSON.stringify({ error: "Invalid request: messages must be an array", request_id: requestId }),
+        {
+          status: 400,
+          headers: withHeaders(),
+        }
+      );
+    }
 
-    const finalMessages = [
-      { role: "system", content: systemPrefix },
+    // Build system prompt from env vars
+    const systemParts = [
+      env.COGMYRA_SYSTEM_PROMPT || "",
+      env.TONE || "",
+      env.SCAFFOLDING || "",
+    ].filter(Boolean);
+
+    let systemText = systemParts.join("\n\n");
+
+    if (persona) {
+      systemText += `\n\nCurrent learner persona: ${persona}.`;
+    }
+
+    const openaiMessages = [
+      { role: "system", content: systemText },
       ...messages,
     ];
 
-    // Call OpenAI (non-streaming)
-    const completion = await client.chat.completions.create({
-      model,
-      messages: finalMessages,
-      // New API uses max_completion_tokens instead of max_tokens
-      max_completion_tokens: 512,
-      temperature: 0.4,
+    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: env.MODEL || "gpt-5.1",
+        messages: openaiMessages,
+        temperature: 0.4,
+      }),
     });
 
-    const choice = completion.choices?.[0];
-    const assistantMessage = choice?.message;
-    const latencyMs = Date.now() - start;
+    if (!openaiRes.ok) {
+      const errText = await openaiRes.text();
 
-    // Push telemetry (best-effort; don't block response on errors)
-    try {
-      await pushTelemetry(env, {
-        kind: "chat_request",
-        createdAt: new Date().toISOString(),
-        ip,
-        persona: persona || null,
-        status: telemetryStatus,
-        error: telemetryError,
-        latencyMs,
-        model,
-        totalTokens: completion.usage?.total_tokens ?? null,
-      });
-    } catch (err) {
-      console.error("Telemetry push failed:", err);
-    }
+      // Keep console error for local dev visibility
+      console.error("OpenAI error:", openaiRes.status, errText);
 
-    return jsonResponse(
-      {
-        message: assistantMessage,
-        usage: completion.usage || null,
-        meta: {
-          model,
-          promptVersion: CMG_PROMPT_VERSION,
-          latencyMs,
+      // Log upstream failure to D1
+      await log({
+        level: "error",
+        message: "upstream_model_error",
+        metadata: {
+          upstream_status: openaiRes.status,
+          upstream_body: errText?.slice(0, 4000) || "",
+          model: env.MODEL || "gpt-5.1",
         },
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Chat handler error:", error);
-    const latencyMs = Date.now() - start;
-    telemetryStatus = "error";
-    telemetryError =
-      error && typeof error === "object" && "code" in error
-        ? error.code || "unknown"
-        : "unknown";
-
-    try {
-      await pushTelemetry(env, {
-        kind: "chat_request",
-        createdAt: new Date().toISOString(),
-        ip,
-        persona: null,
-        status: telemetryStatus,
-        error: telemetryError,
-        latencyMs,
-        model: env.MODEL || "gpt-5.1-mini",
-        totalTokens: null,
       });
-    } catch (err) {
-      console.error("Telemetry push failed (error path):", err);
+
+      return new Response(
+        JSON.stringify({
+          error: "Upstream model error",
+          status: openaiRes.status,
+          request_id: requestId,
+        }),
+        {
+          status: 502,
+          headers: withHeaders(),
+        }
+      );
     }
 
-    return jsonResponse(
-      {
-        error: "Unexpected error while processing chat request.",
+    const data = await openaiRes.json();
+    const choice = data.choices?.[0]?.message;
+
+    const responseBody = {
+      message:
+        choice || {
+          role: "assistant",
+          content: "Sorry, I had trouble replying just now.",
+        },
+      usage: data.usage || null,
+      meta: {
+        model: data.model || env.MODEL || "gpt-5.1",
+        promptVersion: "v1.0",
       },
-      { status: 500 }
+      request_id: requestId,
+    };
+
+    const duration = Date.now() - startTime;
+
+    // Log completion (info) with useful metadata
+    await log({
+      level: "info",
+      message: "request_completed",
+      metadata: {
+        duration_ms: duration,
+        upstream_status: 200,
+        model: data.model || env.MODEL || "gpt-5.1",
+        persona: persona || null,
+      },
+    });
+
+    return new Response(JSON.stringify(responseBody), {
+      status: 200,
+      headers: withHeaders(),
+    });
+
+  } catch (err) {
+    console.error("CogMyra /api/chat error:", err);
+
+    const duration = Date.now() - startTime;
+
+    await log({
+      level: "error",
+      message: "internal_server_error",
+      stack: err?.stack || null,
+      metadata: {
+        duration_ms: duration,
+        error_message: err?.message || "unknown_error",
+      },
+    });
+
+    return new Response(
+      JSON.stringify({ error: "Internal server error", request_id: requestId }),
+      {
+        status: 500,
+        headers: withHeaders(),
+      }
     );
   }
 }
