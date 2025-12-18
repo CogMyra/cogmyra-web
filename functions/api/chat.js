@@ -2,7 +2,12 @@
 // Simple CogMyra Guide API with CORS support for local dev (Vite 5173 ↔ Worker 8789)
 // Hardening 7.2: request_id + D1 error_logs observability (non-breaking)
 
-import { nanoid } from "nanoid";
+function makeId() {
+  // Workers/Pages runtime supports crypto.randomUUID()
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  // fallback (not perfect, but fine for correlation IDs)
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
 
 export async function onRequest({ request, env }) {
   const corsHeaders = {
@@ -11,19 +16,13 @@ export async function onRequest({ request, env }) {
     "Access-Control-Allow-Headers": "Content-Type, x-request-id",
   };
 
-  // Handle CORS preflight
   if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: corsHeaders,
-    });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
-  // Correlation ID for tracing (frontend can also send x-request-id; we generate if missing)
-  const requestId = request.headers.get("x-request-id") || nanoid();
+  const requestId = request.headers.get("x-request-id") || makeId();
   const startTime = Date.now();
 
-  // Helper: attach CORS + request id on every response
   const withHeaders = (extra = {}) => ({
     ...corsHeaders,
     "Content-Type": "application/json",
@@ -31,7 +30,6 @@ export async function onRequest({ request, env }) {
     ...extra,
   });
 
-  // Helper: best-effort log; never break user flow if logging fails
   const log = async ({
     level = "info",
     message = "log",
@@ -41,7 +39,7 @@ export async function onRequest({ request, env }) {
     source = "backend",
   }) => {
     try {
-    await env.CMG_DB.prepare(`
+      await env.CMG_DB.prepare(`
         INSERT INTO error_logs (
           id,
           timestamp,
@@ -54,7 +52,7 @@ export async function onRequest({ request, env }) {
           metadata
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
-        nanoid(),
+        makeId(),
         Date.now(),
         level,
         source,
@@ -65,22 +63,21 @@ export async function onRequest({ request, env }) {
         metadata ? JSON.stringify(metadata) : null
       ).run();
     } catch {
-      // no-op
+      // never break user flow due to logging
     }
   };
 
   if (request.method !== "POST") {
-    // Log non-POST attempts (useful for noise / probes, harmless)
     await log({
       level: "warn",
       message: "method_not_allowed",
       metadata: { method: request.method },
     });
 
-    return new Response(JSON.stringify({ error: "Method not allowed", request_id: requestId }), {
-      status: 405,
-      headers: withHeaders(),
-    });
+    return new Response(
+      JSON.stringify({ error: "Method not allowed", request_id: requestId }),
+      { status: 405, headers: withHeaders() }
+    );
   }
 
   try {
@@ -97,14 +94,10 @@ export async function onRequest({ request, env }) {
 
       return new Response(
         JSON.stringify({ error: "Invalid request: messages must be an array", request_id: requestId }),
-        {
-          status: 400,
-          headers: withHeaders(),
-        }
+        { status: 400, headers: withHeaders() }
       );
     }
 
-    // Build system prompt from env vars
     const systemParts = [
       env.COGMYRA_SYSTEM_PROMPT || "",
       env.TONE || "",
@@ -112,10 +105,7 @@ export async function onRequest({ request, env }) {
     ].filter(Boolean);
 
     let systemText = systemParts.join("\n\n");
-
-    if (persona) {
-      systemText += `\n\nCurrent learner persona: ${persona}.`;
-    }
+    if (persona) systemText += `\n\nCurrent learner persona: ${persona}.`;
 
     const openaiMessages = [
       { role: "system", content: systemText },
@@ -137,31 +127,21 @@ export async function onRequest({ request, env }) {
 
     if (!openaiRes.ok) {
       const errText = await openaiRes.text();
-
-      // Keep console error for local dev visibility
       console.error("OpenAI error:", openaiRes.status, errText);
 
-      // Log upstream failure to D1
       await log({
         level: "error",
         message: "upstream_model_error",
         metadata: {
           upstream_status: openaiRes.status,
-          upstream_body: errText?.slice(0, 4000) || "",
+          upstream_body: (errText || "").slice(0, 4000),
           model: env.MODEL || "gpt-5.1",
         },
       });
 
       return new Response(
-        JSON.stringify({
-          error: "Upstream model error",
-          status: openaiRes.status,
-          request_id: requestId,
-        }),
-        {
-          status: 502,
-          headers: withHeaders(),
-        }
+        JSON.stringify({ error: "Upstream model error", status: openaiRes.status, request_id: requestId }),
+        { status: 502, headers: withHeaders() }
       );
     }
 
@@ -169,22 +149,14 @@ export async function onRequest({ request, env }) {
     const choice = data.choices?.[0]?.message;
 
     const responseBody = {
-      message:
-        choice || {
-          role: "assistant",
-          content: "Sorry, I had trouble replying just now.",
-        },
+      message: choice || { role: "assistant", content: "Sorry, I had trouble replying just now." },
       usage: data.usage || null,
-      meta: {
-        model: data.model || env.MODEL || "gpt-5.1",
-        promptVersion: "v1.0",
-      },
+      meta: { model: data.model || env.MODEL || "gpt-5.1", promptVersion: "v1.0" },
       request_id: requestId,
     };
 
     const duration = Date.now() - startTime;
 
-    // Log completion (info) with useful metadata
     await log({
       level: "info",
       message: "request_completed",
@@ -196,32 +168,22 @@ export async function onRequest({ request, env }) {
       },
     });
 
-    return new Response(JSON.stringify(responseBody), {
-      status: 200,
-      headers: withHeaders(),
-    });
+    return new Response(JSON.stringify(responseBody), { status: 200, headers: withHeaders() });
 
   } catch (err) {
     console.error("CogMyra /api/chat error:", err);
 
     const duration = Date.now() - startTime;
-
     await log({
       level: "error",
       message: "internal_server_error",
       stack: err?.stack || null,
-      metadata: {
-        duration_ms: duration,
-        error_message: err?.message || "unknown_error",
-      },
+      metadata: { duration_ms: duration, error_message: err?.message || "unknown_error" },
     });
 
     return new Response(
       JSON.stringify({ error: "Internal server error", request_id: requestId }),
-      {
-        status: 500,
-        headers: withHeaders(),
-      }
+      { status: 500, headers: withHeaders() }
     );
   }
 }
