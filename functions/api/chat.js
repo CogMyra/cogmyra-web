@@ -1,83 +1,81 @@
 // functions/api/chat.js
-// Simple CogMyra Guide API with CORS support for local dev (Vite 5173 ↔ Worker 8789)
-// Hardening 7.2: request_id + D1 error_logs observability (non-breaking)
+// CogMyra Guide API with CORS + request_id + optional D1 logging (CMG_DB)
 
-function makeId() {
-  // Workers/Pages runtime supports crypto.randomUUID()
-  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
-  // fallback (not perfect, but fine for correlation IDs)
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    // IMPORTANT: allow client/server to send/receive x-request-id
+    "Access-Control-Allow-Headers": "Content-Type, X-Request-Id",
+  };
+}
+
+function withRequestIdHeaders(headersObj, requestId) {
+  return {
+    ...headersObj,
+    "Content-Type": "application/json",
+    "X-Request-Id": requestId,
+  };
+}
+
+function getRequestId(request) {
+  // Cloudflare normalizes header lookups; still handle both casings safely
+  return (
+    request.headers.get("x-request-id") ||
+    request.headers.get("X-Request-Id") ||
+    (globalThis.crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()))
+  );
+}
+
+async function logToD1(env, row) {
+  // Never break the API if DB binding is missing
+  if (!env || !env.CMG_DB) return;
+
+  try {
+    await env.CMG_DB.prepare(
+      `INSERT INTO error_logs (
+        id, timestamp, level, source, request_id, route, message, stack, metadata
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+      .bind(
+        crypto.randomUUID(),
+        Date.now(),
+        row.level,
+        row.source,
+        row.request_id || null,
+        row.route || null,
+        row.message,
+        row.stack || null,
+        row.metadata || null
+      )
+      .run();
+  } catch (e) {
+    // Swallow logging errors; do not affect user traffic
+    console.error("D1 log insert failed:", e);
+  }
 }
 
 export async function onRequest({ request, env }) {
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, x-request-id",
-  };
-
-  if (request.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
-
-  const requestId = request.headers.get("x-request-id") || makeId();
+  const baseCors = corsHeaders();
+  const requestId = getRequestId(request);
   const startTime = Date.now();
 
-  const withHeaders = (extra = {}) => ({
-    ...corsHeaders,
-    "Content-Type": "application/json",
-    "x-request-id": requestId,
-    ...extra,
-  });
-
-  const log = async ({
-    level = "info",
-    message = "log",
-    stack = null,
-    metadata = null,
-    route = "/api/chat",
-    source = "backend",
-  }) => {
-    try {
-      await env.CMG_DB.prepare(`
-        INSERT INTO error_logs (
-          id,
-          timestamp,
-          level,
-          source,
-          request_id,
-          route,
-          message,
-          stack,
-          metadata
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(
-        makeId(),
-        Date.now(),
-        level,
-        source,
-        requestId,
-        route,
-        message,
-        stack,
-        metadata ? JSON.stringify(metadata) : null
-      ).run();
-    } catch {
-      // never break user flow due to logging
-    }
-  };
+  // Handle CORS preflight
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        ...baseCors,
+        "X-Request-Id": requestId,
+      },
+    });
+  }
 
   if (request.method !== "POST") {
-    await log({
-      level: "warn",
-      message: "method_not_allowed",
-      metadata: { method: request.method },
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: withRequestIdHeaders(baseCors, requestId),
     });
-
-    return new Response(
-      JSON.stringify({ error: "Method not allowed", request_id: requestId }),
-      { status: 405, headers: withHeaders() }
-    );
   }
 
   try {
@@ -86,18 +84,16 @@ export async function onRequest({ request, env }) {
     const persona = body?.persona;
 
     if (!Array.isArray(messages)) {
-      await log({
-        level: "warn",
-        message: "invalid_request_messages_not_array",
-        metadata: { hasBody: Boolean(body), messagesType: typeof messages },
-      });
-
       return new Response(
-        JSON.stringify({ error: "Invalid request: messages must be an array", request_id: requestId }),
-        { status: 400, headers: withHeaders() }
+        JSON.stringify({ error: "Invalid request: messages must be an array" }),
+        {
+          status: 400,
+          headers: withRequestIdHeaders(baseCors, requestId),
+        }
       );
     }
 
+    // Build system prompt from env vars
     const systemParts = [
       env.COGMYRA_SYSTEM_PROMPT || "",
       env.TONE || "",
@@ -105,7 +101,9 @@ export async function onRequest({ request, env }) {
     ].filter(Boolean);
 
     let systemText = systemParts.join("\n\n");
-    if (persona) systemText += `\n\nCurrent learner persona: ${persona}.`;
+    if (persona) {
+      systemText += `\n\nCurrent learner persona: ${persona}.`;
+    }
 
     const openaiMessages = [
       { role: "system", content: systemText },
@@ -129,19 +127,26 @@ export async function onRequest({ request, env }) {
       const errText = await openaiRes.text();
       console.error("OpenAI error:", openaiRes.status, errText);
 
-      await log({
+      await logToD1(env, {
         level: "error",
+        source: "backend",
+        request_id: requestId,
+        route: "/api/chat",
         message: "upstream_model_error",
-        metadata: {
-          upstream_status: openaiRes.status,
-          upstream_body: (errText || "").slice(0, 4000),
-          model: env.MODEL || "gpt-5.1",
-        },
+        stack: null,
+        metadata: JSON.stringify({ status: openaiRes.status, body: errText }),
       });
 
       return new Response(
-        JSON.stringify({ error: "Upstream model error", status: openaiRes.status, request_id: requestId }),
-        { status: 502, headers: withHeaders() }
+        JSON.stringify({
+          error: "Upstream model error",
+          status: openaiRes.status,
+          request_id: requestId,
+        }),
+        {
+          status: 502,
+          headers: withRequestIdHeaders(baseCors, requestId),
+        }
       );
     }
 
@@ -149,41 +154,54 @@ export async function onRequest({ request, env }) {
     const choice = data.choices?.[0]?.message;
 
     const responseBody = {
-      message: choice || { role: "assistant", content: "Sorry, I had trouble replying just now." },
+      message:
+        choice || {
+          role: "assistant",
+          content: "Sorry, I had trouble replying just now.",
+        },
       usage: data.usage || null,
-      meta: { model: data.model || env.MODEL || "gpt-5.1", promptVersion: "v1.0" },
-      request_id: requestId,
+      meta: {
+        model: data.model || env.MODEL || "gpt-5.1",
+        promptVersion: "v1.0",
+        request_id: requestId,
+      },
     };
 
     const duration = Date.now() - startTime;
 
-    await log({
+    await logToD1(env, {
       level: "info",
+      source: "backend",
+      request_id: requestId,
+      route: "/api/chat",
       message: "request_completed",
-      metadata: {
-        duration_ms: duration,
-        upstream_status: 200,
-        model: data.model || env.MODEL || "gpt-5.1",
-        persona: persona || null,
-      },
+      stack: null,
+      metadata: JSON.stringify({ duration_ms: duration }),
     });
 
-    return new Response(JSON.stringify(responseBody), { status: 200, headers: withHeaders() });
-
+    return new Response(JSON.stringify(responseBody), {
+      status: 200,
+      headers: withRequestIdHeaders(baseCors, requestId),
+    });
   } catch (err) {
     console.error("CogMyra /api/chat error:", err);
 
-    const duration = Date.now() - startTime;
-    await log({
+    await logToD1(env, {
       level: "error",
-      message: "internal_server_error",
+      source: "backend",
+      request_id: requestId,
+      route: "/api/chat",
+      message: err?.message || "internal_server_error",
       stack: err?.stack || null,
-      metadata: { duration_ms: duration, error_message: err?.message || "unknown_error" },
+      metadata: null,
     });
 
     return new Response(
       JSON.stringify({ error: "Internal server error", request_id: requestId }),
-      { status: 500, headers: withHeaders() }
+      {
+        status: 500,
+        headers: withRequestIdHeaders(baseCors, requestId),
+      }
     );
   }
 }
