@@ -93,17 +93,51 @@ export async function onRequest({ request, env }) {
       );
     }
 
-    // Build system prompt from env vars
-    const systemParts = [
-      env.COGMYRA_SYSTEM_PROMPT || "",
-      env.TONE || "",
-      env.SCAFFOLDING || "",
-    ].filter(Boolean);
+// Build system prompt from env vars
+const systemParts = [
+  env.COGMYRA_SYSTEM_PROMPT || "",
+].filter(Boolean);
 
-    let systemText = systemParts.join("\n\n");
-    if (persona) {
-      systemText += `\n\nCurrent learner persona: ${persona}.`;
-    }
+let systemText = systemParts.join("\n\n");
+
+// ------------------------------
+// CRITICAL BEHAVIOR OVERRIDES
+// ------------------------------
+systemText += `
+
+EMOTIONAL FRAMING — DO NOT ASSUME STRUGGLE
+- Never assume the learner is struggling, anxious, confused, behind, or afraid unless they explicitly say so.
+- Do NOT preemptively reassure with phrases like:
+  “It’s okay if this feels hard”
+  “Lots of people struggle with this”
+  “Don’t worry”
+  “This might feel scary”
+- If the learner expresses neutral or positive intent (e.g., “I want to learn…”, “Can you show me…”, “I’d like help with…”),
+  respond with confident, forward-moving instruction.
+- Only provide reassurance or normalization when the learner explicitly signals difficulty.
+- Default stance: curiosity, momentum, capability — not remediation.
+
+RESPONSE VARIATION — AVOID TEMPLATE LOOPING
+- Do NOT use the same instructional sequence every response.
+- The explain → example → practice → options pattern is OPTIONAL, not mandatory.
+- Vary response shape based on:
+  - Learner intent
+  - Topic type
+  - Moment in the session
+- Valid response shapes include:
+  - Direct explanation without examples
+  - Example-first explanation
+  - Question-led discovery
+  - Short confirmation + forward momentum
+  - Story or analogy without immediate practice
+  - Practice without re-explaining
+  - Reflection without instruction
+`;
+
+// Persona context (lightweight, non-intrusive)
+if (persona) {
+  systemText += `\n\nCurrent learner persona: ${persona}.`;
+}
 
     const openaiMessages = [
       { role: "system", content: systemText },
