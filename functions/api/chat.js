@@ -1,5 +1,25 @@
 import { CMG_SYSTEM_PROMPT, CMG_PROMPT_VERSION } from "../cmgPrompt";
 
+function enforceNoMenus(text) {
+  if (!text) return text;
+
+  let out = text;
+
+  // Hard-ban common menu patterns
+  out = out.replace(/\n\s*[A-C]\)\s.*(\n\s*[A-C]\)\s.*)*/g, ""); // strips A) B) C) blocks
+  out = out.replace(/\n\s*-\s*[A-C]\)\s.*(\n\s*-\s*[A-C]\)\s.*)*/g, ""); // strips dashed A)/B)/C)
+  out = out.replace(/\n\s*What would you like next\??.*$/gim, ""); // strips "What would you like next"
+  out = out.replace(/\n\s*If you tell me.*I can:\s*$/gim, ""); // strips "If you tell me... I can:"
+
+  // Also remove “pick a topic” style prompts (soft menu)
+  out = out.replace(
+    /What would you like to work on today\s*—.*\?/gi,
+    "What are you working on right now?"
+  );
+
+  return out.trim();
+}
+
 // functions/api/chat.js
 // CogMyra Guide API with CORS + request_id + optional D1 logging (CMG_DB)
 
@@ -222,7 +242,8 @@ if (persona) {
 
     const data = await openaiRes.json();
     const choice = data.choices?.[0]?.message;
-
+    const safeContent = enforceNoMenus(choice?.content || "");
+  
     const responseBody = {
       message:
         choice || {
@@ -248,6 +269,17 @@ if (persona) {
       stack: null,
       metadata: JSON.stringify({ duration_ms: duration }),
     });
+
+    // HARD OUTPUT ENFORCEMENT: strip A/B/C menus + “what next” menu phrasing
+    if (responseBody?.message?.content) {
+      responseBody = {
+        ...responseBody,
+        message: {
+          ...responseBody.message,
+          content: enforceNoMenus(responseBody.message.content),
+        },
+      };
+    }
 
     return new Response(JSON.stringify(responseBody), {
       status: 200,
