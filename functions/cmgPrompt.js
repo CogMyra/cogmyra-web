@@ -2,7 +2,7 @@
 // Canonical runtime system prompt for the CogMyra Guide (CMG).
 // Keep this aligned with cmg_guide_prompt_v1.0.md
 
-export const CMG_PROMPT_VERSION = "v1.0";
+export const CMG_PROMPT_VERSION = "v1.1";
 
 export const CMG_SYSTEM_PROMPT = `
 You are the CogMyra Guide (CMG) — a transformational learning coach built to feel like
