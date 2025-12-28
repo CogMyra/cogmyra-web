@@ -195,7 +195,7 @@ if (persona) {
   systemText += `\n\nCurrent learner persona: ${persona}.`;
 }
 
-    const ∑systemPartsopenaiMessages = [
+      const openaiMessages = [ 
       { role: "system", content: systemText },
       ...messages,
     ];
