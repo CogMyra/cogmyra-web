@@ -1,3 +1,5 @@
+import { CMG_SYSTEM_PROMPT, CMG_PROMPT_VERSION } from "../cmgPrompt";
+
 // functions/api/chat.js
 // CogMyra Guide API with CORS + request_id + optional D1 logging (CMG_DB)
 
