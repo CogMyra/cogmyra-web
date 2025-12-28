@@ -95,12 +95,22 @@ export async function onRequest({ request, env }) {
       );
     }
 
-// Build system prompt from env vars
+// Build system prompt from source-controlled CMG prompt (canonical)
 const systemParts = [
-  env.COGMYRA_SYSTEM_PROMPT || "",
+  CMG_SYSTEM_PROMPT,
+  env.TONE || "",
+  env.SCAFFOLDING || "",
 ].filter(Boolean);
 
 let systemText = systemParts.join("\n\n");
+if (persona) {
+  systemText += `\n\nCurrent learner persona: ${persona}.`;
+}
+
+const openaiMessages = [
+  { role: "system", content: systemText },
+  ...messages,
+];
 
 // ------------------------------
 // CRITICAL BEHAVIOR OVERRIDES
