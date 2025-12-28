@@ -96,10 +96,9 @@ export async function onRequest({ request, env }) {
     }
 
 // Build system prompt from source-controlled CMG prompt (canonical)
+// IMPORTANT: do not append env prompt fragments that can reintroduce menus.
 const systemParts = [
   CMG_SYSTEM_PROMPT,
-  env.TONE || "",
-  env.SCAFFOLDING || "",
 ].filter(Boolean);
 
 let systemText = systemParts.join("\n\n");
@@ -175,7 +174,7 @@ if (persona) {
   systemText += `\n\nCurrent learner persona: ${persona}.`;
 }
 
-    const openaiMessages = [
+    const ∑systemPartsopenaiMessages = [
       { role: "system", content: systemText },
       ...messages,
     ];
