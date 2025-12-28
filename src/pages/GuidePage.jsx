@@ -129,25 +129,90 @@ function GuidePage() {
   const [isSending, setIsSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Onboarding micro-flow (8.4)
+  // Step 1 -> Step 2 -> 0 (done)
+  const [onboardingStep, setOnboardingStep] = useState(1);
+
+  // What we learn during onboarding
+  const [onboarding, setOnboarding] = useState({
+    ageOrLevel: "", // kid: age/grade | college: undergrad/grad | pro: role/industry
+    feeling: "",
+    topic: "",
+    goal: "", // Step 2 follow-up (varies)
+    style: "", // Step 2 follow-up (varies)
+  });
+
+  // Vary Step 2 prompts to avoid repetition
+  const [onboardingVariant] = useState(() => Math.floor(Math.random() * 4));
+  // -------------------------------
+  // Onboarding prompt helpers
+  // -------------------------------
+
+  const getStep1Prompt = () => {
+    switch (personaId) {
+      case "kid":
+        return "Before we start — how old are you or what grade are you in?";
+      case "pro":
+        return "Before we dive in — what’s your role or line of work?";
+      case "college":
+      default:
+        return "Before we dive in — are you an undergrad or graduate student?";
+    }
+  };
+
+  const getStep2Prompt = () => {
+    const variants = {
+      kid: [
+        "How are you feeling about this right now?",
+        "What part feels tricky or confusing?",
+        "What do you want help with first?",
+        "Is this for homework, a test, or something else?"
+      ],
+      college: [
+        "What’s the main thing you want to get out of this?",
+        "Where are you getting stuck?",
+        "Is this for a class, a project, or something else?",
+        "Do you want help understanding, practicing, or planning?"
+      ],
+      pro: [
+        "What does success look like here?",
+        "Is this time-sensitive or exploratory?",
+        "What’s the biggest constraint you’re dealing with?",
+        "Do you want strategy, execution help, or feedback?"
+      ]
+    };
+
+    const set = variants[personaId] || variants.college;
+    return set[onboardingVariant % set.length];
+  };
   // Stable session ID
-  const [sessionId] = useState(
-    () =>
-      (typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `sess-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
+  const [sessionId] = useState(() =>
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `sess-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   );
 
-  // Reset when persona changes
-  useEffect(() => {
-    setMessages([]);
-    setInputValue("");
-    setErrorMessage("");
-  }, [personaId]);
-
-  // First intro bubble re-renders whenever persona changes
-  useEffect(() => {
-    setMessages([]);
-  }, [personaConfig.intro]);
+// Reset + start onboarding when persona changes
+useEffect(() => {
+  setMessages([
+    {
+      id: "onboarding-step-1",
+      role: "assistant",
+      from: "assistant",
+      text: getStep1Prompt(),
+    },
+  ]);
+  setOnboardingStep(1);
+  setOnboarding({
+    ageOrLevel: "",
+    feeling: "",
+    topic: "",
+    goal: "",
+    style: "",
+  });
+  setInputValue("");
+  setErrorMessage("");
+}, [personaId]);
 
   const chatScrollRef = useRef(null);
   useEffect(() => {
@@ -171,6 +236,73 @@ function GuidePage() {
       text: userText,
     };
 
+    // ----------------------------------------
+    // Onboarding intercept (8.4)
+    // Step 1: capture level/role
+    // Step 2: capture one more persona-fit detail, then start real chat
+    // ----------------------------------------
+
+    // STEP 1 → STEP 2 (no API call yet)
+    if (onboardingStep === 1) {
+      setMessages((prev) => [
+        ...prev,
+        userMessage,
+        {
+          id: "onboarding-step-2",
+          role: "assistant",
+          from: "assistant",
+          text: getStep2Prompt(),
+        },
+      ]);
+
+      setOnboarding((o) => ({ ...o, ageOrLevel: userText }));
+      setOnboardingStep(2);
+      setInputValue("");
+      setErrorMessage("");
+      return;
+    }
+
+    // STEP 2 → start real chat (API call happens after this)
+    let onboardingContextForThisRequest = null;
+
+    if (onboardingStep === 2) {
+      let patch = {};
+
+      if (personaId === "kid") {
+        if (onboardingVariant % 4 === 0) patch = { feeling: userText };
+        else if (onboardingVariant % 4 === 3) patch = { style: userText };
+        else patch = { topic: userText };
+      } else if (personaId === "pro") {
+        if (onboardingVariant % 4 === 0) patch = { goal: userText };
+        else patch = { style: userText };
+      } else {
+        // college (default)
+        if (onboardingVariant % 4 === 0) patch = { goal: userText };
+        else if (onboardingVariant % 4 === 2) patch = { style: userText };
+        else patch = { topic: userText };
+      }
+
+      const merged = { ...onboarding, ...patch };
+
+      onboardingContextForThisRequest =
+        `Onboarding context (keep it brief):\n` +
+        `Persona: ${personaConfig.personaLabel}\n` +
+        `Level/Role: ${merged.ageOrLevel || "n/a"}\n` +
+        (merged.feeling ? `Feeling: ${merged.feeling}\n` : "") +
+        (merged.topic ? `Topic/Need: ${merged.topic}\n` : "") +
+        (merged.goal ? `Goal: ${merged.goal}\n` : "") +
+        (merged.style ? `Preference: ${merged.style}\n` : "");
+
+      setOnboarding((o) => ({ ...o, ...patch }));
+      setOnboardingStep(0);
+    }
+
+    // Normal message append (used for step 2 and all future messages)
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
+    setIsSending(true);
+    setErrorMessage("");
+
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setIsSending(true);
@@ -182,11 +314,16 @@ function GuidePage() {
         content: m.text,
       }));
 
-      const payload = {
-        messages: apiMessages,
-        persona: personaConfig.personaLabel,
-        session_id: sessionId,
-      };
+const payload = {
+  messages: onboardingContextForThisRequest
+    ? [
+        { role: "system", content: onboardingContextForThisRequest },
+        ...apiMessages,
+      ]
+    : apiMessages,
+  persona: personaConfig.personaLabel,
+  session_id: sessionId,
+};
 
       const res = await fetch("/api/chat", {
         method: "POST",
