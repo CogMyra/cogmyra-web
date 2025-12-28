@@ -195,11 +195,6 @@ if (persona) {
   systemText += `\n\nCurrent learner persona: ${persona}.`;
 }
 
-      const openaiMessages = [ 
-      { role: "system", content: systemText },
-      ...messages,
-    ];
-
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
