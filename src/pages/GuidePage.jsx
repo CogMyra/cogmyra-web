@@ -163,12 +163,11 @@ function GuidePage() {
   const getStep2Prompt = () => {
     const variants = {
       kid: [
-kid: [
-  "What made you curious about this?",
-  "What do you already know about it, if anything?",
-  "Do you want a simple explanation or a deeper one?",
-  "Is this for school, or just personal curiosity?"
-],
+        "What made you curious about this?",
+        "What do you already know about it, if anything?",
+        "Do you want a simple explanation or a deeper one?",
+        "Is this for school, or just personal curiosity?"
+      ],
       college: [
         "What’s the main thing you want to get out of this?",
         "Where are you getting stuck?",
@@ -186,6 +185,7 @@ kid: [
     const set = variants[personaId] || variants.college;
     return set[onboardingVariant % set.length];
   };
+
   // Stable session ID
   const [sessionId] = useState(() =>
     typeof crypto !== "undefined" && crypto.randomUUID
