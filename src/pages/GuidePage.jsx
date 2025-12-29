@@ -160,31 +160,28 @@ function GuidePage() {
     }
   };
 
-  const getStep2Prompt = () => {
-    const variants = {
-kid: [
-  "Got it. What are you trying to do right now—homework, studying, or just curious?",
-  "What exactly does your teacher or assignment ask you to do? (You can paste it.)",
-  "What part feels hardest right now—words, the steps, or getting started?",
-  "Show me one example problem you’re stuck on (or tell me the topic), and I’ll help you do the next tiny step."
-],
-      college: [
-        "What’s the main thing you want to get out of this?",
-        "Where are you getting stuck?",
-        "Is this for a class, a project, or something else?",
-        "Do you want help understanding, practicing, or planning?"
-      ],
-      pro: [
-        "What does success look like here?",
-        "Is this time-sensitive or exploratory?",
-        "What’s the biggest constraint you’re dealing with?",
-        "Do you want strategy, execution help, or feedback?"
-      ]
-    };
-
-    const set = variants[personaId] || variants.college;
-    return set[onboardingVariant % set.length];
+const getStep2Prompt = () => {
+  const variants = {
+    kid: [
+      "What are you working on today (math, reading, science, something else)?",
+      "What’s the assignment or question? You can paste it here.",
+      "Is this homework, a quiz/test, or just curiosity?"
+    ],
+    college: [
+      "What are you working on right now (topic + the exact task)?",
+      "What’s the prompt / question / problem you need to complete?",
+      "What class or context is this for, and what’s the deadline?"
+    ],
+    pro: [
+      "What are you trying to accomplish—what’s the outcome you need?",
+      "What’s the context (industry/situation) and what’s your time window?",
+      "What’s the concrete thing you want me to help you produce (answer, plan, draft, decision)?"
+    ]
   };
+
+  const set = variants[personaId] || variants.college;
+  return set[onboardingVariant % set.length];
+};
 
   // Stable session ID
   const [sessionId] = useState(() =>
