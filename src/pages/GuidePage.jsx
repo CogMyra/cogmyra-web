@@ -162,12 +162,12 @@ function GuidePage() {
 
   const getStep2Prompt = () => {
     const variants = {
-      kid: [
-        "What made you curious about this?",
-        "What do you already know about it, if anything?",
-        "Do you want a simple explanation or a deeper one?",
-        "Is this for school, or just personal curiosity?"
-      ],
+kid: [
+  "Got it. What are you trying to do right now—homework, studying, or just curious?",
+  "What exactly does your teacher or assignment ask you to do? (You can paste it.)",
+  "What part feels hardest right now—words, the steps, or getting started?",
+  "Show me one example problem you’re stuck on (or tell me the topic), and I’ll help you do the next tiny step."
+],
       college: [
         "What’s the main thing you want to get out of this?",
         "Where are you getting stuck?",
