@@ -65,6 +65,11 @@ function stripCmgMenus(text) {
     t = t.slice(0, m.index);
   }
 
+  // Soften common forced-choice endings into an open prompt (no binary "or" question)
+  t = t.replace(
+    /Now,?\s*you\s*tell\s*me:\s*.*\bor\b.*\?\s*$/gim,
+    "Now, describe your picture or situation in one sentence (how many groups, and how many in each group)."
+  );
   // Normalize whitespace
   t = t.replace(/\n{3,}/g, "\n\n").trim();
 
