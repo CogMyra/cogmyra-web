@@ -165,7 +165,7 @@ function GuidePage() {
       kid: [
         "How are you feeling about this right now?",
         "What part feels tricky or confusing?",
-        "What do you want help with first?",
+        "Got it. Let’s take this one step at a time.",
         "Is this for homework, a test, or something else?"
       ],
       college: [
