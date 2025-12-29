@@ -258,21 +258,29 @@ if (persona) {
       );
     }
 
-    const data = await openaiRes.json();
-    const choice = data.choices?.[0]?.message;
-    const rawAssistantText = choice?.content ?? "";
-    const cleanedAssistantText = stripCmgMenus(rawAssistantText);
+const data = await openaiRes.json();
+const choice = data.choices?.[0]?.message;
 
-// write it back so EVERYTHING downstream uses the cleaned version
-if (choice) choice.content = cleanedAssistantText;  
-    const safeContent = enforceNoMenus(choice?.content || "");
-  
-    const responseBody = {
-      message:
-        choice || {
-          role: "assistant",
-          content: "Sorry, I had trouble replying just now.",
-        },
+const rawAssistantText = choice?.content || "";
+
+// 1) strip menus (cuts A/B/C blocks + “What would you like next” tails)
+const cleanedAssistantText = stripCmgMenus(rawAssistantText);
+
+// 2) enforce any remaining constraints (backup safety net)
+const enforcedAssistantText = enforceNoMenus(cleanedAssistantText);
+
+// 3) final fallback if everything got stripped (rare)
+const finalAssistantText =
+  enforcedAssistantText && enforcedAssistantText.trim().length > 0
+    ? enforcedAssistantText.trim()
+    : "Got it. Let’s do one tiny example together: what is 2 × 2? Just say the number.";
+
+const responseBody = {
+  message: {
+    role: "assistant",
+    content: finalAssistantText,
+  },
+
       usage: data.usage || null,
       meta: {
         model: data.model || env.MODEL || "gpt-5.1",
