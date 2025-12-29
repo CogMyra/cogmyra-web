@@ -1,33 +1,55 @@
 import { CMG_SYSTEM_PROMPT, CMG_PROMPT_VERSION } from "../cmgPrompt";
 
-function enforceNoMenus(text) {
-  if (!text) return text;
+/**
+ * Strip all A/B/C menus and "what next" prompts from CMG output.
+ * This is a HARD SAFETY FILTER at the runtime boundary.
+ */
+function stripCmgMenus(text) {
+  if (!text || typeof text !== "string") return text;
 
-  let out = text;
+  let t = text;
 
-  // Hard-ban common menu patterns
-  out = out.replace(/\n\s*[A-C]\)\s.*(\n\s*[A-C]\)\s.*)*/g, ""); // strips A) B) C) blocks
-  out = out.replace(/\n\s*-\s*[A-C]\)\s.*(\n\s*-\s*[A-C]\)\s.*)*/g, ""); // strips dashed A)/B)/C)
-  out = out.replace(/\n\s*What would you like next\??.*$/gim, ""); // strips "What would you like next"
-  out = out.replace(/\n\s*If you tell me.*I can:\s*$/gim, ""); // strips "If you tell me... I can:"
+  // Remove common “what next” lead-ins
+  t = t.replace(/^\s*What would you like next[:?]?.*$/gim, "");
+  t = t.replace(/^\s*What would you like to do next[:?]?.*$/gim, "");
+  t = t.replace(/^\s*Next, what would you like to do[:?]?.*$/gim, "");
+  t = t.replace(/^\s*If you tell me.*I can[:?]?.*$/gim, "");
 
-  // Also remove “pick a topic” style prompts (soft menu)
-  out = out.replace(
-    /What would you like to work on today\s*—.*\?/gi,
-    "What are you working on right now?"
-  );
+  // Cut off at first detected menu option
+  const cutPatterns = [
+    /\n\s*A\)\s+/m,
+    /\n\s*A\.\s+/m,
+    /\n\s*A:\s+/m,
+    /\n\s*Option\s*A\b/im,
+  ];
 
-  return out.trim();
+  for (const re of cutPatterns) {
+    const match = re.exec(t);
+    if (match && typeof match.index === "number") {
+      t = t.slice(0, match.index);
+      break;
+    }
+  }
+
+  // Remove any remaining option-style lines
+  t = t.replace(/^\s*[A-C]\)\s+.*$/gim, "");
+  t = t.replace(/^\s*[A-C]\.\s+.*$/gim, "");
+  t = t.replace(/^\s*[A-C]:\s+.*$/gim, "");
+
+  // Normalize whitespace
+  t = t.replace(/\n{3,}/g, "\n\n").trim();
+
+  return t;
 }
 
-// functions/api/chat.js
-// CogMyra Guide API with CORS + request_id + optional D1 logging (CMG_DB)
+// -----------------------------
+// CORS + Request ID utilities
+// -----------------------------
 
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    // IMPORTANT: allow client/server to send/receive x-request-id
     "Access-Control-Allow-Headers": "Content-Type, X-Request-Id",
   };
 }
@@ -41,11 +63,12 @@ function withRequestIdHeaders(headersObj, requestId) {
 }
 
 function getRequestId(request) {
-  // Cloudflare normalizes header lookups; still handle both casings safely
   return (
     request.headers.get("x-request-id") ||
     request.headers.get("X-Request-Id") ||
-    (globalThis.crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()))
+    (globalThis.crypto?.randomUUID
+      ? crypto.randomUUID()
+      : String(Date.now()))
   );
 }
 
@@ -237,6 +260,11 @@ if (persona) {
 
     const data = await openaiRes.json();
     const choice = data.choices?.[0]?.message;
+    const rawAssistantText = choice?.content ?? "";
+    const cleanedAssistantText = stripCmgMenus(rawAssistantText);
+
+// write it back so EVERYTHING downstream uses the cleaned version
+if (choice) choice.content = cleanedAssistantText;  
     const safeContent = enforceNoMenus(choice?.content || "");
   
     const responseBody = {
