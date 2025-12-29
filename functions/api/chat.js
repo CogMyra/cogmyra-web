@@ -15,6 +15,12 @@ function stripCmgMenus(text) {
   t = t.replace(/^\s*What would you like to do next[:?]?.*$/gim, "");
   t = t.replace(/^\s*Next, what would you like to do[:?]?.*$/gim, "");
   t = t.replace(/^\s*If you tell me.*I can[:?]?.*$/gim, "");
+  // Remove inline forced-choice questions like: "Is that 2 × 5 or 5 × 2?"
+  // (We still want the *explanation*, just not the forced-choice framing.)
+  t = t.replace(
+    /^\s*(Is that|Is it|Which is|Choose)\b[^\n]*\bor\b[^\n]*\?\s*$/gim,
+    ""
+  );
 
   // Cut off at first detected A/B/C-style menu
   const cutPatterns = [
