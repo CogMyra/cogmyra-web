@@ -4,6 +4,7 @@ import { CMG_SYSTEM_PROMPT, CMG_PROMPT_VERSION } from "../cmgPrompt";
  * Strip all A/B/C menus and "what next" prompts from CMG output.
  * This is a HARD SAFETY FILTER at the runtime boundary.
  */
+
 function stripCmgMenus(text) {
   if (!text || typeof text !== "string") return text;
 
@@ -15,7 +16,7 @@ function stripCmgMenus(text) {
   t = t.replace(/^\s*Next, what would you like to do[:?]?.*$/gim, "");
   t = t.replace(/^\s*If you tell me.*I can[:?]?.*$/gim, "");
 
-  // Cut off at first detected menu option
+  // Cut off at first detected A/B/C-style menu
   const cutPatterns = [
     /\n\s*A\)\s+/m,
     /\n\s*A\.\s+/m,
@@ -35,6 +36,18 @@ function stripCmgMenus(text) {
   t = t.replace(/^\s*[A-C]\)\s+.*$/gim, "");
   t = t.replace(/^\s*[A-C]\.\s+.*$/gim, "");
   t = t.replace(/^\s*[A-C]:\s+.*$/gim, "");
+
+  // ALSO cut off at “Is that: … or …” / forced-choice blocks (bullets with an OR line)
+  // Example:
+  //   Is that:
+  //   - 2 × 5
+  //   or
+  //   - 5 × 2
+  const forcedChoice = /\n\s*(Is that|Is it|Which is|Choose)\b[^\n]*:\s*\n\s*-\s+.+\n\s*(or|OR)\s*\n\s*-\s+/m;
+  const m = forcedChoice.exec(t);
+  if (m && typeof m.index === "number") {
+    t = t.slice(0, m.index);
+  }
 
   // Normalize whitespace
   t = t.replace(/\n{3,}/g, "\n\n").trim();
