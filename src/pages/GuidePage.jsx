@@ -160,28 +160,17 @@ function GuidePage() {
     }
   };
 
-const getStep2Prompt = () => {
-  const variants = {
-    kid: [
-      "What are you working on today (math, reading, science, something else)?",
-      "What’s the assignment or question? You can paste it here.",
-      "Is this homework, a quiz/test, or just curiosity?"
-    ],
-    college: [
-      "What are you working on right now (topic + the exact task)?",
-      "What’s the prompt / question / problem you need to complete?",
-      "What class or context is this for, and what’s the deadline?"
-    ],
-    pro: [
-      "What are you trying to accomplish—what’s the outcome you need?",
-      "What’s the context (industry/situation) and what’s your time window?",
-      "What’s the concrete thing you want me to help you produce (answer, plan, draft, decision)?"
-    ]
+  const getStep2Prompt = () => {
+    switch (personaId) {
+      case "kid":
+        return "What are you working on or trying to understand right now?";
+      case "pro":
+        return "What are you trying to accomplish right now?";
+      case "college":
+      default:
+        return "What are you working on right now (class, assignment, or project)?";
+    }
   };
-
-  const set = variants[personaId] || variants.college;
-  return set[onboardingVariant % set.length];
-};
 
   // Stable session ID
   const [sessionId] = useState(() =>
@@ -296,11 +285,6 @@ useEffect(() => {
     }
 
     // Normal message append (used for step 2 and all future messages)
-    setMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
-    setIsSending(true);
-    setErrorMessage("");
-
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setIsSending(true);
