@@ -275,7 +275,7 @@ const finalAssistantText =
     ? enforcedAssistantText.trim()
     : "Got it. Let’s do one tiny example together: what is 2 × 2? Just say the number.";
 
-const responseBody = {
+let responseBody = {
   message: {
     role: "assistant",
     content: finalAssistantText,
