@@ -42,6 +42,15 @@ function stripCmgMenus(text) {
   return t;
 }
 
+/**
+ * BACKSTOP ALIAS
+ * Some parts of the code still call enforceNoMenus().
+ * This prevents runtime ReferenceError → 500s.
+ */
+function enforceNoMenus(text) {
+  return stripCmgMenus(text);
+}
+
 // -----------------------------
 // CORS + Request ID utilities
 // -----------------------------
