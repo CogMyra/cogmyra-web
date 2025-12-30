@@ -296,13 +296,17 @@ useEffect(() => {
         content: m.text,
       }));
 
+const questionRule =
+  "Instruction: End EVERY assistant reply with exactly ONE short, natural, context-specific question that clearly follows from what the user just said. Do not ask multiple questions. Do not ask generic filler. Do not repeat onboarding questions.";
+
 const payload = {
-  messages: onboardingContextForThisRequest
-    ? [
-        { role: "system", content: onboardingContextForThisRequest },
-        ...apiMessages,
-      ]
-    : apiMessages,
+  messages: [
+    { role: "system", content: questionRule },
+    ...(onboardingContextForThisRequest
+      ? [{ role: "system", content: onboardingContextForThisRequest }]
+      : []),
+    ...apiMessages,
+  ],
   persona: personaConfig.personaLabel,
   session_id: sessionId,
 };
