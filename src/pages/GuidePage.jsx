@@ -78,19 +78,19 @@ const PERSONA_CONFIG = {
     id: "kid",
     personaLabel: "Kid in School",
     intro:
-      "Hi! I’m the CogMyra Guide. Tell me your age, grade, and what you’re working on, and we’ll take tiny steps together.",
+"Hi! I’m the CogMyra Guide. Before we start — how old are you or what grade are you in?",
   },
   college: {
     id: "college",
     personaLabel: "College Student",
     intro:
-      "Hi, I’m the CogMyra Guide. Tell me what you’re working on or stuck on, and I’ll help you one step at a time.",
+  "Hi, I’m the CogMyra Guide. Before we dive in — are you an undergrad or graduate student?",
   },
   pro: {
     id: "pro",
     personaLabel: "Professional",
     intro:
-      "Hi, I’m the CogMyra Guide. Tell me your role, context, and what you’re trying to accomplish, and we’ll take it step by step together.",
+  "Hi, I’m the CogMyra Guide. Before we dive in — what’s your role or line of work?",
   },
 };
 
@@ -181,14 +181,9 @@ function GuidePage() {
 
 // Reset + start onboarding when persona changes
 useEffect(() => {
-  setMessages([
-    {
-      id: "onboarding-step-1",
-      role: "assistant",
-      from: "assistant",
-      text: getStep1Prompt(),
-    },
-  ]);
+  // typedIntro already shows the combined first prompt,
+  // so we don't add a separate onboarding "step 1" message bubble.
+  setMessages([]);
   setOnboardingStep(1);
   setOnboarding({
     ageOrLevel: "",
